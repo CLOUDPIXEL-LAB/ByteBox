@@ -7,6 +7,70 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.0] - 2025-12-01
+
+### 🎨 Card Modal Editing & UX Improvements
+
+This release adds full card editing capabilities to the card detail modal and fixes several UI/UX issues.
+
+#### Added
+- **Card Editing in Modal** – Full edit mode for cards directly in the detail modal
+  - Edit title, description, and content fields
+  - Change language for code snippets and commands
+  - Add/remove tags with visual toggle buttons
+  - Toggle starred status with dedicated button
+  - Save/Cancel buttons with loading state
+  - Form validation (title required)
+- **Star Toggle in Modal Header** – Quick star/unstar button in view mode
+  - Shows filled star when starred, outline when not
+  - Amber accent color with hover effects
+- **Edit Button** – New "Edit" button in modal footer to enter edit mode
+  - Only shows when `onUpdate` callback is provided
+  - PencilSquareIcon with label
+- **Minimum Modal Size** – Card modals now have a 400px minimum height
+  - Prevents modals from looking cramped with short content (like single-line commands)
+  - Content areas also have minimum heights (120px for code, 80px for general content)
+
+#### Fixed
+- **Nested Button Hydration Error** – Fixed HTML validation error where `<button>` contained nested `<button>` elements
+  - Changed Card component's outer element from `<button>` to `<div role="button">`
+  - Added proper keyboard handling (Enter/Space) for accessibility
+  - Star button, download button, and image zoom button now work without hydration errors
+  - Console error "In HTML, `<button>` cannot be a descendant of `<button>`" is now resolved
+- **Dark Theme Dropdown Styling** – Fixed select dropdowns appearing white in dark mode
+  - Added global CSS for `select` and `option` elements with proper dark theme colors
+  - Form inputs in CreateCardModal now use theme-aware styling
+  - Select elements use `color-scheme: dark` for native dark theme support
+  - Options styled with `--background-muted` and `--text-strong` variables
+
+#### Changed
+- **Card Component** – Refactored for proper HTML structure
+  - Uses `div` with `role="button"` instead of native `button`
+  - Maintains full keyboard accessibility
+  - Allows nested interactive elements (buttons) without HTML violations
+- **CardModal Props** – Extended interface with new optional props:
+  - `onUpdate?: (updatedCard: CardType) => void` – Callback for card updates
+  - `allTags?: Tag[]` – Available tags for editing
+- **CreateCardModal Styling** – All form inputs now properly themed
+  - Inputs use `bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)]`
+  - Borders use `border-[color-mix(in_srgb,var(--card-border)_80%,transparent)]`
+  - Text uses `text-(--text-strong)` for proper contrast
+  - Focus rings use accent color
+
+#### Technical Details
+- **New Database Function**: `updateCardWithTags()` in `queries.ts`
+  - Updates card fields and replaces tag associations atomically
+  - Uses Prisma's `tags: { set: [...] }` for tag replacement
+- **API Enhancement**: PATCH `/api/cards/[id]` now handles `tagNames` parameter
+  - When `tagNames` is provided, uses `updateCardWithTags()` instead of `updateCard()`
+  - Tag names are resolved to IDs, creating new tags if needed
+- **CSS Additions**: New global styles in `globals.css`
+  - `select { color-scheme: dark; }`
+  - `select option { background-color: var(--background-muted); color: var(--text-strong); }`
+  - Firefox-specific `@-moz-document` rules for select styling
+
+---
+
 ## [2.0.0] - 2025-12-01
 
 ### 🚀 Major Release: Database-Backed Settings & Appearance Overhaul

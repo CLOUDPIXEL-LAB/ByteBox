@@ -2,7 +2,7 @@
   "name": "@pinkpixel/bytebox",
   "author": "Pink Pixel",
   "description": "A dashboard app for developers",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "private": true,
   "type": "module",
   "overrides": {

@@ -1,8 +1,8 @@
 # ByteBox Development Roadmap 🗺️
 
 **Last Updated:** December 1, 2025  
-**Current Version:** 2.0.0  
-**Next Version:** 2.1.0 (Planned - Phase 4)  
+**Current Version:** 2.1.0  
+**Next Version:** 2.2.0 (Planned - Phase 4)  
 **Status:** 🚀 Active Development
 
 ---
@@ -13,7 +13,7 @@ ByteBox is a **developer's personal command center** - a beautiful, glassmorphic
 
 ---
 
-## ✅ Completed Features (v1.0.0 - v2.0.0)
+## ✅ Completed Features (v1.0.0 - v2.1.0)
 
 ### Core Foundation ✨
 - [x] **Next.js 16.0.6** with App Router & React 19.2.0
@@ -37,8 +37,9 @@ ByteBox is a **developer's personal command center** - a beautiful, glassmorphic
   - ⌘ Commands (bash/CLI)
   - 📄 Documentation (notes/guides)
   - 🖼️ Images (screenshots with base64 storage)
-  - 📝 Notes (quick thoughts) ⭐ NEW
+  - 📝 Notes (quick thoughts)
 - [x] **CRUD Operations** - Create, read, update, delete with modals
+- [x] **In-Modal Card Editing** - Edit title, description, content, language, tags, and starred status directly in card modal ⭐ NEW
 - [x] **Copy to Clipboard** - One-click copying for all content types
 - [x] **Two-Step Delete** - Confirmation dialog prevents accidents
 
@@ -60,6 +61,7 @@ ByteBox is a **developer's personal command center** - a beautiful, glassmorphic
 - [x] **17 UI Fonts** - System, Inter, Geist, Roboto, Poppins, and stylized options
 - [x] **13 Mono Fonts** - Geist Mono, JetBrains, Fira Code, and more
 - [x] **Settings Presets** - Save/load entire appearance as named profiles
+- [x] **Dark Theme Form Styling** - Select dropdowns and inputs properly styled for dark themes ⭐ NEW
 
 ### Image Features 🖼️
 - [x] **Image Card Type** - Base64 storage (max 1920×1920, 5MB limit)
@@ -82,6 +84,19 @@ _No features currently in progress. Ready for Phase 4!_
 ---
 
 ## ✅ Recently Completed
+
+### v2.1.0: Card Modal Editing & UX Improvements 🎨
+**Status:** ✅ Complete (2025-12-01)  
+**Priority:** High  
+**Released:** v2.1.0
+
+Enhanced card modal with full editing capabilities:
+- **In-Modal Editing** - Edit all card fields directly in the detail modal
+- **Tag Management** - Add/remove tags with visual toggle interface
+- **Star Toggle** - Quick star/unstar in modal header
+- **Minimum Modal Size** - 400px minimum height for better appearance
+- **Fixed Nested Button Error** - Resolved HTML hydration error
+- **Dark Theme Dropdowns** - Fixed white dropdowns in Create Card modal
 
 ### v2.0.0: Database-Backed Settings & Appearance Overhaul 🎨
 **Status:** ✅ Complete (2025-12-01)  

@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.1.1] - 2025-12-01
+
+### 🐛 Bug Fixes: Theme Persistence & Navigation
+
+This patch release fixes critical theme persistence issues where the dark theme wasn't being applied as default and theme settings would reset when clicking sidebar navigation buttons.
+
+#### Fixed
+- **Dark Theme Not Default** – Fixed `getUserSettings()` in `queries.ts` to use correct default values when creating new user settings:
+  - Changed `mode` default from `'light'` to `'dark'`
+  - Changed `accentThemeId` default from `'default'` to `'byte-classic'`
+  - Changed `iconThemeId` default from `'default'` to `'neon-grid'`
+  - Changed `glassIntensity` default from `0` to `60`
+  - Changed `customIconColor` default from `''` to `'#f472b6'`
+  - Changed `backgroundConfig` default from `'{}'` to `'{"type":"default"}'`
+  - Changed `fontConfig` default from `'{}'` to `'{"uiFont":"system","monoFont":"geist-mono"}'`
+- **Theme Reset on Sidebar Click** – Fixed sidebar navigation causing full page reloads which reset theme to API defaults
+  - **Root Cause**: Sidebar navigation items used `<a href={...}>` tags instead of Next.js `<Link>` component
+  - **Solution**: Changed all sidebar navigation items in `AppLayout.tsx` from `<a>` to `<Link>` for proper client-side navigation
+  - Previously clicking Dashboard, Search, Tags, or Settings would trigger a full page reload
+  - Now navigation is instant and preserves all React state including theme settings
+
+#### Technical Details
+- **Modified Files**:
+  - `src/lib/db/queries.ts`: Fixed `getUserSettings()` default values
+  - `src/components/layout/AppLayout.tsx`: Changed `<a>` tags to `<Link>` components for sidebar nav
+- **Database**: Cleared existing `user_settings` row to allow fresh creation with correct defaults
+- **Import Added**: `import Link from 'next/link'` in AppLayout.tsx
+
+#### Migration Notes
+- Users should hard refresh their browser (Ctrl+Shift+R / Cmd+Shift+R) after updating
+- If theme issues persist, clear localStorage keys starting with `bytebox-` or clear site data
+- New installations will automatically use dark theme as default
+
+---
+
 ## [2.1.0] - 2025-12-01
 
 ### 🎨 Card Modal Editing & UX Improvements

@@ -1,7 +1,7 @@
 # ByteBox Development Roadmap 🗺️
 
 **Last Updated:** December 1, 2025  
-**Current Version:** 2.1.0  
+**Current Version:** 2.1.1  
 **Next Version:** 2.2.0 (Planned - Phase 4)  
 **Status:** 🚀 Active Development
 
@@ -84,6 +84,16 @@ _No features currently in progress. Ready for Phase 4!_
 ---
 
 ## ✅ Recently Completed
+
+### v2.1.1: Theme Persistence & Navigation Fixes 🐛
+**Status:** ✅ Complete (2025-12-01)  
+**Priority:** Critical  
+**Released:** v2.1.1
+
+Critical bug fixes for theme persistence and sidebar navigation:
+- **Dark Theme Default** - Fixed `getUserSettings()` to use correct default values (dark mode, byte-classic accent, neon-grid icons, etc.)
+- **Sidebar Navigation** - Changed `<a>` tags to Next.js `<Link>` component for client-side navigation
+- **Theme No Longer Resets** - Sidebar clicks now preserve React state instead of triggering full page reloads
 
 ### v2.1.0: Card Modal Editing & UX Improvements 🎨
 **Status:** ✅ Complete (2025-12-01)  
@@ -319,6 +329,7 @@ Make ByteBox fully responsive and mobile-friendly with proper touch interactions
 | Customizable Dashboard | ✅ Complete | 1.5.0 | 2025-11-29 |
 | Database-Backed Settings | ✅ Complete | 2.0.0 | 2025-12-01 |
 | Appearance Overhaul | ✅ Complete | 2.0.0 | 2025-12-01 |
+| Theme Persistence Fix | ✅ Complete | 2.1.1 | 2025-12-01 |
 | Category Pages | 💭 Concept | TBD | TBD |
 | Quick Links Bar | 💭 Concept | TBD | TBD |
 | Mobile App Layout | 💭 Concept | TBD | TBD |
@@ -382,6 +393,10 @@ Make ByteBox fully responsive and mobile-friendly with proper touch interactions
    - ✅ Prisma 7 upgrade with better-sqlite3 adapter
    - ✅ Custom accent themes persistence
    - ✅ Settings presets persistence
+7. ✅ ~~**Theme Persistence & Navigation Fixes**~~ DONE (v2.1.1)
+   - ✅ Fixed default theme settings (dark mode default)
+   - ✅ Fixed sidebar navigation to use Next.js Link
+   - ✅ Theme no longer resets on sidebar clicks
 
 ### Upcoming Sprint (Phase 4)
 1. **Category-Specific Pages** 📑 (Next Priority)

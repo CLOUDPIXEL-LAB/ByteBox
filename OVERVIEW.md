@@ -1,7 +1,7 @@
 # 📚 ByteBox – Project Overview
 
 **Last Updated**: December 1, 2025  
-**Version**: 2.1.0  
+**Version**: 2.1.1  
 **Author**: [Pink Pixel](https://pinkpixel.dev)  
 **License**: Apache 2.0  
 **Status**: ✅ Stable & Complete
@@ -126,7 +126,7 @@ bytebox/
 │   │   │   ├── CreateCardModal.tsx    # New card creation modal with file upload and dark theme support
 │   │   │   └── DraggableCard.tsx      # Card with @dnd-kit drag wrapper
 │   │   ├── layout/                    # Layout components
-│   │   │   ├── AppLayout.tsx          # Main app shell (sidebar, header, collapsible with icon/banner logo)
+│   │   │   ├── AppLayout.tsx          # Main app shell (sidebar with Next.js Link navigation, header, collapsible with icon/banner logo)
 │   │   │   ├── Board.tsx              # Kanban board wrapper (drag context)
 │   │   │   └── DraggableBoard.tsx     # Board with @dnd-kit drop zones and CSS Grid columns
 │   │   └── ui/                        # Reusable UI components
@@ -489,10 +489,12 @@ bytebox/
 
 ### 9️⃣ Collapsible Sidebar
 
-**Technology**: React state + Tailwind CSS transitions
+**Technology**: React state + Tailwind CSS transitions + Next.js Link
 
 **Implementation**:
 - `AppLayout.tsx` manages `sidebarOpen` state for expand/collapse behavior
+- Uses Next.js `Link` component for all sidebar navigation (Dashboard, Search, Tags, Settings)
+- Client-side navigation preserves React state and theme settings across page transitions
 - Sidebar transitions smoothly between 320px (expanded) and 96px (collapsed) widths
 - **Logo Switching**:
   - Expanded: Shows full `logo_banner.png` (240×120)

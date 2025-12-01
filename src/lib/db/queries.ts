@@ -325,12 +325,30 @@ export async function getUserSettings(): Promise<UserSettingsData> {
   let settings = await prisma.userSettings.findUnique({
     where: { id: SETTINGS_ID },
   });
-
   // Create default settings if none exist
   if (!settings) {
-    settings = await prisma.userSettings.create({
-      data: { id: SETTINGS_ID },
+    await prisma.userSettings.create({
+      data: {
+        id: SETTINGS_ID,
+        mode: 'light',
+        accentThemeId: 'default',
+        iconThemeId: 'default',
+        customAccentThemes: '[]',
+        settingsPresets: '[]',
+        backgroundConfig: '{}',
+        fontConfig: '{}',
+        customIconColor: '',
+        glassIntensity: 0,
+      },
     });
+    
+    settings = await prisma.userSettings.findUnique({
+      where: { id: SETTINGS_ID },
+    });
+  }
+
+  if (!settings) {
+    throw new Error('Failed to create default user settings');
   }
 
   return {

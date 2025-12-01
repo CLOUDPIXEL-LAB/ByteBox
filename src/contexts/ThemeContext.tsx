@@ -1,7 +1,5 @@
 'use client';
 
-/* eslint-disable react-hooks/set-state-in-effect */
-
 import {
   createContext,
   useContext,
@@ -83,12 +81,13 @@ const STORAGE_KEYS = {
 
 const DEFAULT_GLASS_INTENSITY = 60;
 
-const isBrowser = () => typeof window !== 'undefined' && typeof document !== 'undefined';
+const isBrowser = () => globalThis.window !== undefined && globalThis.document !== undefined;
+
 
 const hashString = (value: string) => {
   let hash = 0;
   for (let i = 0; i < value.length; i += 1) {
-    hash = (hash * 31 + value.charCodeAt(i)) >>> 0;
+    hash = (hash * 31 + (value.codePointAt(i) ?? 0)) >>> 0;
   }
   return hash;
 };
@@ -166,9 +165,9 @@ const applyAccentTheme = (theme: AccentTheme) => {
   root.dataset.accentTheme = theme.id;
 
   const palette = theme.palette.length > 0 ? theme.palette : ['#f72585'];
-  palette.slice(0, 8).forEach((color, idx) => {
+  for (const [idx, color] of palette.slice(0, 8).entries()) {
     root.style.setProperty(`--accent-${idx + 1}`, color);
-  });
+  }
 
   const primary = palette[0];
   const secondary = palette[1] ?? palette[0];
@@ -192,9 +191,9 @@ const applyAccentTheme = (theme: AccentTheme) => {
 const applyIconPalette = (palette: string[]) => {
   if (!isBrowser()) return;
   const root = document.documentElement;
-  palette.slice(0, 12).forEach((color, idx) => {
+  for (const [idx, color] of palette.slice(0, 12).entries()) {
     root.style.setProperty(`--icon-${idx + 1}`, color);
-  });
+  }
   const primary = palette[0] ?? '#f472b6';
   root.style.setProperty('--icon-primary', primary);
 };
@@ -284,7 +283,7 @@ const applyFontConfig = (config: FontConfig) => {
   // For system fonts or direct values, use as-is
   // For fonts using var(--font-xxx), resolve the actual computed value
   const resolveFont = (fontValue: string, fallback: string): string => {
-    const varMatch = fontValue.match(/^var\(([^)]+)\)/);
+    const varMatch = /^var\(([^)]+)\)/.exec(fontValue);
     if (varMatch) {
       const varName = varMatch[1];
       const computed = getComputedStyle(body).getPropertyValue(varName).trim();
@@ -337,15 +336,15 @@ const readJsonFromStorage = <T,>(key: string, fallback: T): T => {
   }, fallback);
 };
 
-export function ThemeProvider({ children }: { children: ReactNode }) {
-  const [mode, setModeState] = useState<ThemeMode>('dark');
+export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
+  const [modeInternal, setModeInternal] = useState<ThemeMode>('dark');
   const [accentThemeId, setAccentThemeId] = useState<string>(DEFAULT_ACCENT_THEME_ID);
   const [iconThemeId, setIconThemeId] = useState<string>(DEFAULT_ICON_THEME_ID);
-  const [customIconColor, setCustomIconColorState] = useState<string>('#f472b6');
+  const [customIconColorInternal, setCustomIconColorInternal] = useState<string>('#f472b6');
   const [backgroundImage, setBackgroundImage] = useState<string | null>(null);
-  const [glassIntensity, setGlassIntensityState] = useState<number>(DEFAULT_GLASS_INTENSITY);
-  const [backgroundConfig, setBackgroundConfigState] = useState<BackgroundConfig>(defaultBackgroundConfig);
-  const [fontConfig, setFontConfigState] = useState<FontConfig>(defaultFontConfig);
+  const [glassIntensityInternal, setGlassIntensityInternal] = useState<number>(DEFAULT_GLASS_INTENSITY);
+  const [backgroundConfigInternal, setBackgroundConfigInternal] = useState<BackgroundConfig>(defaultBackgroundConfig);
+  const [fontConfigInternal, setFontConfigInternal] = useState<FontConfig>(defaultFontConfig);
   const [customAccentThemes, setCustomAccentThemes] = useState<AccentTheme[]>([]);
   const [settingsPresets, setSettingsPresets] = useState<SettingsPreset[]>([]);
   const [mounted, setMounted] = useState(false);
@@ -428,14 +427,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     );
 
     // Apply localStorage values immediately
-    setModeState(storedMode);
+    setModeInternal(storedMode);
     setAccentThemeId(storedAccent);
     setIconThemeId(storedIcon);
-    setCustomIconColorState(storedIconColor);
+    setCustomIconColorInternal(storedIconColor);
     setBackgroundImage(storedBackground);
-    setGlassIntensityState(storedGlass);
-    setBackgroundConfigState(storedBackgroundConfig);
-    setFontConfigState(storedFontConfig);
+    setGlassIntensityInternal(storedGlass);
+    setBackgroundConfigInternal(storedBackgroundConfig);
+    setFontConfigInternal(storedFontConfig);
     setCustomAccentThemes(storedCustomAccentThemes);
     setSettingsPresets(storedPresets);
     setMounted(true);
@@ -448,13 +447,13 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         const apiSettings = await response.json();
 
         // Update state with API values (these are the source of truth)
-        setModeState(apiSettings.mode || 'dark');
+        setModeInternal(apiSettings.mode || 'dark');
         setAccentThemeId(apiSettings.accentThemeId || DEFAULT_ACCENT_THEME_ID);
         setIconThemeId(apiSettings.iconThemeId || DEFAULT_ICON_THEME_ID);
-        setCustomIconColorState(apiSettings.customIconColor || '#f472b6');
-        setGlassIntensityState(apiSettings.glassIntensity ?? DEFAULT_GLASS_INTENSITY);
-        setBackgroundConfigState(apiSettings.backgroundConfig || defaultBackgroundConfig);
-        setFontConfigState(apiSettings.fontConfig || defaultFontConfig);
+        setCustomIconColorInternal(apiSettings.customIconColor || '#f472b6');
+        setGlassIntensityInternal(apiSettings.glassIntensity ?? DEFAULT_GLASS_INTENSITY);
+        setBackgroundConfigInternal(apiSettings.backgroundConfig || defaultBackgroundConfig);
+        setFontConfigInternal(apiSettings.fontConfig || defaultFontConfig);
         setCustomAccentThemes(apiSettings.customAccentThemes || []);
         setSettingsPresets(apiSettings.settingsPresets || []);
 
@@ -498,28 +497,28 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
   const iconPalette = useMemo<string[]>(() => {
     if (iconTheme.userAdjustable) {
       const fallback = iconTheme.palette[0] ?? '#f472b6';
-      const primary = customIconColor || fallback;
+      const primary = customIconColorInternal || fallback;
       const rest = iconTheme.palette.slice(1);
       return [primary, ...rest];
     }
     return iconTheme.palette;
-  }, [iconTheme, customIconColor]);
+  }, [iconTheme, customIconColorInternal]);
 
   useEffect(() => {
     if (!mounted) return;
-    applyModeTokens(mode);
-    applyGlassTokens(mode, glassIntensity);
+    applyModeTokens(modeInternal);
+    applyGlassTokens(modeInternal, glassIntensityInternal);
     // Re-apply background config when mode changes
-    if (backgroundConfig.type !== 'default') {
-      applyBackgroundConfig(backgroundConfig, mode);
+    if (backgroundConfigInternal.type !== 'default') {
+      applyBackgroundConfig(backgroundConfigInternal, modeInternal);
     }
     if (isBrowser()) {
-      localStorage.setItem(STORAGE_KEYS.MODE, mode);
+      localStorage.setItem(STORAGE_KEYS.MODE, modeInternal);
       if (settingsLoaded) {
-        saveToApi({ mode });
+        saveToApi({ mode: modeInternal });
       }
     }
-  }, [mode, mounted, glassIntensity, backgroundConfig, settingsLoaded, saveToApi]);
+  }, [modeInternal, mounted, glassIntensityInternal, backgroundConfigInternal, settingsLoaded, saveToApi]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -543,16 +542,16 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
       if (settingsLoaded) {
         saveToApi({ 
           iconThemeId: iconTheme.id,
-          customIconColor: iconTheme.userAdjustable ? iconPalette[0] : customIconColor 
+          customIconColor: iconTheme.userAdjustable ? iconPalette[0] : customIconColorInternal 
         });
       }
     }
-  }, [iconPalette, iconTheme, mounted, settingsLoaded, saveToApi, customIconColor]);
+  }, [iconPalette, iconTheme, mounted, settingsLoaded, saveToApi, customIconColorInternal]);
 
   useEffect(() => {
     if (!mounted) return;
     // Only apply legacy background image if backgroundConfig type is 'default' or 'image'
-    if (backgroundConfig.type === 'default' || backgroundConfig.type === 'image') {
+    if (backgroundConfigInternal.type === 'default' || backgroundConfigInternal.type === 'image') {
       applyBackgroundImage(backgroundImage);
     }
     if (isBrowser()) {
@@ -562,40 +561,40 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
         localStorage.removeItem(STORAGE_KEYS.BACKGROUND);
       }
     }
-  }, [backgroundImage, mounted, backgroundConfig.type]);
+  }, [backgroundImage, mounted, backgroundConfigInternal.type]);
 
   useEffect(() => {
     if (!mounted) return;
-    applyGlassTokens(mode, glassIntensity);
+    applyGlassTokens(modeInternal, glassIntensityInternal);
     if (isBrowser()) {
-      localStorage.setItem(STORAGE_KEYS.GLASS, glassIntensity.toString());
+      localStorage.setItem(STORAGE_KEYS.GLASS, glassIntensityInternal.toString());
       if (settingsLoaded) {
-        saveToApi({ glassIntensity });
+        saveToApi({ glassIntensity: glassIntensityInternal });
       }
     }
-  }, [glassIntensity, mounted, mode, settingsLoaded, saveToApi]);
+  }, [glassIntensityInternal, mounted, modeInternal, settingsLoaded, saveToApi]);
 
   useEffect(() => {
     if (!mounted) return;
-    applyBackgroundConfig(backgroundConfig, mode);
+    applyBackgroundConfig(backgroundConfigInternal, modeInternal);
     if (isBrowser()) {
-      localStorage.setItem(STORAGE_KEYS.BACKGROUND_CONFIG, JSON.stringify(backgroundConfig));
+      localStorage.setItem(STORAGE_KEYS.BACKGROUND_CONFIG, JSON.stringify(backgroundConfigInternal));
       if (settingsLoaded) {
-        saveToApi({ backgroundConfig });
+        saveToApi({ backgroundConfig: backgroundConfigInternal });
       }
     }
-  }, [backgroundConfig, mounted, mode, settingsLoaded, saveToApi]);
+  }, [backgroundConfigInternal, mounted, modeInternal, settingsLoaded, saveToApi]);
 
   useEffect(() => {
     if (!mounted) return;
-    applyFontConfig(fontConfig);
+    applyFontConfig(fontConfigInternal);
     if (isBrowser()) {
-      localStorage.setItem(STORAGE_KEYS.FONT_CONFIG, JSON.stringify(fontConfig));
+      localStorage.setItem(STORAGE_KEYS.FONT_CONFIG, JSON.stringify(fontConfigInternal));
       if (settingsLoaded) {
-        saveToApi({ fontConfig });
+        saveToApi({ fontConfig: fontConfigInternal });
       }
     }
-  }, [fontConfig, mounted, settingsLoaded, saveToApi]);
+  }, [fontConfigInternal, mounted, settingsLoaded, saveToApi]);
 
   useEffect(() => {
     if (!mounted) return;
@@ -617,30 +616,30 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     }
   }, [settingsPresets, mounted, settingsLoaded, saveToApi]);
 
-  const setMode = (newMode: ThemeMode) => {
-    setModeState(newMode);
-  };
+  const setMode = useCallback((newMode: ThemeMode) => {
+    setModeInternal(newMode);
+  }, []);
 
-  const toggleMode = () => {
-    setModeState((current) => (current === 'dark' ? 'light' : 'dark'));
-  };
+  const toggleMode = useCallback(() => {
+    setModeInternal((current) => (current === 'dark' ? 'light' : 'dark'));
+  }, []);
 
-  const setAccentTheme = (id: string) => {
+  const setAccentTheme = useCallback((id: string) => {
     setAccentThemeId(id);
-  };
+  }, []);
 
-  const setIconTheme = (id: string) => {
+  const setIconTheme = useCallback((id: string) => {
     setIconThemeId(id);
-  };
+  }, []);
 
-  const setCustomIconColor = (hex: string) => {
-    setCustomIconColorState(hex);
+  const setCustomIconColor = useCallback((hex: string) => {
+    setCustomIconColorInternal(hex);
     if (isBrowser()) {
       localStorage.setItem(STORAGE_KEYS.ICON_CUSTOM, hex);
     }
-  };
+  }, []);
 
-  const setBackgroundImageFromFile = async (file: File) => {
+  const setBackgroundImageFromFile = useCallback(async (file: File) => {
     if (!isBrowser()) return;
     const dataUrl = await new Promise<string>((resolve, reject) => {
       const reader = new FileReader();
@@ -650,19 +649,19 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     });
     setBackgroundImage(dataUrl);
     // Also update background config to image type
-    setBackgroundConfigState({
+    setBackgroundConfigInternal({
       type: 'image',
       imageUrl: dataUrl,
     });
-  };
+  }, []);
 
-  const clearBackgroundImage = () => {
+  const clearBackgroundImage = useCallback(() => {
     setBackgroundImage(null);
-    setBackgroundConfigState({ type: 'default' });
-  };
+    setBackgroundConfigInternal({ type: 'default' });
+  }, []);
 
-  const setBackgroundConfig = (config: BackgroundConfig) => {
-    setBackgroundConfigState(config);
+  const setBackgroundConfig = useCallback((config: BackgroundConfig) => {
+    setBackgroundConfigInternal(config);
     // Keep legacy backgroundImage in sync only when a custom upload is present.
     // Preset wallpapers and gradients shouldn't retain the previous data URL.
     if (config.type === 'image') {
@@ -670,14 +669,14 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     } else {
       setBackgroundImage(null);
     }
-  };
+  }, []);
 
-  const setFontConfig = (config: FontConfig) => {
-    setFontConfigState(config);
-  };
+  const setFontConfig = useCallback((config: FontConfig) => {
+    setFontConfigInternal(config);
+  }, []);
 
   const addCustomAccentTheme = useCallback((name: string, colors: string[]) => {
-    const id = `custom-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    const id = `custom-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`;
     const newTheme = createCustomAccentTheme(id, name, colors);
     setCustomAccentThemes(prev => [...prev, newTheme]);
     // Automatically select the new theme
@@ -694,30 +693,30 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
 
   const saveCurrentAsPreset = useCallback((name: string) => {
     const preset: SettingsPreset = {
-      id: `preset-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      id: `preset-${Date.now()}-${Math.random().toString(36).slice(2, 11)}`,
       name,
       createdAt: Date.now(),
-      mode,
+      mode: modeInternal,
       accentThemeId,
       iconThemeId,
-      customIconColor,
-      glassIntensity,
-      background: backgroundConfig,
-      fonts: fontConfig,
+      customIconColor: customIconColorInternal,
+      glassIntensity: glassIntensityInternal,
+      background: backgroundConfigInternal,
+      fonts: fontConfigInternal,
       customAccentThemes: customAccentThemes,
     };
     setSettingsPresets(prev => [...prev, preset]);
-  }, [mode, accentThemeId, iconThemeId, customIconColor, glassIntensity, backgroundConfig, fontConfig, customAccentThemes]);
+  }, [modeInternal, accentThemeId, iconThemeId, customIconColorInternal, glassIntensityInternal, backgroundConfigInternal, fontConfigInternal, customAccentThemes]);
 
   const loadPreset = useCallback((id: string) => {
     const preset = settingsPresets.find(p => p.id === id);
     if (!preset) return;
 
-    setModeState(preset.mode);
-    setGlassIntensityState(preset.glassIntensity);
-    setCustomIconColorState(preset.customIconColor);
-    setBackgroundConfigState(preset.background);
-    setFontConfigState(preset.fonts);
+    setModeInternal(preset.mode);
+    setGlassIntensityInternal(preset.glassIntensity);
+    setCustomIconColorInternal(preset.customIconColor);
+    setBackgroundConfigInternal(preset.background);
+    setFontConfigInternal(preset.fonts);
     
     // Load custom accent themes from preset
     if (preset.customAccentThemes) {
@@ -735,55 +734,84 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     setSettingsPresets(prev => prev.filter(p => p.id !== id));
   }, []);
 
-  const getIconColorByIndex = (index: number) => {
+  const getIconColorByIndex = useCallback((index: number) => {
     if (iconPalette.length === 0) return '#f472b6';
     return iconPalette[index % iconPalette.length];
-  };
+  }, [iconPalette]);
 
-  const getIconColor = (key: string, offset = 0) => {
+  const getIconColor = useCallback((key: string, offset = 0) => {
     if (iconPalette.length === 0) return '#f472b6';
     const hashedIndex = (hashString(key) + Math.max(0, offset)) % iconPalette.length;
     return iconPalette[hashedIndex];
-  };
+  }, [iconPalette]);
 
-  const setGlassIntensity = (value: number) => {
+  const setGlassIntensity = useCallback((value: number) => {
     const clamped = Math.max(0, Math.min(100, Math.round(value)));
-    setGlassIntensityState(clamped);
-  };
+    setGlassIntensityInternal(clamped);
+  }, []);
+
+  const contextValue = useMemo<ThemeContextType>(() => ({
+    mode: modeInternal,
+    setMode,
+    toggleMode,
+    glassIntensity: glassIntensityInternal,
+    setGlassIntensity,
+    accentTheme,
+    setAccentTheme,
+    iconTheme,
+    setIconTheme,
+    customIconColor: customIconColorInternal,
+    setCustomIconColor,
+    getIconColor,
+    getIconColorByIndex,
+    backgroundImage,
+    setBackgroundImageFromFile,
+    clearBackgroundImage,
+    backgroundConfig: backgroundConfigInternal,
+    setBackgroundConfig,
+    fontConfig: fontConfigInternal,
+    setFontConfig,
+    customAccentThemes,
+    addCustomAccentTheme,
+    removeCustomAccentTheme,
+    allAccentThemes,
+    settingsPresets,
+    saveCurrentAsPreset,
+    loadPreset,
+    deletePreset,
+  }), [
+    modeInternal,
+    setMode,
+    toggleMode,
+    glassIntensityInternal,
+    setGlassIntensity,
+    accentTheme,
+    setAccentTheme,
+    iconTheme,
+    setIconTheme,
+    customIconColorInternal,
+    setCustomIconColor,
+    getIconColor,
+    getIconColorByIndex,
+    backgroundImage,
+    setBackgroundImageFromFile,
+    clearBackgroundImage,
+    backgroundConfigInternal,
+    setBackgroundConfig,
+    fontConfigInternal,
+    setFontConfig,
+    customAccentThemes,
+    addCustomAccentTheme,
+    removeCustomAccentTheme,
+    allAccentThemes,
+    settingsPresets,
+    saveCurrentAsPreset,
+    loadPreset,
+    deletePreset,
+  ]);
 
   return (
-    <ThemeContext.Provider
-      value={{
-        mode,
-        setMode,
-        toggleMode,
-        glassIntensity,
-        setGlassIntensity,
-        accentTheme,
-        setAccentTheme,
-        iconTheme,
-        setIconTheme,
-        customIconColor,
-        setCustomIconColor,
-        getIconColor,
-        getIconColorByIndex,
-        backgroundImage,
-        setBackgroundImageFromFile,
-        clearBackgroundImage,
-        backgroundConfig,
-        setBackgroundConfig,
-        fontConfig,
-        setFontConfig,
-        customAccentThemes,
-        addCustomAccentTheme,
-        removeCustomAccentTheme,
-        allAccentThemes,
-        settingsPresets,
-        saveCurrentAsPreset,
-        loadPreset,
-        deletePreset,
-      }}
-    >
+    <ThemeContext.Provider value={contextValue}>
       {mounted ? children : <div style={{ visibility: 'hidden' }}>{children}</div>}
     </ThemeContext.Provider>
   );
@@ -796,5 +824,3 @@ export function useTheme() {
   }
   return context;
 }
-
-/* eslint-enable react-hooks/set-state-in-effect */

@@ -7,7 +7,7 @@ import { FilterPanel } from '@/components/ui/FilterPanel';
 import { CardModal } from '@/components/cards/CardModal';
 import CreateCardModal from '@/components/cards/CreateCardModal';
 import { useSearch } from '@/hooks/useSearch';
-import type { Board, Card as CardType, Tag } from '@/types';
+import type { Board, Card as CardType, Tag, CategoryWithCards } from '@/types';
 
 export default function Home() {
   const [boardData, setBoardData] = useState<Board | null>(null);
@@ -58,14 +58,17 @@ export default function Home() {
     hasActiveFilters,
   } = useSearch({ cards: allCards });
 
+  // Helper for filtering board data
+  const filterCategoryCards = (category: CategoryWithCards) => ({
+    ...category,
+    cards: category.cards.filter((card: CardType) => filteredCards.includes(card)),
+  });
+
   // Build filtered board data
   const filteredBoardData: Board | null = boardData
     ? {
         ...boardData,
-        categories: boardData.categories.map(category => ({
-          ...category,
-          cards: category.cards.filter(card => filteredCards.includes(card)),
-        })),
+        categories: boardData.categories.map(filterCategoryCards),
       }
     : null;
 
@@ -90,6 +93,25 @@ export default function Home() {
     }
   };
 
+  // Helper to update a card in a category
+  const updateCardInCategory = (category: CategoryWithCards, cardId: string, starred: boolean) => ({
+    ...category,
+    cards: category.cards.map(card =>
+      card.id === cardId ? { ...card, starred } : card
+    ),
+  });
+
+  // Helper to update a card's starred status in board data
+  const updateCardStarred = useCallback((cardId: string, starred: boolean) => {
+    setBoardData(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        categories: prev.categories.map(category => updateCardInCategory(category, cardId, starred)),
+      };
+    });
+  }, []);
+
   // Handle star toggle
   const handleStarToggle = useCallback(async (cardId: string) => {
     try {
@@ -102,24 +124,11 @@ export default function Home() {
       if (!response.ok) throw new Error('Failed to toggle star');
 
       const updatedCard = await response.json();
-      
-      // Update the card in board data
-      setBoardData(prev => {
-        if (!prev) return prev;
-        return {
-          ...prev,
-          categories: prev.categories.map(category => ({
-            ...category,
-            cards: category.cards.map(card => 
-              card.id === cardId ? { ...card, starred: updatedCard.starred } : card
-            ),
-          })),
-        };
-      });
+      updateCardStarred(cardId, updatedCard.starred);
     } catch (error) {
       console.error('Error toggling star:', error);
     }
-  }, []);
+  }, [updateCardStarred]);
 
   // Refresh data after card creation
   const refreshData = async () => {
@@ -141,6 +150,18 @@ export default function Home() {
     setIsCreateModalOpen(true);
   };
 
+  // Handle card click
+  const handleCardClick = (card: CardType) => {
+    setSelectedCard(card);
+    setIsModalOpen(true);
+  };
+
+  // Handle create modal close
+  const handleCreateModalClose = () => {
+    setIsCreateModalOpen(false);
+    setPreselectedCategoryId(undefined);
+  };
+
   // Handle card deletion
   const handleDeleteCard = async () => {
     // Refresh the board data after deletion
@@ -160,8 +181,8 @@ export default function Home() {
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    globalThis.window.addEventListener('keydown', handleKeyDown);
+    return () => globalThis.window.removeEventListener('keydown', handleKeyDown);
   }, [toggleStarredFilter]);
 
   // Clean up the selected card once the modal finishes closing
@@ -231,10 +252,7 @@ export default function Home() {
             <DraggableBoard
               categories={filteredBoardData.categories}
               onCardMove={handleCardMove}
-              onCardClick={(card) => {
-                setSelectedCard(card);
-                setIsModalOpen(true);
-              }}
+              onCardClick={handleCardClick}
               onAddCard={handleAddCard}
               onStarToggle={handleStarToggle}
             />
@@ -279,10 +297,7 @@ export default function Home() {
       {boardData && (
         <CreateCardModal
           isOpen={isCreateModalOpen}
-          onClose={() => {
-            setIsCreateModalOpen(false);
-            setPreselectedCategoryId(undefined);
-          }}
+          onClose={handleCreateModalClose}
           onSuccess={refreshData}
           categories={boardData.categories.map((cat) => ({ id: cat.id, name: cat.name }))}
           allTags={allTags}

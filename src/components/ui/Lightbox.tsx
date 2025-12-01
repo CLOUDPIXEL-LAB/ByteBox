@@ -6,7 +6,7 @@
 'use client';
 
 import { Fragment, useEffect } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog, DialogPanel, Transition, TransitionChild } from '@headlessui/react';
 import { XMarkIcon, ArrowDownTrayIcon, ClipboardIcon } from '@heroicons/react/24/outline';
 import { downloadImage, copyImageToClipboard } from '@/lib/utils/imageUtils';
 import { cn } from '@/lib/utils';
@@ -19,7 +19,7 @@ interface LightboxProps {
   className?: string;
 }
 
-export function Lightbox({ isOpen, onClose, imageUrl, title, className }: LightboxProps) {
+export function Lightbox({ isOpen, onClose, imageUrl, title, className }: Readonly<LightboxProps>) {
   // Handle ESC key
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
@@ -28,12 +28,12 @@ export function Lightbox({ isOpen, onClose, imageUrl, title, className }: Lightb
       }
     };
 
-    window.addEventListener('keydown', handleEsc);
-    return () => window.removeEventListener('keydown', handleEsc);
+    globalThis.addEventListener('keydown', handleEsc);
+    return () => globalThis.removeEventListener('keydown', handleEsc);
   }, [isOpen, onClose]);
 
   const handleDownload = () => {
-    const filename = title ? `${title.replace(/\s+/g, '_')}.jpg` : 'bytebox_image.jpg';
+    const filename = title ? `${title.replaceAll(/\s+/g, '_')}.jpg` : 'bytebox_image.jpg';
     downloadImage(imageUrl, filename);
   };
 
@@ -50,7 +50,7 @@ export function Lightbox({ isOpen, onClose, imageUrl, title, className }: Lightb
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
         {/* Backdrop with glass effect */}
-        <Transition.Child
+        <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
           enterFrom="opacity-0"
@@ -65,11 +65,11 @@ export function Lightbox({ isOpen, onClose, imageUrl, title, className }: Lightb
               background: 'rgba(5, 6, 11, 0.92)',
             }}
           />
-        </Transition.Child>
+        </TransitionChild>
 
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4">
-            <Transition.Child
+            <TransitionChild
               as={Fragment}
               enter="ease-out duration-300"
               enterFrom="opacity-0 scale-95"
@@ -78,7 +78,7 @@ export function Lightbox({ isOpen, onClose, imageUrl, title, className }: Lightb
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className={cn('relative w-full max-w-7xl', className)}>
+              <DialogPanel className={cn('relative w-full max-w-7xl', className)}>
                 {/* Control Bar */}
                 <div className="absolute top-0 right-0 z-10 flex items-center gap-2 p-4">
                   {/* Download Button */}
@@ -171,8 +171,8 @@ export function Lightbox({ isOpen, onClose, imageUrl, title, className }: Lightb
                     </p>
                   </div>
                 </div>
-              </Dialog.Panel>
-            </Transition.Child>
+              </DialogPanel>
+            </TransitionChild>
           </div>
         </div>
       </Dialog>

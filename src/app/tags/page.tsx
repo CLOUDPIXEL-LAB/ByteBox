@@ -55,9 +55,9 @@ export default function TagsPage() {
       const data = await response.json();
       
       const allCards: CardWithRelations[] = [];
-      data.boardData.categories.forEach((cat: { cards: CardWithRelations[] }) => {
+      for (const cat of data.boardData.categories as { cards: CardWithRelations[] }[]) {
         allCards.push(...cat.cards);
-      });
+      }
       
       setCards(allCards);
       setTags(data.tags);
@@ -88,6 +88,68 @@ export default function TagsPage() {
     total: getIconColor('tags-total'),
     usage: getIconColor('tags-usage'),
     avg: getIconColor('tags-average'),
+  };
+
+  const renderTagGridContent = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div
+            className="animate-spin w-8 h-8 border-4 rounded-full"
+            style={{
+              borderColor: 'color-mix(in srgb, var(--accent-primary) 30%, transparent)',
+              borderTopColor: 'transparent',
+              borderRightColor: 'var(--accent-primary)',
+            }}
+          />
+        </div>
+      );
+    }
+
+    if (tags.length === 0) {
+      return (
+        <div className="text-center py-12">
+          <TagIcon className="w-16 h-16 mx-auto text-foreground/20 mb-4" />
+          <h3 className="text-xl font-semibold mb-2">No tags yet</h3>
+          <p className="text-foreground/60">
+            Tags will appear here as you add them to cards
+          </p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+        {sortedTags.map((tag) => {
+          const cardCount = tag._count?.cards ?? 0;
+          return (
+            <button
+              key={tag.id}
+              onClick={() => setSelectedTag(selectedTag === tag.id ? null : tag.id)}
+              className={cn(
+                'group relative surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 text-left transition-all',
+                'hover:border-[color-mix(in_srgb,var(--accent-border)_50%,transparent)] hover:shadow-[0_16px_45px_color-mix(in_srgb,var(--accent-primary)_18%,transparent)]',
+                selectedTag === tag.id && 'border-[color-mix(in_srgb,var(--accent-border)_80%,transparent)] bg-accent-soft/40 shadow-[0_18px_50px_color-mix(in_srgb,var(--accent-primary)_22%,transparent)]'
+              )}
+            >
+              <div className="flex items-start justify-between mb-2">
+                <div
+                  className="w-3 h-3 rounded-full"
+                  style={{ backgroundColor: tag.color }}
+                />
+                <span className="text-xs font-medium px-2 py-0.5 rounded-full surface-card surface-card--subtle text-[var(--text-soft)] border border-[color-mix(in_srgb,var(--card-border)_70%,transparent)]">
+                  {cardCount}
+                </span>
+              </div>
+              <p className="font-medium truncate text-[var(--text-strong)]">{tag.name}</p>
+              <p className="text-xs text-[var(--text-soft)] mt-1">
+                {cardCount} card{cardCount === 1 ? '' : 's'}
+              </p>
+            </button>
+          );
+        })}
+      </div>
+    );
   };
 
   return (
@@ -183,54 +245,7 @@ export default function TagsPage() {
             </div>
           </div>
 
-          {loading ? (
-            <div className="flex items-center justify-center py-12">
-              <div
-                className="animate-spin w-8 h-8 border-4 rounded-full"
-                style={{
-                  borderColor: 'color-mix(in srgb, var(--accent-primary) 30%, transparent)',
-                  borderTopColor: 'transparent',
-                  borderRightColor: 'var(--accent-primary)',
-                }}
-              />
-            </div>
-          ) : tags.length === 0 ? (
-            <div className="text-center py-12">
-              <TagIcon className="w-16 h-16 mx-auto text-foreground/20 mb-4" />
-              <h3 className="text-xl font-semibold mb-2">No tags yet</h3>
-              <p className="text-foreground/60">
-                Tags will appear here as you add them to cards
-              </p>
-            </div>
-          ) : (
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-              {sortedTags.map((tag) => (
-                <button
-                  key={tag.id}
-                  onClick={() => setSelectedTag(selectedTag === tag.id ? null : tag.id)}
-                  className={cn(
-                    'group relative surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 text-left transition-all',
-                    'hover:border-[color-mix(in_srgb,var(--accent-border)_50%,transparent)] hover:shadow-[0_16px_45px_color-mix(in_srgb,var(--accent-primary)_18%,transparent)]',
-                    selectedTag === tag.id && 'border-[color-mix(in_srgb,var(--accent-border)_80%,transparent)] bg-accent-soft/40 shadow-[0_18px_50px_color-mix(in_srgb,var(--accent-primary)_22%,transparent)]'
-                  )}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div
-                      className="w-3 h-3 rounded-full"
-                      style={{ backgroundColor: tag.color }}
-                    />
-                    <span className="text-xs font-medium px-2 py-0.5 rounded-full surface-card surface-card--subtle text-[var(--text-soft)] border border-[color-mix(in_srgb,var(--card-border)_70%,transparent)]">
-                      {tag._count?.cards || 0}
-                    </span>
-                  </div>
-                  <p className="font-medium truncate text-[var(--text-strong)]">{tag.name}</p>
-                  <p className="text-xs text-[var(--text-soft)] mt-1">
-                    {tag._count?.cards || 0} card{(tag._count?.cards || 0) !== 1 ? 's' : ''}
-                  </p>
-                </button>
-              ))}
-            </div>
-          )}
+          {renderTagGridContent()}
         </div>
 
         {/* Selected Tag Cards */}

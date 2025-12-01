@@ -168,43 +168,27 @@ async function extractMarkdownText(buffer: ArrayBuffer): Promise<string> {
  * Convert file to base64 and extract text
  */
 export async function processDocFile(file: File): Promise<ProcessedFile> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
+  const arrayBuffer = await file.arrayBuffer();
+  
+  // Convert to base64
+  const base64 = Buffer.from(arrayBuffer).toString('base64');
+  const dataUrl = `data:${file.type};base64,${base64}`;
 
-    reader.onload = async (event) => {
-      try {
-        const arrayBuffer = event.target?.result as ArrayBuffer;
-        
-        // Convert to base64
-        const base64 = Buffer.from(arrayBuffer).toString('base64');
-        const dataUrl = `data:${file.type};base64,${base64}`;
+  // Extract text based on file type
+  let extractedText = '';
+  if (file.type === 'application/pdf') {
+    extractedText = await extractPdfText(arrayBuffer);
+  } else {
+    extractedText = await extractMarkdownText(arrayBuffer);
+  }
 
-        // Extract text based on file type
-        let extractedText = '';
-        if (file.type === 'application/pdf') {
-          extractedText = await extractPdfText(arrayBuffer);
-        } else {
-          extractedText = await extractMarkdownText(arrayBuffer);
-        }
-
-        resolve({
-          base64: dataUrl,
-          extractedText,
-          fileName: file.name,
-          fileType: file.type,
-          fileSize: file.size,
-        });
-      } catch (error) {
-        reject(error);
-      }
-    };
-
-    reader.onerror = () => {
-      reject(new Error('Failed to read file'));
-    };
-
-    reader.readAsArrayBuffer(file);
-  });
+  return {
+    base64: dataUrl,
+    extractedText,
+    fileName: file.name,
+    fileType: file.type,
+    fileSize: file.size,
+  };
 }
 
 /**
@@ -217,7 +201,7 @@ export function downloadFile(base64Data: string, fileName: string) {
     link.download = fileName;
     document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link);
+    link.remove();
   } catch (error) {
     console.error('Error downloading file:', error);
     throw new Error('Failed to download file');
@@ -234,7 +218,7 @@ export function formatFileSize(bytes: number): string {
   const sizes = ['Bytes', 'KB', 'MB', 'GB'];
   const i = Math.floor(Math.log(bytes) / Math.log(k));
 
-  return `${parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
+  return `${Number.parseFloat((bytes / Math.pow(k, i)).toFixed(2))} ${sizes[i]}`;
 }
 
 /**

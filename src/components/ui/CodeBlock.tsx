@@ -8,7 +8,6 @@ interface CodeBlockProps {
   code: string;
   language: string;
   filename?: string;
-  showLineNumbers?: boolean;
   className?: string;
 }
 
@@ -17,7 +16,7 @@ export function CodeBlock({
   language,
   filename,
   className = '',
-}: CodeBlockProps) {
+}: Readonly<CodeBlockProps>) {
   const [html, setHtml] = useState<string>('');
   const [copied, setCopied] = useState(false);
   const [isLoading, setIsLoading] = useState(true);

@@ -39,7 +39,7 @@ export function DraggableBoard({
   onCardMove,
   onStarToggle,
   className,
-}: DraggableBoardProps) {
+}: Readonly<DraggableBoardProps>) {
   const [activeCard, setActiveCard] = useState<CardType | null>(null);
   
   const sensors = useSensors(

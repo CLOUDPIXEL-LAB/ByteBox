@@ -7,7 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.0.0]
+## [2.0.0] - 2025-12-01
+
+### 🚀 Major Release: Database-Backed Settings & Appearance Overhaul
+
+This major release introduces full database persistence for all user settings, a comprehensive appearance customization system, and significant infrastructure upgrades including Prisma 7 and improved font handling.
 
 ### 🔧 Settings & Typography Fixes
 
@@ -219,98 +223,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Safe area insets for notched devices
   - Responsive breakpoint definitions (mobile/tablet/desktop)
 
----
-
-## [Unreleased]
-
-### �️ Customizable Dashboard Filters (Phase 3: ROADMAP)
-
-#### Added
-- **View Mode Selector** — Dropdown in dashboard header to switch between view modes
-  - **All Cards** — Show all cards (default)
-  - **Most Recent** — Cards sorted by newest first (by updatedAt/createdAt)
-  - **Starred Only** — Show only favorited cards
-  - **By Tag** — Filter by selected tags (auto-switches when tags selected)
-- **ViewModeSelector Component** — New glassmorphic dropdown with icons and descriptions
-  - Displays current view mode with icon
-  - Shows keyboard shortcut hints in menu
-  - Accent styling for active view mode
-- **Clear Filters Button** — Red "Clear" button next to view selector
-  - Appears when any filters are active
-  - Resets view mode to "All Cards" and clears search/tags
-- **Keyboard Shortcuts for View Modes** — Quick switching with `⌘1-4`
-  - `⌘1` — All Cards
-  - `⌘2` — Most Recent
-  - `⌘3` — Starred Only
-  - `⌘4` — By Tag
-- **View Mode Persistence** — Selected view mode saved to localStorage
-  - Key: `bytebox-view-mode`
-  - Persists across sessions and page refreshes
-- **Quick View Buttons in Filter Panel** — Grid of 4 buttons for quick mode switching
-  - All, Recent, Starred, By Tag with icons
-  - Matches current view mode styling
-
-#### Changed
-- **useSearch Hook** — Refactored to use ViewMode system
-  - Added `viewMode` state with localStorage persistence
-  - Added `setViewMode()` function for mode changes
-  - Added `sortByRecent()` for Most Recent view
-  - `showStarredOnly` is now computed from `viewMode === 'starred'`
-  - Auto-switches to "By Tag" mode when selecting tags
-  - `clearFilters()` now resets to "All Cards" view mode
-- **AppLayout Component** — Added view mode props and keyboard shortcuts
-  - `viewMode`, `onViewModeChange`, `hasActiveFilters`, `onClearFilters` props
-  - Keyboard handler for `⌘1-4` shortcuts
-  - Reduced search bar width to accommodate view selector
-- **FilterPanel Component** — Enhanced with view mode controls
-  - Quick view buttons grid
-  - Updated keyboard shortcut hint for starred (`⌘3`)
-- **Active Filters Badge** — Now shows view mode context
-  - "(starred only)", "(most recent)", or "(n tags)" based on current mode
-
-#### Technical Details
-- New file: `src/components/ui/ViewModeSelector.tsx`
-- Updated exports in `src/components/ui/index.ts`
-- Type: `ViewMode = 'all' | 'recent' | 'starred' | 'by-tag'`
-- localStorage key: `bytebox-view-mode`
-
-### �🎨 UI/UX Improvements
-
-#### Changed
-- **Responsive Category Columns** – Board columns now stretch evenly to fill the viewport
-  - Replaced fixed 340px column widths with CSS Grid `repeat(n, minmax(280px, 1fr))`
-  - Columns expand proportionally on larger screens
-  - Minimum width of 280px prevents cards from becoming unreadable
-  - Horizontal scrolling only kicks in when minimum widths can't be maintained
-  - Provides consistent experience across different screen sizes and resolutions
-
-#### Fixed
-- **Logo Doubling in Light Mode** – Fixed visual bug where the logo banner appeared doubled/staggered when switching to light mode
-  - Root cause: CSS `drop-shadow` filter was creating a ghost image effect in light mode
-  - Solution: Removed drop-shadow styling in light mode (set to `none`), keeping shadow effect only for dark mode
-  - Added React `key` prop with mode to force proper image remount on theme change
-
-#### Changed
-- **Sidebar Collapse Button** – Replaced confusing X icon with intuitive chevron arrows
-  - `ChevronLeftIcon` when sidebar is expanded (indicates collapse direction)
-  - `ChevronRightIcon` when sidebar is collapsed (indicates expand direction)
-  - Improved accessibility with dynamic `aria-label` ("Collapse sidebar" / "Expand sidebar")
-- **Collapsed Sidebar Logo** – Now displays square icon instead of blank space
-  - Shows `icon.png` (48×48) when sidebar is collapsed
-  - Shows `logo_banner.png` when sidebar is expanded
-  - Improved layout: collapsed state uses vertical flex layout to center icon and button
-  - Both logos include proper `key` props to prevent rendering issues on theme switch
-
-### 🛠️ Build System
-
-#### Fixed
-- **baseline-browser-mapping Warnings** – Suppressed noisy `[baseline-browser-mapping] The data in this module is over two months old` warnings during builds
-  - Root cause: Transitive dependency via `eslint-config-next → eslint-plugin-react-hooks → @babel/core → browserslist → baseline-browser-mapping`
-  - Added npm override for `baseline-browser-mapping@2.9.0-beta2`
-  - Applied stderr filtering (`grep -v`) to `dev`, `build`, and `start` scripts
-  - Build output now clean without cosmetic warnings
-
-### �📄 File Upload for Documentation (Phase 1: ROADMAP)
+### 📄 File Upload for Documentation (Phase 1: ROADMAP)
 
 #### Added
 - **Documentation File Upload** – Upload .md and .pdf files to Documentation cards
@@ -685,13 +598,6 @@ The first public release of **ByteBox** — a lightweight web dashboard for deve
 - **Spacing** — Tailwind CSS spacing scale
 - **Shadows** — Subtle elevation with colored shadows
 - **Animations** — Smooth transitions and hover effects
-
----
-
-## [Unreleased]
-
-### 🔮 Planned Features
-_(No unreleased features yet — check ROADMAP.md for future plans!)_
 
 ---
 

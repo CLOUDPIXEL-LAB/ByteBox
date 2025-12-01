@@ -34,7 +34,6 @@ import { cn } from '@/lib/utils';
 
 export default function SettingsPage() {
   const {
-    mode,
     accentTheme,
     setAccentTheme,
     iconTheme,
@@ -94,7 +93,7 @@ export default function SettingsPage() {
 
       alert('All data cleared successfully!');
       setShowDeleteConfirm(false);
-      window.location.reload();
+      globalThis.location.reload();
     } catch (error) {
       console.error('Error clearing data:', error);
       alert('Failed to clear data. Please try again.');
@@ -363,8 +362,9 @@ export default function SettingsPage() {
               {isCreatingTheme && (
                 <div className="surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 space-y-4">
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-semibold text-(--text-soft) uppercase tracking-widest">Theme name</label>
+                    <label htmlFor="new-theme-name" className="text-xs font-semibold text-(--text-soft) uppercase tracking-widest">Theme name</label>
                     <input
+                      id="new-theme-name"
                       value={newThemeName}
                       onChange={(event) => setNewThemeName(event.target.value)}
                       placeholder="e.g. Cyber Sunset"
@@ -554,6 +554,7 @@ export default function SettingsPage() {
                       value={solidBackground}
                       onChange={(event) => setSolidBackground(event.target.value)}
                       className="px-3 py-2 rounded-lg bg-transparent border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] focus:border-[color-mix(in_srgb,var(--accent-border)_60%,transparent)] outline-none text-sm"
+                      aria-label="Solid background color hex value"
                     />
                     <button
                       onClick={() => handleSetSolidBackground(solidBackground)}
@@ -788,6 +789,7 @@ export default function SettingsPage() {
                     value={fontConfig.uiFont}
                     onChange={(event) => setFontConfig({ ...fontConfig, uiFont: event.target.value })}
                     className="w-full rounded-lg bg-transparent border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 text-sm focus:border-[color-mix(in_srgb,var(--accent-border)_60%,transparent)] outline-none"
+                    aria-label="Select UI font"
                   >
                     {availableFonts.map((font) => (
                       <option key={font.id} value={font.id} className="bg-[color-mix(in_srgb,var(--background)_90%,#000_10%)]">
@@ -812,6 +814,7 @@ export default function SettingsPage() {
                     value={fontConfig.monoFont}
                     onChange={(event) => setFontConfig({ ...fontConfig, monoFont: event.target.value })}
                     className="w-full rounded-lg bg-transparent border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 text-sm focus:border-[color-mix(in_srgb,var(--accent-border)_60%,transparent)] outline-none"
+                    aria-label="Select monospace font for code blocks"
                   >
                     {availableMonoFonts.map((font) => (
                       <option key={font.id} value={font.id} className="bg-[color-mix(in_srgb,var(--background)_90%,#000_10%)]">
@@ -823,7 +826,7 @@ export default function SettingsPage() {
                     className="text-sm text-(--text-soft)"
                     style={{ fontFamily: availableMonoFonts.find((f) => f.id === fontConfig.monoFont)?.value }}
                   >
-                    const accent = ['#f72585', '#4361ee'];
+                    const accent = [&apos;#f72585&apos;, &apos;#4361ee&apos;];
                   </p>
                 </div>
               </div>
@@ -848,8 +851,9 @@ export default function SettingsPage() {
               {isCreatingPreset && (
                 <div className="surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 space-y-3">
                   <div className="flex flex-col gap-2">
-                    <label className="text-xs font-semibold text-(--text-soft) uppercase tracking-widest">Preset name</label>
+                    <label htmlFor="preset-name" className="text-xs font-semibold text-(--text-soft) uppercase tracking-widest">Preset name</label>
                     <input
+                      id="preset-name"
                       value={newPresetName}
                       onChange={(event) => setNewPresetName(event.target.value)}
                       placeholder="e.g. Focus mode, Presentation"
@@ -937,15 +941,7 @@ export default function SettingsPage() {
                   Permanently delete all cards, tags, and categories.
                 </p>
               </div>
-              {!showDeleteConfirm ? (
-                <button
-                  onClick={() => setShowDeleteConfirm(true)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-all"
-                >
-                  <TrashIcon className="w-5 h-5" />
-                  Clear All Data
-                </button>
-              ) : (
+              {showDeleteConfirm ? (
                 <div className="space-y-3">
                   <p className="text-sm font-medium text-red-400">Are you absolutely sure?</p>
                   <p className="text-xs text-(--text-soft)">
@@ -966,6 +962,14 @@ export default function SettingsPage() {
                     </button>
                   </div>
                 </div>
+              ) : (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-all"
+                >
+                  <TrashIcon className="w-5 h-5" />
+                  Clear All Data
+                </button>
               )}
             </div>
           </div>
@@ -977,7 +981,7 @@ export default function SettingsPage() {
           <div className="grid gap-3 text-sm text-(--text-soft)">
             <div className="flex justify-between border-b border-[color-mix(in_srgb,var(--card-border)_70%,transparent)] pb-2">
               <span>Version</span>
-              <span className="text-(--text-strong)">1.0.0</span>
+              <span className="text-(--text-strong)">2.0.0</span>
             </div>
             <div className="flex justify-between border-b border-[color-mix(in_srgb,var(--card-border)_70%,transparent)] pb-2">
               <span>Built with</span>

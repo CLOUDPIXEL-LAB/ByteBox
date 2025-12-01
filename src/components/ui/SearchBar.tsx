@@ -9,7 +9,7 @@ interface SearchBarProps {
   className?: string;
 }
 
-export function SearchBar({ onSearch, placeholder = 'Search cards...', className = '' }: SearchBarProps) {
+export function SearchBar({ onSearch, placeholder = 'Search cards...', className = '' }: Readonly<SearchBarProps>) {
   const [query, setQuery] = useState('');
   const [isFocused, setIsFocused] = useState(false);
 
@@ -23,8 +23,8 @@ export function SearchBar({ onSearch, placeholder = 'Search cards...', className
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    globalThis.addEventListener('keydown', handleKeyDown);
+    return () => globalThis.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const handleChange = (value: string) => {

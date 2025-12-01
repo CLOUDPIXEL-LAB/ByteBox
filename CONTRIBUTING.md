@@ -195,8 +195,8 @@ npm run build       # Build for production
 - Follow [Next.js 16 App Router](https://nextjs.org/docs) best practices
 
 ### Tailwind CSS
-- Use **Tailwind 4.x** utility classes
-- Follow the **Pink Pixel design system** (pink/purple gradients)
+- Use **Tailwind CSS 4.x** utility classes
+- Follow the **Pink Pixel design system** (glass morphism, accent themes)
 - Use `cn()` utility for conditional classes
 - Keep custom CSS minimal — prefer Tailwind utilities
 

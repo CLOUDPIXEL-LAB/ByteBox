@@ -54,7 +54,7 @@ export function AppLayout({
   onViewModeChange,
   hasActiveFilters = false,
   onClearFilters,
-}: AppLayoutProps) {
+}: Readonly<AppLayoutProps>) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const { getIconColor, accentTheme, mode } = useTheme();
 
@@ -88,8 +88,8 @@ export function AppLayout({
       }
     };
 
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
+    globalThis.addEventListener('keydown', handleKeyDown);
+    return () => globalThis.removeEventListener('keydown', handleKeyDown);
   }, [onViewModeChange]);
 
   // Only apply shadow in dark mode - light mode doesn't need it and causes visual doubling

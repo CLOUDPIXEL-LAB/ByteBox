@@ -6,7 +6,7 @@
  */
 
 import { Fragment } from "react";
-import { Menu, Transition } from "@headlessui/react";
+import { Menu, MenuButton, MenuItems, MenuItem, Transition } from "@headlessui/react";
 import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import {
@@ -60,6 +60,87 @@ const viewModeOptions: ViewModeOption[] = [
   },
 ];
 
+// Extracted component to reduce function nesting depth
+interface MenuItemButtonProps {
+  option: ViewModeOption;
+  isActive: boolean;
+  isFocused: boolean;
+  onSelect: (mode: ViewMode) => void;
+}
+
+function MenuItemButton({ option, isActive, isFocused, onSelect }: Readonly<MenuItemButtonProps>) {
+  const Icon = option.icon;
+  
+  const getBackgroundColor = () => {
+    if (isActive) return 'rgba(247, 37, 133, 0.12)';
+    if (isFocused) return 'rgba(148, 163, 184, 0.12)';
+    return 'transparent';
+  };
+
+  return (
+    <button
+      onClick={() => onSelect(option.id)}
+      className={cn(
+        "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150",
+        isActive && "border shadow-[0_8px_30px_rgba(0,0,0,0.25)]",
+      )}
+      style={{
+        backgroundColor: getBackgroundColor(),
+        borderColor: isActive ? 'rgba(247, 37, 133, 0.33)' : 'transparent',
+      }}
+    >
+      <div
+        className="p-1.5 rounded-lg transition-colors"
+        style={{
+          backgroundColor: isActive
+            ? 'rgba(247, 37, 133, 0.12)'
+            : 'rgba(148, 163, 184, 0.12)',
+        }}
+      >
+        {option.id === "starred" && isActive ? (
+          <StarIconSolid className="w-4 h-4 text-amber-400" />
+        ) : (
+          <Icon 
+            className={cn(
+              "w-4 h-4",
+              isActive
+                ? "text-[#f72585]"
+                : "text-[rgba(248,250,252,0.7)]"
+            )}
+          />
+        )}
+      </div>
+
+      <div className="flex-1 min-w-0">
+        <p
+          className="text-sm font-medium"
+          style={{
+            color: isActive ? '#f72585' : '#f8fafc',
+          }}
+        >
+          {option.name}
+        </p>
+        <p
+          className="text-xs truncate"
+          style={{ color: 'rgba(248, 250, 252, 0.7)' }}
+        >
+          {option.description}
+        </p>
+      </div>
+
+      <kbd
+        className="px-1.5 py-0.5 rounded text-[10px] font-mono"
+        style={{
+          backgroundColor: 'rgba(148, 163, 184, 0.15)',
+          color: 'rgba(248, 250, 252, 0.7)',
+        }}
+      >
+        ⌘{option.shortcut}
+      </kbd>
+    </button>
+  );
+}
+
 interface ViewModeSelectorProps {
   currentMode: ViewMode;
   onModeChange: (mode: ViewMode) => void;
@@ -74,7 +155,7 @@ export function ViewModeSelector({
   onClearFilters,
   hasActiveFilters = false,
   className = "",
-}: ViewModeSelectorProps) {
+}: Readonly<ViewModeSelectorProps>) {
   const currentOption =
     viewModeOptions.find((opt) => opt.id === currentMode) || viewModeOptions[0];
   const CurrentIcon = currentOption.icon;
@@ -84,14 +165,14 @@ export function ViewModeSelector({
       <Menu as="div" className="relative">
         {({ open }) => (
           <>
-            <Menu.Button
+            <MenuButton
               data-viewmode-button
               className={cn(
                 "flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium",
                 "transition-all duration-200 border",
-                currentMode !== "all"
-                  ? "bg-accent-soft/80 border-[color-mix(in_srgb,var(--accent-border)_70%,transparent)] text-accent shadow-[0_8px_24px_rgba(0,0,0,0.15)]"
-                  : "surface-card surface-card--subtle hover:border-[color-mix(in_srgb,var(--accent-border)_40%,transparent)] bg-[rgba(5,6,11,0.9)]",
+                currentMode === "all"
+                  ? "surface-card surface-card--subtle hover:border-[color-mix(in_srgb,var(--accent-border)_40%,transparent)] bg-[rgba(5,6,11,0.9)]"
+                  : "bg-accent-soft/80 border-[color-mix(in_srgb,var(--accent-border)_70%,transparent)] text-accent shadow-[0_8px_24px_rgba(0,0,0,0.15)]",
               )}
             >
               {currentMode === "starred" ? (
@@ -101,10 +182,10 @@ export function ViewModeSelector({
               )}
               <span>{currentOption.name}</span>
               <ChevronDownIcon className="w-4 h-4 opacity-60" />
-            </Menu.Button>
+            </MenuButton>
 
             {/* Portal the dropdown to body to escape glass effects */}
-            {typeof window !== 'undefined' && open && createPortal(
+            {globalThis.window !== undefined && open && createPortal(
               <Transition
                 show={open}
                 as={Fragment}
@@ -115,7 +196,7 @@ export function ViewModeSelector({
                 leaveFrom="transform opacity-100 scale-100"
                 leaveTo="transform opacity-0 scale-95"
               >
-                <Menu.Items
+              <MenuItems
                   static
                   className="fixed rounded-2xl focus:outline-none z-[9999] overflow-hidden shadow-[0_26px_70px_rgba(0,0,0,0.75)]"
                   style={{
@@ -138,78 +219,19 @@ export function ViewModeSelector({
                     </div>
 
                     {viewModeOptions.map((option) => {
-                      const Icon = option.icon;
                       const isActive = currentMode === option.id;
 
                       return (
-                        <Menu.Item key={option.id}>
-                          {({ active }) => (
-                            <button
-                              onClick={() => onModeChange(option.id)}
-                              className={cn(
-                                "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150",
-                                isActive && "border shadow-[0_8px_30px_rgba(0,0,0,0.25)]",
-                              )}
-                              style={{
-                                backgroundColor: isActive 
-                                  ? 'rgba(247, 37, 133, 0.12)'
-                                  : active 
-                                    ? 'rgba(148, 163, 184, 0.12)' 
-                                    : 'transparent',
-                                borderColor: isActive ? 'rgba(247, 37, 133, 0.33)' : 'transparent',
-                              }}
-                            >
-                              <div
-                                className="p-1.5 rounded-lg transition-colors"
-                                style={{
-                                  backgroundColor: isActive
-                                    ? 'rgba(247, 37, 133, 0.12)'
-                                    : 'rgba(148, 163, 184, 0.12)',
-                                }}
-                              >
-                                {option.id === "starred" && isActive ? (
-                                  <StarIconSolid className="w-4 h-4 text-amber-400" />
-                                ) : (
-                                  <Icon 
-                                    className={cn(
-                                        "w-4 h-4",
-                                        isActive
-                                        ? "text-[#f72585]"
-                                        : "text-[rgba(248,250,252,0.7)]"
-                                    )}
-                                    />
-                                )}
-                              </div>
-
-                              <div className="flex-1 min-w-0">
-                                <p
-                                  className="text-sm font-medium"
-                                  style={{
-                                    color: isActive ? '#f72585' : '#f8fafc',
-                                  }}
-                                >
-                                  {option.name}
-                                </p>
-                                <p
-                                  className="text-xs truncate"
-                                  style={{ color: 'rgba(248, 250, 252, 0.7)' }}
-                                >
-                                  {option.description}
-                                </p>
-                              </div>
-
-                              <kbd
-                                className="px-1.5 py-0.5 rounded text-[10px] font-mono"
-                                style={{
-                                  backgroundColor: 'rgba(148, 163, 184, 0.15)',
-                                  color: 'rgba(248, 250, 252, 0.7)',
-                                }}
-                              >
-                                ⌘{option.shortcut}
-                              </kbd>
-                            </button>
+                        <MenuItem key={option.id}>
+                          {({ focus }) => (
+                            <MenuItemButton
+                              option={option}
+                              isActive={isActive}
+                              isFocused={focus}
+                              onSelect={onModeChange}
+                            />
                           )}
-                        </Menu.Item>
+                        </MenuItem>
                       );
                     })}
                   </div>
@@ -236,7 +258,7 @@ export function ViewModeSelector({
                       to switch views
                     </p>
                   </div>
-                </Menu.Items>
+                </MenuItems>
               </Transition>,
               document.body
             )}

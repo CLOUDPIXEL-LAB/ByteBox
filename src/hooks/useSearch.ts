@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect, useCallback } from 'react';
+import { useMemo, useState, useCallback } from 'react';
 import type { Card } from '@/types';
 
 type FilterMode = 'AND' | 'OR';
@@ -8,7 +8,7 @@ const VIEW_MODE_STORAGE_KEY = 'bytebox-view-mode';
 
 // Load view mode from localStorage (client-side only)
 function getStoredViewMode(): ViewMode {
-  if (typeof window === 'undefined') return 'all';
+  if (globalThis.window === undefined) return 'all';
   const stored = localStorage.getItem(VIEW_MODE_STORAGE_KEY);
   if (stored && ['all', 'recent', 'starred', 'by-tag'].includes(stored)) {
     return stored as ViewMode;
@@ -34,27 +34,18 @@ export function useSearch({
   const [searchQuery, setSearchQuery] = useState(initialQuery);
   const [selectedTags, setSelectedTags] = useState<string[]>(initialTags);
   const [filterMode, setFilterMode] = useState<FilterMode>(initialMode);
-  const [viewMode, setViewModeState] = useState<ViewMode>(initialViewMode || 'all');
-  const [mounted, setMounted] = useState(false);
-
-  // Hydrate view mode from localStorage after mount
-  useEffect(() => {
-    if (!initialViewMode) {
-      setViewModeState(getStoredViewMode());
-    }
-    setMounted(true);
-  }, [initialViewMode]);
+  const [viewModeInternal, setViewModeInternal] = useState<ViewMode>(() => initialViewMode || getStoredViewMode());
 
   // Persist view mode to localStorage
   const setViewMode = useCallback((mode: ViewMode) => {
-    setViewModeState(mode);
-    if (typeof window !== 'undefined') {
+    setViewModeInternal(mode);
+    if (globalThis.window !== undefined) {
       localStorage.setItem(VIEW_MODE_STORAGE_KEY, mode);
     }
   }, []);
 
   // Computed starred-only state based on view mode
-  const showStarredOnly = viewMode === 'starred';
+  const showStarredOnly = viewModeInternal === 'starred';
 
   // Search across all card fields
   const searchCards = (cards: Card[], query: string): Card[] => {
@@ -83,14 +74,14 @@ export function useSearch({
     if (tags.length === 0) return cards;
 
     return cards.filter(card => {
-      const cardTagNames = card.tags.map(tag => tag.name);
+      const cardTagNames = new Set(card.tags.map(tag => tag.name));
       
       if (mode === 'AND') {
         // ALL selected tags must be present
-        return tags.every(tag => cardTagNames.includes(tag));
+        return tags.every(tag => cardTagNames.has(tag));
       } else {
         // ANY selected tag must be present
-        return tags.some(tag => cardTagNames.includes(tag));
+        return tags.some(tag => cardTagNames.has(tag));
       }
     });
   };
@@ -115,7 +106,7 @@ export function useSearch({
     let result = cards;
     
     // Apply view mode filtering
-    switch (viewMode) {
+    switch (viewModeInternal) {
       case 'starred':
         result = filterByStarred(result, true);
         break;
@@ -140,12 +131,12 @@ export function useSearch({
     }
     
     // Apply tag filtering for non-by-tag modes (additional filtering)
-    if (viewMode !== 'by-tag' && selectedTags.length > 0) {
+    if (viewModeInternal !== 'by-tag' && selectedTags.length > 0) {
       result = filterByTags(result, selectedTags, filterMode);
     }
     
     return result;
-  }, [cards, searchQuery, selectedTags, filterMode, viewMode]);
+  }, [cards, searchQuery, selectedTags, filterMode, viewModeInternal]);
 
   // Get starred cards count
   const starredCount = useMemo(() => {
@@ -160,15 +151,15 @@ export function useSearch({
         : [...prev, tagName]
     );
     // Auto-switch to by-tag mode when selecting tags (if not already in a filter mode)
-    if (viewMode === 'all' && !selectedTags.includes(tagName)) {
+    if (viewModeInternal === 'all' && !selectedTags.includes(tagName)) {
       setViewMode('by-tag');
     }
   };
 
   // Toggle starred filter (now toggles view mode)
   const toggleStarredFilter = useCallback(() => {
-    setViewMode(viewMode === 'starred' ? 'all' : 'starred');
-  }, [viewMode, setViewMode]);
+    setViewMode(viewModeInternal === 'starred' ? 'all' : 'starred');
+  }, [viewModeInternal, setViewMode]);
 
   // Clear all filters and reset to 'all' view
   const clearFilters = useCallback(() => {
@@ -178,7 +169,7 @@ export function useSearch({
   }, [setViewMode]);
 
   // Determine if there are active filters
-  const hasActiveFilters = searchQuery !== '' || selectedTags.length > 0 || viewMode !== 'all';
+  const hasActiveFilters = searchQuery !== '' || selectedTags.length > 0 || viewModeInternal !== 'all';
 
   return {
     searchQuery,
@@ -188,7 +179,7 @@ export function useSearch({
     toggleTag,
     filterMode,
     setFilterMode,
-    viewMode,
+    viewMode: viewModeInternal,
     setViewMode,
     showStarredOnly,
     toggleStarredFilter,
@@ -196,6 +187,5 @@ export function useSearch({
     filteredCards,
     clearFilters,
     hasActiveFilters,
-    mounted,
   };
 }

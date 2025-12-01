@@ -33,7 +33,7 @@ export function ExportImport() {
       a.download = `bytebox-backup-${new Date().toISOString().split('T')[0]}.json`;
       document.body.appendChild(a);
       a.click();
-      document.body.removeChild(a);
+      a.remove();
       URL.revokeObjectURL(url);
 
       setMessage({ type: 'success', text: 'Data exported successfully!' });
@@ -82,7 +82,7 @@ export function ExportImport() {
 
       // Refresh the page after successful import
       setTimeout(() => {
-        window.location.reload();
+        globalThis.location.reload();
       }, 2000);
     } catch (error) {
       console.error('Import error:', error);

@@ -33,12 +33,12 @@
 ### 🌌 **Glass UI & Theming**
 - **Glassmorphic Layout** — Sidebar, header, cards, modals, and filters share reusable glass utilities with blurred depth and accent-aware tinting.
 - **Adjustable Glass Intensity** — A transparency slider (Clear → Frosted) instantly recalibrates blur, opacity, and shadows to match your wallpaper.
-- **Accent Theme Library** — Swap between Byte Classic, Neon Night, Rainbow Sprint, Midnight Carbon, Sunset Espresso, and Pastel Haze palettes, or build your own 2–6 color palette.
-- **Icon Palettes** — Choose curated icon stacks (Neon Grid, Carbon Tech, Espresso Circuit, Rainbow Loop, Pink Pulse) or set a custom hex color.
-- **Background Playground** — Solid color picker, custom 2–4 color gradients with angle control, curated gradient presets, and built-in wallpaper library (plus uploads).
-- **Typography Controls** — Choose UI and mono fonts independently from preloaded stacks (Inter/Geist/etc. + JetBrains/Fira/etc.).
-- **Presets** — Save the entire appearance (mode, accent/icon, background, fonts, glass) as named profiles; apply or delete anytime.
-- **Theme Persistence** — Light/dark base, accent/icon themes, custom colors, background selection, fonts, and presets persist locally.
+- **Accent Theme Library** — Swap between 6 built-in palettes (Byte Classic, Neon Night, Rainbow Sprint, Midnight Carbon, Sunset Espresso, Pastel Haze) or build your own 2–6 color palette.
+- **Icon Palettes** — Choose from 6 curated icon stacks (Neon Grid, Carbon Tech, Espresso Circuit, Rainbow Loop, Pink Pulse) or set a custom hex color.
+- **Background Playground** — Solid color picker, custom 2–4 color gradients with angle control, 8 curated gradient presets, and 12 built-in wallpapers (plus custom uploads).
+- **Typography Controls** — Choose from 17 UI fonts and 13 mono fonts independently (Inter, Geist, Poppins, Indie Flower, JetBrains Mono, Fira Code, and more).
+- **Settings Presets** — Save the entire appearance (mode, accent/icon, background, fonts, glass) as named profiles; apply or delete anytime.
+- **Database-Backed Persistence** — All theme settings persist to SQLite database, surviving browser clears and syncing across sessions.
 - **System Detection** — Defaults to your OS preference on first load.
 
 ### 💾 **Data Management**
@@ -53,14 +53,14 @@
 
 | Category | Technology |
 |----------|-----------|
-| **Framework** | [Next.js 16](https://nextjs.org/) (App Router) |
-| **Language** | [TypeScript 5](https://www.typescriptlang.org/) |
-| **Styling** | [Tailwind CSS 4.1.16](https://tailwindcss.com/) |
+| **Framework** | [Next.js 16.0.6](https://nextjs.org/) (App Router) |
+| **Language** | [TypeScript 5.9.x](https://www.typescriptlang.org/) |
+| **Styling** | [Tailwind CSS 4.x](https://tailwindcss.com/) |
 | **Database** | SQLite with [Prisma 7.0.1](https://www.prisma.io/) (better-sqlite3 adapter) |
-| **Drag & Drop** | [@dnd-kit](https://dndkit.com/) |
-| **Syntax Highlighting** | [Shiki](https://shiki.matsu.io/) |
-| **Icons** | [@heroicons/react](https://heroicons.com/) |
-| **UI Components** | [@headlessui/react](https://headlessui.dev/) |
+| **Drag & Drop** | [@dnd-kit](https://dndkit.com/) 6.x / 10.x |
+| **Syntax Highlighting** | [Shiki 3.17.0](https://shiki.matsu.io/) |
+| **Icons** | [@heroicons/react 2.2.0](https://heroicons.com/) |
+| **UI Components** | [@headlessui/react 2.2.9](https://headlessui.dev/) |
 
 ---
 
@@ -124,8 +124,9 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. 🎉
    - **📑 Bookmark** — Save URLs and links (auto-categorized to Bookmarks)
    - **💻 Code Snippet** — Save code with syntax highlighting (auto-categorized to Code Snippets)
    - **⌘ Command** — Save CLI commands (auto-categorized to Commands)
-   - **📚 Documentation** — Save notes and docs (auto-categorized to Documentation)
+   - **📚 Documentation** — Save notes, docs, or upload .md/.pdf files (auto-categorized to Documentation)
    - **🖼️ Image** — Upload screenshots or images (auto-categorized to Images)
+   - **📝 Note** — Quick thoughts and ideas (auto-categorized to Notes)
 3. Fill in:
    - **Title** — Card name
    - **Description** — What's this resource about?
@@ -181,11 +182,11 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. 🎉
 1. Head to **Settings → Appearance**.
 2. Use the **Glass Transparency** slider to shift the interface from airy to frosted depending on your wallpaper.
 3. Pick an **Accent Theme** (or build a custom 2–6 color palette) and an **Icon Palette** (or custom hex).
-4. Choose **Background**: solid color, custom 2–4 color gradient with angle, preset gradient, or a built-in wallpaper — upload your own if you prefer.
-5. Set **Typography**: pick UI font and mono font separately.
+4. Choose **Background**: solid color, custom 2–4 color gradient with angle, one of 8 gradient presets, or one of 12 built-in wallpapers — upload your own if you prefer.
+5. Set **Typography**: pick from 17 UI fonts and 13 mono fonts separately.
 6. Toggle **Light/Dark Mode** with the sun/moon button in the header.
 7. Click **Save preset** to store the whole setup (mode, colors, background, fonts, glass) and reapply it later.
-8. All settings persist locally and the entire UI updates in real time.
+8. All settings persist to the database and the entire UI updates in real time.
 
 ### 🌙 **Theme Toggle**
 - Click the **sun/moon icon** (top-right) to switch between dark and light base themes.
@@ -196,10 +197,10 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. 🎉
 ## 🗂️ Project Structure
 
 ```
-dev-dashboard/
+bytebox/
 ├── src/
 │   ├── app/
-│   │   ├── api/              # API routes (cards, export, import)
+│   │   ├── api/              # API routes (cards, settings, export, import)
 │   │   ├── globals.css       # Tailwind CSS + glass/theming tokens
 │   │   ├── layout.tsx        # Root layout with ThemeProvider
 │   │   ├── page.tsx          # Dashboard (boards)
@@ -208,33 +209,32 @@ dev-dashboard/
 │   │   └── tags/page.tsx     # Tag directory with stats & filtering
 │   ├── components/
 │   │   ├── cards/            # Card, DraggableCard, CardModal, CreateCardModal
-│   │   ├── layout/           # AppLayout, Board, CategoryColumn
-│   │   └── ui/               # Tag, SearchBar, FilterPanel, CodeBlock, ThemeToggle, ExportImport
+│   │   ├── layout/           # AppLayout, Board, DraggableBoard
+│   │   └── ui/               # Tag, SearchBar, FilterPanel, CodeBlock, ThemeToggle, ExportImport, ViewModeSelector, Lightbox
 │   ├── contexts/
-│   │   └── ThemeContext.tsx  # Theme, accent, icon, and wallpaper controller
+│   │   └── ThemeContext.tsx  # Theme, accent, icon, background, font controller
 │   ├── hooks/
-│   │   └── useSearch.ts      # Search & filter hook
+│   │   └── useSearch.ts      # Search, filter, and view mode hook
 │   ├── lib/
 │   │   ├── db/               # Prisma client & queries
-│   │   ├── themeRegistry.ts  # Accent & icon palette definitions
-│   │   └── utils/            # cn, generateId, formatDate, truncate, syntax.ts
+│   │   ├── themeRegistry.ts  # Accent/icon palettes, gradients, wallpapers, fonts
+│   │   └── utils/            # cn, imageUtils, fileUtils, syntax, formatDate
 │   └── types/
 │       └── index.ts          # TypeScript types
 ├── prisma/
-│   ├── schema.prisma         # Database schema
+│   ├── schema.prisma         # Database schema (Category, Tag, Card, UserSettings)
+│   ├── prisma.config.ts      # Prisma 7 configuration
 │   ├── seed.ts               # Seed script
 │   └── migrations/           # Database migrations
 ├── public/
-│   ├── icon.png              # Favicon
-│   └── logo.png              # Logo asset
+│   ├── icon.png              # Square logo icon
+│   ├── logo_banner.png       # Full logo banner
+│   └── wallpapers/           # 12 built-in wallpapers
 ├── package.json
 ├── tsconfig.json
-├── tailwind.config.ts
 ├── next.config.ts
-├── .env                      # Database URL (not in repo)
 ├── README.md
 ├── CHANGELOG.md
-├── glass_theming_guide.md     # Framework-agnostic glass & theming notes
 ├── CONTRIBUTING.md
 ├── LICENSE
 ├── OVERVIEW.md

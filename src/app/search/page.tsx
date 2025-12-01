@@ -35,9 +35,9 @@ export default function SearchPage() {
       const data = await response.json();
       
       const allCards: CardWithRelations[] = [];
-      data.boardData.categories.forEach((cat: { cards: CardWithRelations[] }) => {
+      for (const cat of data.boardData.categories as { cards: CardWithRelations[] }[]) {
         allCards.push(...cat.cards);
-      });
+      }
       
       setCards(allCards);
       setAllTags(data.tags);
@@ -83,11 +83,11 @@ export default function SearchPage() {
     // Apply tag filters
     if (selectedTags.length > 0) {
       results = results.filter(card => {
-        const cardTagIds = card.tags.map(t => t.id);
+        const cardTagIds = new Set(card.tags.map(t => t.id));
         if (filterMode === 'AND') {
-          return selectedTags.every(tagId => cardTagIds.includes(tagId));
+          return selectedTags.every(tagId => cardTagIds.has(tagId));
         } else {
-          return selectedTags.some(tagId => cardTagIds.includes(tagId));
+          return selectedTags.some(tagId => cardTagIds.has(tagId));
         }
       });
     }
@@ -109,6 +109,64 @@ export default function SearchPage() {
     setSearchQuery('');
     setSelectedTags([]);
     setSearchType('all');
+  };
+
+  const renderResultsGrid = () => {
+    if (loading) {
+      return (
+        <div className="flex items-center justify-center py-12">
+          <div
+            className="animate-spin w-8 h-8 border-4 rounded-full"
+            style={{
+              borderColor: 'color-mix(in srgb, var(--accent-primary) 28%, transparent)',
+              borderTopColor: 'transparent',
+              borderRightColor: 'var(--accent-primary)',
+            }}
+          />
+        </div>
+      );
+    }
+
+    if (filteredCards.length === 0) {
+      return (
+        <div className="glass glass--dense rounded-3xl p-12 text-center space-y-3">
+          <MagnifyingGlassIcon
+            className="w-16 h-16 mx-auto"
+            style={{ color: 'color-mix(in srgb, var(--icon-3) 45%, transparent)' }}
+          />
+          <h3 className="text-xl font-semibold text-[var(--text-strong)]">No results found</h3>
+          <p className="text-[var(--text-soft)]">
+            {searchQuery || selectedTags.length > 0
+              ? 'Try adjusting your search or filters'
+              : 'Start searching to find your cards'}
+          </p>
+          {(searchQuery || selectedTags.length > 0) && (
+            <button
+              onClick={clearFilters}
+              className="px-4 py-2 rounded-lg accent-gradient font-medium shadow-[0_16px_40px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)] hover:shadow-[0_20px_55px_color-mix(in_srgb,var(--accent-primary)_40%,transparent)] transition-all"
+            >
+              Clear filters
+            </button>
+          )}
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredCards.map((card) => (
+          <Card key={card.id} card={card as unknown as CardType} />
+        ))}
+      </div>
+    );
+  };
+
+  const renderResultsHeader = () => {
+    if (loading) {
+      return 'Loading...';
+    }
+    const count = filteredCards.length;
+    return count === 1 ? '1 Result' : `${count} Results`;
   };
 
   return (
@@ -193,7 +251,7 @@ export default function SearchPage() {
         <div className="flex items-center justify-between">
           <div>
             <h2 className="text-xl font-semibold text-[var(--text-strong)]">
-              {loading ? 'Loading...' : `${filteredCards.length} Result${filteredCards.length !== 1 ? 's' : ''}`}
+              {renderResultsHeader()}
             </h2>
             {(searchQuery || selectedTags.length > 0) && (
               <button
@@ -207,45 +265,7 @@ export default function SearchPage() {
         </div>
 
         {/* Results Grid */}
-        {loading ? (
-          <div className="flex items-center justify-center py-12">
-            <div
-              className="animate-spin w-8 h-8 border-4 rounded-full"
-              style={{
-                borderColor: 'color-mix(in srgb, var(--accent-primary) 28%, transparent)',
-                borderTopColor: 'transparent',
-                borderRightColor: 'var(--accent-primary)',
-              }}
-            />
-          </div>
-        ) : filteredCards.length === 0 ? (
-          <div className="glass glass--dense rounded-3xl p-12 text-center space-y-3">
-            <MagnifyingGlassIcon
-              className="w-16 h-16 mx-auto"
-              style={{ color: 'color-mix(in srgb, var(--icon-3) 45%, transparent)' }}
-            />
-            <h3 className="text-xl font-semibold text-[var(--text-strong)]">No results found</h3>
-            <p className="text-[var(--text-soft)]">
-              {searchQuery || selectedTags.length > 0
-                ? 'Try adjusting your search or filters'
-                : 'Start searching to find your cards'}
-            </p>
-            {(searchQuery || selectedTags.length > 0) && (
-              <button
-                onClick={clearFilters}
-                className="px-4 py-2 rounded-lg accent-gradient font-medium shadow-[0_16px_40px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)] hover:shadow-[0_20px_55px_color-mix(in_srgb,var(--accent-primary)_40%,transparent)] transition-all"
-              >
-                Clear filters
-              </button>
-            )}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {filteredCards.map((card) => (
-              <Card key={card.id} card={card as unknown as CardType} />
-            ))}
-          </div>
-        )}
+        {renderResultsGrid()}
       </div>
     </AppLayout>
   );

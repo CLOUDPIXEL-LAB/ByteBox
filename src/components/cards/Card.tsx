@@ -30,7 +30,102 @@ const cardTypeIcons = {
   note: PencilSquareIcon,
 };
 
-export function Card({ card, onClick, onStarToggle, className }: CardProps) {
+// Extracted component to avoid nested ternary operations
+interface CardContentPreviewProps {
+  card: CardType;
+  iconColor: string;
+  onImageClick: (e: React.MouseEvent) => void;
+}
+
+function CardContentPreview({ card, iconColor, onImageClick }: Readonly<CardContentPreviewProps>) {
+  const cardType = card.cardType[0];
+
+  // Image card preview
+  if (cardType === 'image' && card.imageData) {
+    return (
+      <button
+        type="button"
+        className="relative mb-3 rounded-xl overflow-hidden group-hover:ring-2 ring-(--accent-primary) transition-all cursor-zoom-in w-full"
+        onClick={onImageClick}
+        title="Click to view full-screen"
+        aria-label="View image full-screen"
+      >
+        <img
+          src={card.imageData.trim()}
+          alt={card.title}
+          className="w-full h-auto max-h-64 object-cover"
+          onError={(e) => {
+            // Hide broken data URIs to avoid noisy console errors
+            e.currentTarget.style.display = 'none';
+          }}
+        />
+        <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+          <span className="text-xs px-2 py-1 rounded-full glass glass--dense text-white">
+            Click to zoom
+          </span>
+        </div>
+      </button>
+    );
+  }
+
+  // Document card with file attachment
+  if (cardType === 'doc' && card.fileData) {
+    return (
+      <div className="mb-3">
+        <div className="relative surface-card surface-card--subtle border border-transparent rounded-xl p-3 overflow-hidden">
+          <div className="flex items-center gap-3">
+            <span className="text-2xl shrink-0">{getFileIcon(card.fileType || '')}</span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-medium truncate">{card.fileName || 'Document'}</p>
+              <p className="text-xs text-(--text-soft)">
+                {card.fileType?.toUpperCase()} {card.fileSize && `· ${formatFileSize(card.fileSize)}`}
+              </p>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                if (card.fileData && card.fileName) {
+                  downloadFile(card.fileData, card.fileName);
+                }
+              }}
+              className="p-2 rounded-lg hover:bg-hover transition-colors shrink-0"
+              title="Download file"
+            >
+              <ArrowDownTrayIcon className="w-4 h-4" style={{ color: iconColor }} />
+            </button>
+          </div>
+          {card.content && (
+            <p className="text-xs text-(--text-soft) mt-2 line-clamp-2">
+              {card.content.substring(0, 100)}...
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // Default content preview (bookmark, snippet, command, note)
+  return (
+    <div className="text-sm font-mono text-(--foreground-soft) surface-card surface-card--subtle border border-transparent rounded-xl p-3 mb-3 line-clamp-3 overflow-hidden">
+      {cardType === 'bookmark' ? (
+        <a
+          href={card.content}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-accent hover:underline"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {card.content}
+        </a>
+      ) : (
+        <code className="whitespace-pre-wrap wrap-break-word">{card.content}</code>
+      )}
+    </div>
+  );
+}
+
+export function Card({ card, onClick, onStarToggle, className }: Readonly<CardProps>) {
   const Icon = cardTypeIcons[card.cardType[0] as keyof typeof cardTypeIcons];
   const { getIconColor } = useTheme();
   const iconColor = getIconColor(card.cardType[0]);
@@ -48,13 +143,13 @@ export function Card({ card, onClick, onStarToggle, className }: CardProps) {
     setLightboxOpen(true);
   };
 
-  const handleStarClick = async (e: React.MouseEvent) => {
+  const handleStarClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (isStarring || !onStarToggle) return;
     
     setIsStarring(true);
     try {
-      await onStarToggle(card.id, !card.starred);
+      onStarToggle(card.id, !card.starred);
     } finally {
       setIsStarring(false);
     }
@@ -62,10 +157,11 @@ export function Card({ card, onClick, onStarToggle, className }: CardProps) {
 
   return (
     <>
-      <div
+      <button
+        type="button"
         onClick={handleCardClick}
         className={cn(
-          'group relative glass glass--dense rounded-2xl p-4 transition-all duration-200',
+          'group relative glass glass--dense rounded-2xl p-4 transition-all duration-200 w-full text-left',
           'hover:-translate-y-1 hover:shadow-[0_28px_70px_color-mix(in_srgb,var(--accent-primary)_18%,transparent)]',
           'cursor-pointer border border-transparent',
           className
@@ -122,77 +218,11 @@ export function Card({ card, onClick, onStarToggle, className }: CardProps) {
       )}
 
       {/* Card Content Preview */}
-      {card.cardType[0] === 'image' && card.imageData ? (
-        <div 
-          className="relative mb-3 rounded-xl overflow-hidden group-hover:ring-2 ring-(--accent-primary) transition-all cursor-zoom-in"
-          onClick={handleImageClick}
-          title="Click to view full-screen"
-        >
-          <img
-            src={card.imageData.trim()}
-            alt={card.title}
-            className="w-full h-auto max-h-64 object-cover"
-            onError={(e) => {
-              // Hide broken data URIs to avoid noisy console errors
-              e.currentTarget.style.display = 'none';
-            }}
-          />
-          <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
-            <span className="text-xs px-2 py-1 rounded-full glass glass--dense text-white">
-              Click to zoom
-            </span>
-          </div>
-        </div>
-      ) : card.cardType[0] === 'doc' && card.fileData ? (
-        /* File Attachment for Doc Cards */
-        <div className="mb-3">
-          <div className="relative surface-card surface-card--subtle border border-transparent rounded-xl p-3 overflow-hidden">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl shrink-0">{getFileIcon(card.fileType || '')}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium truncate">{card.fileName || 'Document'}</p>
-                <p className="text-xs text-(--text-soft)">
-                  {card.fileType?.toUpperCase()} {card.fileSize && `· ${formatFileSize(card.fileSize)}`}
-                </p>
-              </div>
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (card.fileData && card.fileName) {
-                    downloadFile(card.fileData, card.fileName);
-                  }
-                }}
-                className="p-2 rounded-lg hover:bg-hover transition-colors shrink-0"
-                title="Download file"
-              >
-                <ArrowDownTrayIcon className="w-4 h-4" style={{ color: iconColor }} />
-              </button>
-            </div>
-            {card.content && (
-              <p className="text-xs text-(--text-soft) mt-2 line-clamp-2">
-                {card.content.substring(0, 100)}...
-              </p>
-            )}
-          </div>
-        </div>
-      ) : (
-        <div className="text-sm font-mono text-(--foreground-soft) surface-card surface-card--subtle border border-transparent rounded-xl p-3 mb-3 line-clamp-3 overflow-hidden">
-          {card.cardType[0] === 'bookmark' ? (
-            <a
-              href={card.content}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-accent hover:underline"
-              onClick={(e) => e.stopPropagation()}
-            >
-              {card.content}
-            </a>
-          ) : (
-            <code className="whitespace-pre-wrap wrap-break-word">{card.content}</code>
-          )}
-        </div>
-      )}
+      <CardContentPreview 
+        card={card}
+        iconColor={iconColor}
+        onImageClick={handleImageClick}
+      />
 
       {/* Tags */}
       {card.tags && card.tags.length > 0 && (
@@ -217,7 +247,7 @@ export function Card({ card, onClick, onStarToggle, className }: CardProps) {
       <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
         <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_top,var(--accent-soft),transparent_65%)]" />
       </div>
-    </div>
+    </button>
 
     {/* Lightbox for image cards */}
     {card.cardType[0] === 'image' && card.imageData && (

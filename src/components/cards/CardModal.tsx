@@ -1,7 +1,7 @@
 'use client';
 
 import { Fragment, useState, useEffect } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { XMarkIcon, BookmarkIcon, CodeBracketIcon, CommandLineIcon, DocumentTextIcon, PhotoIcon, ClipboardIcon, TrashIcon, MagnifyingGlassPlusIcon, PencilSquareIcon } from '@heroicons/react/24/outline';
 import type { Card as CardType } from '@/types';
 import { normalizeLanguage } from '@/lib/utils/syntax';
@@ -25,7 +25,7 @@ const cardTypeIcons = {
   note: PencilSquareIcon,
 };
 
-export function CardModal({ card, isOpen, onClose, onDelete }: CardModalProps) {
+export function CardModal({ card, isOpen, onClose, onDelete }: Readonly<CardModalProps>) {
   const { getIconColor } = useTheme();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -80,11 +80,86 @@ export function CardModal({ card, isOpen, onClose, onDelete }: CardModalProps) {
     }
   };
 
+  const renderCardContent = () => {
+    // Image Display
+    if (card.type === 'image' && card.imageData) {
+      return (
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-medium text-(--text-soft)">Image</h4>
+            <button
+              onClick={() => setLightboxOpen(true)}
+              className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border border-[color-mix(in_srgb,var(--card-border)_90%,transparent)] hover:bg-[color-mix(in_srgb,var(--hover-bg)_90%,transparent)] transition-colors"
+            >
+              <MagnifyingGlassPlusIcon className="w-4 h-4" />
+              <span>View Full-Screen</span>
+            </button>
+          </div>
+          <button
+            type="button"
+            className="relative rounded-xl overflow-hidden border border-[color-mix(in_srgb,var(--accent-border)_40%,transparent)] w-full bg-transparent p-0 cursor-pointer"
+            onClick={() => setLightboxOpen(true)}
+            aria-label={`View ${card.title} full-screen`}
+          >
+            <img
+              src={card.imageData.trim()}
+              alt={card.title}
+              className="w-full h-auto max-h-[70vh] object-contain bg-black/5"
+              onError={(e) => {
+                e.currentTarget.style.display = 'none';
+              }}
+            />
+          </button>
+        </div>
+      );
+    }
+
+    // Code/Command with Syntax Highlighting
+    if (shouldHighlight) {
+      return (
+        <CodeBlock
+          code={card.content}
+          language={normalizeLanguage(card.language ?? (card.type === 'command' ? 'bash' : 'javascript'))}
+          filename={card.url ?? undefined}
+        />
+      );
+    }
+
+    // Bookmark URL
+    if (card.type === 'bookmark') {
+      return (
+        <div className="space-y-2">
+          <h4 className="text-sm font-medium text-(--text-soft)">URL</h4>
+          <a
+            href={card.content}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-accent hover:underline transition-colors font-mono text-sm block break-all"
+          >
+            {card.content}
+          </a>
+        </div>
+      );
+    }
+
+    // Default content display (notes, docs, etc.)
+    return (
+      <div className="space-y-2">
+        <h4 className="text-sm font-medium text-(--text-soft)">Content</h4>
+        <div className="prose prose-invert max-w-none">
+          <pre className="whitespace-pre-wrap wrap-break-word text-sm font-mono surface-card surface-card--subtle border border-transparent px-4 py-3 rounded-xl">
+            {card.content}
+          </pre>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
+        <TransitionChild
           as={Fragment}
           enter="ease-out duration-300"
           enterFrom="opacity-0"
@@ -94,11 +169,11 @@ export function CardModal({ card, isOpen, onClose, onDelete }: CardModalProps) {
           leaveTo="opacity-0"
         >
           <div className="fixed inset-0 bg-black/70 backdrop-blur-md" aria-hidden="true" />
-        </Transition.Child>
+        </TransitionChild>
 
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
+            <TransitionChild
               as={Fragment}
               enter="ease-out duration-300"
               enterFrom="opacity-0 scale-95"
@@ -107,15 +182,15 @@ export function CardModal({ card, isOpen, onClose, onDelete }: CardModalProps) {
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-4xl transform overflow-hidden glass glass--dense rounded-3xl text-left align-middle shadow-[0_40px_120px_rgba(5,6,11,0.65)] transition-all">
+              <DialogPanel className="w-full max-w-4xl transform overflow-hidden glass glass--dense rounded-3xl text-left align-middle shadow-[0_40px_120px_rgba(5,6,11,0.65)] transition-all">
                 {/* Header */}
                 <div className="flex items-start justify-between px-6 py-5 glass-bar">
                   <div className="flex items-center gap-3 flex-1">
                     <Icon className="w-6 h-6" style={{ color: iconColor }} />
                     <div className="flex-1">
-                      <Dialog.Title className="text-xl font-semibold text-(--text-strong)">
+                      <DialogTitle className="text-xl font-semibold text-(--text-strong)">
                         {card.title}
-                      </Dialog.Title>
+                      </DialogTitle>
                       {card.description && (
                         <p className="text-sm text-(--text-soft) mt-1">
                           {card.description}
@@ -133,61 +208,8 @@ export function CardModal({ card, isOpen, onClose, onDelete }: CardModalProps) {
 
                 {/* Content */}
                 <div className="p-6 space-y-4">
-                  {/* Image Display */}
-                  {card.type === 'image' && card.imageData ? (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <h4 className="text-sm font-medium text-(--text-soft)">Image</h4>
-                        <button
-                          onClick={() => setLightboxOpen(true)}
-                          className="flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm border border-[color-mix(in_srgb,var(--card-border)_90%,transparent)] hover:bg-[color-mix(in_srgb,var(--hover-bg)_90%,transparent)] transition-colors"
-                        >
-                          <MagnifyingGlassPlusIcon className="w-4 h-4" />
-                          <span>View Full-Screen</span>
-                        </button>
-                      </div>
-                      <div className="relative rounded-xl overflow-hidden border border-[color-mix(in_srgb,var(--accent-border)_40%,transparent)]">
-                        <img
-                          src={card.imageData.trim()}
-                          alt={card.title}
-                          className="w-full h-auto max-h-[70vh] object-contain bg-black/5 cursor-pointer"
-                          onClick={() => setLightboxOpen(true)}
-                          title="Click to view full-screen"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                      </div>
-                    </div>
-                  ) : /* Code/Command with Syntax Highlighting */
-                  shouldHighlight ? (
-                    <CodeBlock
-                      code={card.content}
-                      language={normalizeLanguage(card.language || (card.type === 'command' ? 'bash' : 'javascript'))}
-                      filename={card.url || undefined}
-                    />
-                  ) : card.type === 'bookmark' ? (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-(--text-soft)">URL</h4>
-                      <a
-                        href={card.content}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-accent hover:underline transition-colors font-mono text-sm block break-all"
-                      >
-                        {card.content}
-                      </a>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <h4 className="text-sm font-medium text-(--text-soft)">Content</h4>
-                      <div className="prose prose-invert max-w-none">
-                        <pre className="whitespace-pre-wrap wrap-break-word text-sm font-mono surface-card surface-card--subtle border border-transparent px-4 py-3 rounded-xl">
-                          {card.content}
-                        </pre>
-                      </div>
-                    </div>
-                  )}
+                  {/* Card Content Display */}
+                  {renderCardContent()}
 
                   {/* Tags */}
                   {card.tags && card.tags.length > 0 && (
@@ -292,8 +314,8 @@ export function CardModal({ card, isOpen, onClose, onDelete }: CardModalProps) {
                     </button>
                   </div>
                 </div>
-              </Dialog.Panel>
-            </Transition.Child>
+              </DialogPanel>
+            </TransitionChild>
           </div>
         </div>
       </Dialog>

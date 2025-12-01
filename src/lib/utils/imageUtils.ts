@@ -148,7 +148,7 @@ export function downloadImage(base64: string, filename: string = 'image.jpg') {
   link.download = filename;
   document.body.appendChild(link);
   link.click();
-  document.body.removeChild(link);
+  link.remove();
 }
 
 /**

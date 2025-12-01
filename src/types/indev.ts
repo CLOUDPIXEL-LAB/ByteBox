@@ -13,15 +13,16 @@ export type Tag = {
   updatedAt: Date;
 };
 
+// Card type literals for type safety
+export type CardType = 'bookmark' | 'snippet' | 'command' | 'doc' | 'image' | 'note';
+
 // Forward declaration for circular reference
 export type Card = {
   url: undefined;
   id: string;
   // Raw DB type string, plus convenience array form used by UI
-  type: 'bookmark' | 'snippet' | 'command' | 'doc' | 'image' | 'note' | string;
-  cardType: [
-    'bookmark' | 'snippet' | 'command' | 'doc' | 'image' | 'note' | string
-  ];
+  type: CardType;
+  cardType: [CardType];
   title: string;
   description?: string | null;
   content: string;

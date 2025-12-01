@@ -33,7 +33,7 @@ export function FilterPanel({
   viewMode = 'all',
   onViewModeChange,
   className = '',
-}: FilterPanelProps) {
+}: Readonly<FilterPanelProps>) {
   const hasFilters = selectedTags.length > 0 || viewMode !== 'all';
 
   return (
@@ -197,7 +197,10 @@ export function FilterPanel({
       <div className="space-y-2">
         <p className="text-xs text-(--foreground-soft)">Filter by tags:</p>
         <div className="flex flex-wrap gap-2">
-          {availableTags.map((tag) => (
+          {availableTags.map((tag) => {
+          const isSelected = selectedTags.includes(tag.name);
+          const tagTextColor = isSelected ? undefined : (tag.color || undefined);
+          return (
             <button
               key={tag.id}
               onClick={() => onToggleTag(tag.name)}
@@ -205,23 +208,22 @@ export function FilterPanel({
                 px-3 py-1.5 rounded-lg text-sm font-medium
                 transition-all duration-200
                 ${
-                  selectedTags.includes(tag.name)
+                  isSelected
                     ? 'accent-gradient shadow-lg shadow-[color-mix(in_srgb,var(--accent-primary)_30%,transparent)]'
                     : 'surface-card surface-card--subtle text-(--foreground-soft) hover:text-(--foreground) border border-[color-mix(in_srgb,var(--card-border)_90%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_40%,transparent)]'
                 }
               `}
               style={{
-                borderColor: selectedTags.includes(tag.name)
+                borderColor: isSelected
                   ? 'transparent'
                   : `${tag.color}55`,
-                color: selectedTags.includes(tag.name)
-                  ? undefined
-                  : tag.color ? `${tag.color}` : undefined,
+                color: tagTextColor,
               }}
             >
               {tag.name}
             </button>
-          ))}
+          );
+        })}
         </div>
       </div>
     </div>

@@ -12,12 +12,12 @@ import { Card } from './Card';
 import type { Card as CardType } from '@/types';
 
 interface DraggableCardProps {
-  card: CardType;
-  onClick?: () => void;
-  onStarToggle?: (cardId: string, starred: boolean) => void;
+  readonly card: CardType;
+  readonly onClick?: () => void;
+  readonly onStarToggle?: (cardId: string, starred: boolean) => void;
 }
 
-export function DraggableCard({ card, onClick, onStarToggle }: DraggableCardProps) {
+export function DraggableCard({ card, onClick, onStarToggle }: Readonly<DraggableCardProps>) {
   const {
     attributes,
     listeners,

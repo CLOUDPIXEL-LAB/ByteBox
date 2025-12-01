@@ -25,7 +25,7 @@ export function CategoryColumn({
   onCardClick,
   onAddCard,
   className,
-}: CategoryColumnProps) {
+}: Readonly<CategoryColumnProps>) {
   return (
     <div
       className={cn(
@@ -114,7 +114,7 @@ export function Board({
   onCardClick,
   onAddCard,
   className,
-}: BoardProps) {
+}: Readonly<BoardProps>) {
   return (
     <div className={cn('w-full h-full', className)}>
       <div className="grid gap-4 pb-4 h-full" style={{ gridTemplateColumns: `repeat(${categories.length}, minmax(280px, 1fr))` }}>

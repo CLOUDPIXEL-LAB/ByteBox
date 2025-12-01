@@ -6,7 +6,7 @@
 'use client';
 
 import { Fragment, useEffect, useRef, useState } from 'react';
-import { Dialog, Transition } from '@headlessui/react';
+import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
 import { XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import { processImage, validateImageFile } from '@/lib/utils/imageUtils';
@@ -28,7 +28,7 @@ export default function CreateCardModal({
   categories,
   allTags,
   preselectedCategoryId,
-}: CreateCardModalProps) {
+}: Readonly<CreateCardModalProps>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [type, setType] = useState<'bookmark' | 'snippet' | 'command' | 'doc' | 'image' | 'note'>('snippet');
   const [title, setTitle] = useState('');
@@ -110,7 +110,7 @@ export default function CreateCardModal({
     else if (type === 'doc') handleDocSelect(file);
   };
 
-  const onDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const onDrop = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
     setIsDragging(false);
     const file = e.dataTransfer.files?.[0];
@@ -173,10 +173,121 @@ export default function CreateCardModal({
     }
   };
 
+  const renderContentInput = () => {
+    if (type === 'image') {
+      return (
+        <div>
+          <span id="image-upload-label" className="block text-xs font-medium mb-2">Upload Image</span>
+          <button
+            type="button"
+            onDrop={onDrop}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            className={cn(
+              'relative w-full flex flex-col items-center justify-center p-8 rounded-xl cursor-pointer transition-all border-2 border-dashed',
+              isDragging
+                ? 'border-[color-mix(in_srgb,var(--accent-border)_90%,transparent)] bg-accent-soft/30 scale-[1.02]'
+                : 'border-[color-mix(in_srgb,var(--card-border)_70%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_60%,transparent)] surface-card surface-card--subtle'
+            )}
+            onClick={() => fileInputRef.current?.click()}
+            aria-labelledby="image-upload-label"
+          >
+            <PhotoIcon className="w-10 h-10 mb-2" />
+            <p className="text-sm">Click or drag an image here</p>
+            <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileInput} />
+            <div className="absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_center,var(--accent-soft),transparent_70%)] opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
+          </button>
+
+          {imageData && (
+            <div className="mt-3 rounded-xl overflow-hidden border border-[color-mix(in_srgb,var(--accent-border)_40%,transparent)]">
+              <img src={imageData} alt={title || 'Uploaded image'} className="w-full h-auto max-h-[60vh] object-contain bg-black/5" />
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (type === 'doc') {
+      return (
+        <div className="space-y-3">
+          <span id="doc-upload-label" className="block text-xs font-medium">Upload File <span className="text-(--text-soft)">(Markdown or PDF, max 10MB)</span></span>
+          <button
+            type="button"
+            onDrop={onDrop}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setIsDragging(true);
+            }}
+            onDragLeave={() => setIsDragging(false)}
+            className={cn(
+              'relative w-full flex flex-col items-center justify-center p-8 rounded-xl cursor-pointer transition-all border-2 border-dashed',
+              isDragging
+                ? 'border-[color-mix(in_srgb,var(--accent-border)_90%,transparent)] bg-accent-soft/30 scale-[1.02]'
+                : 'border-[color-mix(in_srgb,var(--card-border)_70%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_60%,transparent)] surface-card surface-card--subtle'
+            )}
+            onClick={() => fileInputRef.current?.click()}
+            aria-labelledby="doc-upload-label"
+          >
+            <span className="text-5xl mb-2">{getFileIcon(fileType || 'text/markdown')}</span>
+            <p className="text-sm font-medium">Click or drag file here</p>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".md,.markdown,application/pdf,text/markdown,text/plain"
+              className="hidden"
+              onChange={handleFileInput}
+            />
+            <div className="absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_center,var(--accent-soft),transparent_70%)] opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
+          </button>
+
+          {fileData && (
+            <div className="p-4 rounded-xl border border-[color-mix(in_srgb,var(--accent-border)_60%,transparent)] surface-card surface-card--subtle">
+              <div className="flex items-start gap-3">
+                <span className="text-3xl shrink-0">{getFileIcon(fileType)}</span>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-sm truncate">{fileName}</p>
+                  <p className="text-xs text-(--text-soft) mt-1">{fileType?.toUpperCase()} · {formatFileSize(fileSize)}</p>
+                  {content && <p className="text-xs text-(--text-soft) mt-2 line-clamp-3">{content.substring(0, 150)}...</p>}
+                </div>
+                <button
+                  type="button"
+                  onClick={resetFileState}
+                  className="p-2 rounded-lg hover:bg-hover transition-colors shrink-0"
+                >
+                  <XMarkIcon className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    // Default: bookmark, snippet, command, note
+    const labelText = type === 'bookmark' ? 'URL' : 'Content';
+    return (
+      <div>
+        <label htmlFor="card-content" className="block text-xs font-medium mb-1">{labelText}</label>
+        <textarea
+          id="card-content"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+          placeholder={type === 'bookmark' ? 'https://example.com' : 'Enter content...'}
+          rows={6}
+          className={cn('w-full px-3 py-2 rounded-lg font-mono text-sm bg-background border border-card-border focus:outline-none focus:ring-2')}
+          required={!imageData && !fileData}
+        />
+      </div>
+    );
+  };
+
   return (
     <Transition appear show={isOpen} as={Fragment}>
       <Dialog as="div" className="relative z-50" onClose={onClose}>
-        <Transition.Child
+        <TransitionChild
           as={Fragment}
           enter="ease-out duration-200"
           enterFrom="opacity-0"
@@ -186,11 +297,11 @@ export default function CreateCardModal({
           leaveTo="opacity-0"
         >
           <div className="fixed inset-0 bg-black/70 backdrop-blur-sm" aria-hidden="true" />
-        </Transition.Child>
+        </TransitionChild>
 
         <div className="fixed inset-0 overflow-y-auto">
           <div className="flex min-h-full items-center justify-center p-4 text-center">
-            <Transition.Child
+            <TransitionChild
               as={Fragment}
               enter="ease-out duration-200"
               enterFrom="opacity-0 scale-95"
@@ -199,10 +310,10 @@ export default function CreateCardModal({
               leaveFrom="opacity-100 scale-100"
               leaveTo="opacity-0 scale-95"
             >
-              <Dialog.Panel className="w-full max-w-3xl transform overflow-hidden glass glass--dense rounded-3xl text-left align-middle shadow-[0_40px_120px_rgba(5,6,11,0.65)]">
+              <DialogPanel className="w-full max-w-3xl transform overflow-hidden glass glass--dense rounded-3xl text-left align-middle shadow-[0_40px_120px_rgba(5,6,11,0.65)]">
                 {/* Header */}
                 <div className="flex items-center justify-between px-6 py-4 glass-bar">
-                  <Dialog.Title className="text-lg font-semibold text-(--text-strong)">Create New Card</Dialog.Title>
+                  <DialogTitle className="text-lg font-semibold text-(--text-strong)">Create New Card</DialogTitle>
                   <button onClick={onClose} className="p-2 rounded-lg hover:bg-[color-mix(in_srgb,var(--hover-bg)_90%,transparent)]">
                     <XMarkIcon className="w-5 h-5" />
                   </button>
@@ -215,8 +326,9 @@ export default function CreateCardModal({
                   {/* Type & Category */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium mb-1">Type</label>
+                      <label htmlFor="card-type" className="block text-xs font-medium mb-1">Type</label>
                       <select
+                        id="card-type"
                         value={type}
                         onChange={(e) => {
                           const next = e.target.value as typeof type;
@@ -234,8 +346,9 @@ export default function CreateCardModal({
                       </select>
                     </div>
                     <div>
-                      <label className="block text-xs font-medium mb-1">Category</label>
+                      <label htmlFor="card-category" className="block text-xs font-medium mb-1">Category</label>
                       <select
+                        id="card-category"
                         value={categoryId}
                         onChange={(e) => setCategoryId(e.target.value)}
                         className="w-full rounded-lg border px-3 py-2 bg-background"
@@ -252,8 +365,9 @@ export default function CreateCardModal({
                   {/* Title & Description */}
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="block text-xs font-medium mb-1">Title</label>
+                      <label htmlFor="card-title" className="block text-xs font-medium mb-1">Title</label>
                       <input
+                        id="card-title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
                         className="w-full rounded-lg border px-3 py-2 bg-background"
@@ -261,119 +375,25 @@ export default function CreateCardModal({
                       />
                     </div>
                     <div>
-                      <label className="block text-xs font-medium mb-1">Description</label>
-                      <input value={description} onChange={(e) => setDescription(e.target.value)} className="w-full rounded-lg border px-3 py-2 bg-background" />
+                      <label htmlFor="card-description" className="block text-xs font-medium mb-1">Description</label>
+                      <input id="card-description" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full rounded-lg border px-3 py-2 bg-background" />
                     </div>
                   </div>
 
                   {/* Conditional Inputs */}
-                  {type === 'image' ? (
-                    <div>
-                      <label className="block text-xs font-medium mb-2">Upload Image</label>
-                      <div
-                        onDrop={onDrop}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          setIsDragging(true);
-                        }}
-                        onDragLeave={() => setIsDragging(false)}
-                        className={cn(
-                          'relative flex flex-col items-center justify-center p-8 rounded-xl cursor-pointer transition-all border-2 border-dashed',
-                          isDragging
-                            ? 'border-[color-mix(in_srgb,var(--accent-border)_90%,transparent)] bg-accent-soft/30 scale-[1.02]'
-                            : 'border-[color-mix(in_srgb,var(--card-border)_70%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_60%,transparent)] surface-card surface-card--subtle'
-                        )}
-                        onClick={() => fileInputRef.current?.click()}
-                        title="Click or drop an image"
-                      >
-                        <PhotoIcon className="w-10 h-10 mb-2" />
-                        <p className="text-sm">Click or drag an image here</p>
-                        <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleFileInput} />
-                        <div className="absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_center,var(--accent-soft),transparent_70%)] opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
-                      </div>
-
-                      {imageData && (
-                        <div className="mt-3 rounded-xl overflow-hidden border border-[color-mix(in_srgb,var(--accent-border)_40%,transparent)]">
-                          <img src={imageData} alt={title || 'Uploaded image'} className="w-full h-auto max-h-[60vh] object-contain bg-black/5" />
-                        </div>
-                      )}
-                    </div>
-                  ) : type === 'doc' ? (
-                    <div className="space-y-3">
-                      <label className="block text-xs font-medium">Upload File <span className="text-(--text-soft)">(Markdown or PDF, max 10MB)</span></label>
-                      <div
-                        onDrop={onDrop}
-                        onDragOver={(e) => {
-                          e.preventDefault();
-                          setIsDragging(true);
-                        }}
-                        onDragLeave={() => setIsDragging(false)}
-                        className={cn(
-                          'relative flex flex-col items-center justify-center p-8 rounded-xl cursor-pointer transition-all border-2 border-dashed',
-                          isDragging
-                            ? 'border-[color-mix(in_srgb,var(--accent-border)_90%,transparent)] bg-accent-soft/30 scale-[1.02]'
-                            : 'border-[color-mix(in_srgb,var(--card-border)_70%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_60%,transparent)] surface-card surface-card--subtle'
-                        )}
-                        onClick={() => fileInputRef.current?.click()}
-                        title="Click or drop a file"
-                      >
-                        <span className="text-5xl mb-2">{getFileIcon(fileType || 'text/markdown')}</span>
-                        <p className="text-sm font-medium">Click or drag file here</p>
-                        <input
-                          ref={fileInputRef}
-                          type="file"
-                          accept=".md,.markdown,application/pdf,text/markdown,text/plain"
-                          className="hidden"
-                          onChange={handleFileInput}
-                        />
-                        <div className="absolute inset-0 rounded-xl bg-[radial-gradient(circle_at_center,var(--accent-soft),transparent_70%)] opacity-0 hover:opacity-100 transition-opacity pointer-events-none" />
-                      </div>
-
-                      {fileData && (
-                        <div className="p-4 rounded-xl border border-[color-mix(in_srgb,var(--accent-border)_60%,transparent)] surface-card surface-card--subtle">
-                          <div className="flex items-start gap-3">
-                            <span className="text-3xl shrink-0">{getFileIcon(fileType)}</span>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-medium text-sm truncate">{fileName}</p>
-                              <p className="text-xs text-(--text-soft) mt-1">{fileType?.toUpperCase()} · {formatFileSize(fileSize)}</p>
-                              {content && <p className="text-xs text-(--text-soft) mt-2 line-clamp-3">{content.substring(0, 150)}...</p>}
-                            </div>
-                            <button
-                              type="button"
-                              onClick={resetFileState}
-                              className="p-2 rounded-lg hover:bg-hover transition-colors shrink-0"
-                            >
-                              <XMarkIcon className="w-4 h-4" />
-                            </button>
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  ) : (
-                    <div>
-                      <label className="block text-xs font-medium mb-1">{type === 'bookmark' ? 'URL' : 'Content'}</label>
-                      <textarea
-                        value={content}
-                        onChange={(e) => setContent(e.target.value)}
-                        placeholder={type === 'bookmark' ? 'https://example.com' : 'Enter content...'}
-                        rows={6}
-                        className={cn('w-full px-3 py-2 rounded-lg font-mono text-sm bg-background border border-card-border focus:outline-none focus:ring-2')}
-                        required={!imageData && !fileData}
-                      />
-                    </div>
-                  )}
+                  {renderContentInput()}
 
                   {/* Language (snippets/commands) */}
                   {(type === 'snippet' || type === 'command') && (
                     <div>
-                      <label className="block text-xs font-medium mb-1">Language</label>
-                      <input value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full rounded-lg border px-3 py-2 bg-background" />
+                      <label htmlFor="card-language" className="block text-xs font-medium mb-1">Language</label>
+                      <input id="card-language" value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full rounded-lg border px-3 py-2 bg-background" />
                     </div>
                   )}
 
                   {/* Tags */}
-                  <div>
-                    <label className="block text-xs font-medium mb-2">Tags</label>
+                  <fieldset>
+                    <legend className="block text-xs font-medium mb-2">Tags</legend>
                     <div className="flex flex-wrap gap-2">
                       {allTags.map((tag) => (
                         <button
@@ -391,7 +411,7 @@ export default function CreateCardModal({
                         </button>
                       ))}
                     </div>
-                  </div>
+                  </fieldset>
 
                   {/* Footer */}
                   <div className="flex items-center justify-end gap-2 pt-3 border-t border-[color-mix(in_srgb,var(--card-border)_80%,transparent)]">
@@ -403,8 +423,8 @@ export default function CreateCardModal({
                     </button>
                   </div>
                 </form>
-              </Dialog.Panel>
-            </Transition.Child>
+              </DialogPanel>
+            </TransitionChild>
           </div>
         </div>
       </Dialog>

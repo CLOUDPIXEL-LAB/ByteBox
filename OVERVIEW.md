@@ -1,7 +1,7 @@
 # 📚 ByteBox – Project Overview
 
-**Last Updated**: November 30, 2025  
-**Version**: 1.5.0  
+**Last Updated**: December 1, 2025  
+**Version**: 2.0.0  
 **Author**: [Pink Pixel](https://pinkpixel.dev)  
 **License**: Apache 2.0  
 **Status**: ✅ Stable & Complete
@@ -32,14 +32,14 @@
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
-| **Framework** | Next.js 16 (App Router) | React-based SSR/SSG framework with modern routing |
-| **Language** | TypeScript 5 | Type safety and better DX |
-| **Styling** | Tailwind CSS 4.1.16 | Utility-first CSS framework |
+| **Framework** | Next.js 16.0.6 (App Router) | React-based SSR/SSG framework with modern routing |
+| **Language** | TypeScript 5.9.x | Type safety and better DX |
+| **Styling** | Tailwind CSS 4.x | Utility-first CSS framework |
 | **Database** | SQLite + Prisma 7.0.1 | Local lightweight database with ORM (better-sqlite3 adapter) |
 | **Drag & Drop** | @dnd-kit | Accessible drag-and-drop library |
-| **Syntax Highlighting** | Shiki 1.26.0 | Code highlighting with VS Code themes |
-| **UI Components** | @headlessui/react | Accessible unstyled components |
-| **Icons** | @heroicons/react | Beautiful SVG icons |
+| **Syntax Highlighting** | Shiki 3.17.0 | Code highlighting with VS Code themes |
+| **UI Components** | @headlessui/react 2.2.9 | Accessible unstyled components |
+| **Icons** | @heroicons/react 2.2.0 | Beautiful SVG icons |
 
 ### Architecture Diagram (Conceptual)
 
@@ -55,7 +55,8 @@
 │  └─────────────────────────────────────────────────────┘  │
 │                           ↕                                 │
 │  ┌─────────────────────────────────────────────────────┐  │
-│  │  API Routes (/api/cards, /api/export, /api/import) │  │
+│  │  API Routes (/api/cards, /api/settings,            │  │
+│  │              /api/export, /api/import)              │  │
 │  └─────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
                            ↕
@@ -69,7 +70,8 @@
 ┌─────────────────────────────────────────────────────────────┐
 │               SQLite Database (dev.db)                      │
 │  ┌─────────────────────────────────────────────────────┐  │
-│  │  Tables: Category, Tag, Card, _CardToTag           │  │
+│  │  Tables: Category, Tag, Card, UserSettings,        │  │
+│  │          _CardToTag (join table)                    │  │
 │  └─────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
 ```
@@ -81,9 +83,9 @@
 A cohesive customization stack that keeps the UI consistent while giving users deep control over color, texture, and type.
 
 - **Theme Registry (`src/lib/themeRegistry.ts`)** – Curated accent palettes (Byte Classic, Neon Night, Rainbow Sprint, Midnight Carbon, Sunset Espresso, Pastel Haze) and icon palettes (Neon Grid, Carbon Tech, Espresso Circuit, Rainbow Loop, Pink Pulse, Custom Single) plus gradient presets and built-in wallpaper data URIs.
-- **Theme Context (`src/contexts/ThemeContext.tsx`)** – Loads settings from the database API on mount (with localStorage for instant hydration fallback), applies CSS variables (`--accent-*`, `--icon-*`, `--glass-*`, `--font-*`, background tokens), and keeps uploads/gradients/solids/presets in sync. Saves changes to both localStorage and API with 500ms debouncing.
+- **Theme Context (`src/contexts/ThemeContext.tsx`)** – Loads settings from the database API on mount (with localStorage for instant hydration fallback), applies CSS variables (`--accent-*`, `--icon-*`, `--glass-*`, `--font-*`, background tokens), and keeps uploads/gradients/solids/presets in sync. Saves changes to both localStorage and API with 500ms debouncing. Supports 17 UI fonts and 13 mono fonts including stylized options.
 - **Global Tokens (`src/app/globals.css`)** – Glass utilities (`.glass`, `.glass--dense`), surface helpers, accent gradients, and configurable background stack (custom gradient, preset wallpaper, or user upload).
-- **Settings UI (`src/app/settings/page.tsx`)** – Light/dark toggle, glass slider, accent/icon pickers, custom accent builder (2–6 colors), solid + gradient background editors with angle control, wallpaper library/upload, UI + mono font selectors, and named presets for saving/loading the whole appearance.
+- **Settings UI (`src/app/settings/page.tsx`)** – Light/dark toggle, glass slider, accent/icon pickers, custom accent builder (2–6 colors), solid + gradient background editors with angle control, wallpaper library (12 built-in wallpapers) plus upload support, UI + mono font selectors, and named presets for saving/loading the whole appearance. All settings database-backed with localStorage as hydration fallback.
 - **Component Integration** – Layout, cards, filters, search, and stats all subscribe to the theme hooks so changes propagate instantly across the app.
 
 All customizations are database-backed with localStorage as a fast hydration layer, ensuring consistent rendering on first paint and persistence across browser sessions.
@@ -93,7 +95,7 @@ All customizations are database-backed with localStorage as a fast hydration lay
 # 📁 Project Structure
 
 ```
-dev-dashboard/
+bytebox/
 ├── src/
 │   ├── app/                           # Next.js App Router
 │   │   ├── api/                       # API routes
@@ -119,39 +121,41 @@ dev-dashboard/
 │   │
 │   ├── components/
 │   │   ├── cards/                     # Card-related components
-│   │   │   ├── Card.tsx               # Card display component
-│   │   │   ├── CardModal.tsx          # Card create/edit modal
-│   │   │   ├── CreateCardModal.tsx    # New card creation modal with full form
+│   │   │   ├── Card.tsx               # Card display component with star toggle
+│   │   │   ├── CardModal.tsx          # Card view/edit modal with copy & delete
+│   │   │   ├── CreateCardModal.tsx    # New card creation modal with file upload
 │   │   │   └── DraggableCard.tsx      # Card with @dnd-kit drag wrapper
 │   │   ├── layout/                    # Layout components
 │   │   │   ├── AppLayout.tsx          # Main app shell (sidebar, header, collapsible with icon/banner logo)
 │   │   │   ├── Board.tsx              # Kanban board wrapper (drag context)
-│   │   │   ├── CategoryColumn.tsx     # Single category column
-│   │   │   └── DraggableBoard.tsx     # Board with @dnd-kit drop zones
+│   │   │   └── DraggableBoard.tsx     # Board with @dnd-kit drop zones and CSS Grid columns
 │   │   └── ui/                        # Reusable UI components
 │   │       ├── CodeBlock.tsx          # Syntax-highlighted code display
 │   │       ├── ExportImport.tsx       # Export/import UI controls
-│   │       ├── FilterPanel.tsx        # Tag filtering sidebar
+│   │       ├── FilterPanel.tsx        # Tag filtering sidebar with view mode buttons
 │   │       ├── Lightbox.tsx           # Full-screen image preview modal
 │   │       ├── SearchBar.tsx          # Global search input (Cmd+K)
 │   │       ├── Tag.tsx                # Tag badge component
-│   │       └── ThemeToggle.tsx        # Light/dark toggle with accent-aware styles
+│   │       ├── ThemeToggle.tsx        # Light/dark toggle with accent-aware styles
+│   │       └── ViewModeSelector.tsx   # View mode dropdown (All/Recent/Starred/By Tag)
 │   │
 │   ├── contexts/
-│   │   └── ThemeContext.tsx           # Theme, accent, icon, and wallpaper controller
+│   │   └── ThemeContext.tsx           # Theme, accent, icon, background, font, and preset controller
 │   │
 │   ├── hooks/
-│   │   └── useSearch.ts               # Search & filter logic hook
+│   │   └── useSearch.ts               # Search, filter, view mode, and starred logic hook
 │   │
 │   ├── lib/
 │   │   ├── db/
+│   │   │   ├── index.ts               # Database exports
 │   │   │   ├── prisma.ts              # Prisma client singleton
-│   │   │   └── queries.ts             # Database query functions (including createCardWithTags, deleteAllData)
-│   │   ├── themeRegistry.ts           # Accent/icon palette definitions
+│   │   │   └── queries.ts             # Database query functions (createCardWithTags, toggleCardStarred, etc.)
+│   │   ├── themeRegistry.ts           # Accent/icon palettes, gradients, wallpapers, fonts
 │   │   └── utils/
-│   │       ├── cn.ts                  # Tailwind class merging utility
-│   │       ├── formatDate.ts          # Date formatting
-│   │       ├── generateId.ts          # Unique ID generation
+│   │       ├── fileUtils.ts           # File processing (PDF/Markdown extraction, validation)
+│   │       ├── imageUtils.ts          # Image processing (compress, validate, copy, download)
+│   │       ├── index.ts               # Utility exports (cn, formatDate, etc.)
+│   │       └── syntax.ts              # Shiki syntax highlighting setup
 │   │       ├── imageUtils.ts          # Image processing (compress, validate, copy, download)
 │   │       ├── syntax.ts              # Shiki syntax highlighting setup
 │   │       └── truncate.ts            # Text truncation utility
@@ -167,25 +171,22 @@ dev-dashboard/
 │           └── migration.sql          # Initial migration SQL
 │
 ├── public/
-│   ├── favicon.png                    # Favicon
-│   ├── icon.png                       # Square logo icon (used in collapsed sidebar)
-│   ├── logo_banner.png                # Full logo banner (used in expanded sidebar)
-│   └── placeholder.png                # Placeholder image asset
+│   └── wallpapers/                    # 12 built-in wallpapers (Abstract, Cyber, Dark, Gradient, etc.)
 │
 ├── .env                               # Environment variables (DATABASE_URL)
 ├── .env.example                       # Example env file (for contributors)
-├── .eslintrc.json                     # ESLint configuration
+├── eslint.config.mjs                  # ESLint flat config (v9+)
 ├── .gitignore                         # Git ignore rules
 ├── CHANGELOG.md                       # Version history and release notes
-├── glass_theming_guide.md             # Detailed glass + theme implementation guide
 ├── CONTRIBUTING.md                    # Contribution guidelines
 ├── LICENSE                            # Apache 2.0 license
 ├── next.config.ts                     # Next.js configuration
 ├── OVERVIEW.md                        # This file (project architecture)
 ├── package.json                       # NPM dependencies and scripts
+├── postcss.config.mjs                 # PostCSS configuration
+├── prisma.config.ts                   # Prisma configuration (better-sqlite3 adapter)
 ├── README.md                          # Project introduction and usage guide
 ├── ROADMAP.md                         # Development plan and completed tasks
-├── tailwind.config.ts                 # Tailwind CSS configuration
 └── tsconfig.json                      # TypeScript configuration
 ```
 
@@ -210,11 +211,13 @@ dev-dashboard/
         └──▶│      Card        │◀─┘
             ├──────────────────┤
             │ id (String PK)   │
+            │ type (String)    │
             │ title (String)   │
             │ description (?)  │
             │ content (?)      │
             │ language (?)     │
             │ imageData (?)    │
+            │ starred (Bool)   │
             │ order (Int)      │
             │ categoryId (FK)  │
             │ createdAt (Date) │
@@ -345,7 +348,7 @@ dev-dashboard/
 
 ### 4️⃣ Syntax Highlighting (Shiki)
 
-**Technology**: Shiki 1.26.0 (VS Code-powered highlighter)
+**Technology**: Shiki 3.17.0 (VS Code-powered highlighter)
 
 **Implementation**:
 - `syntax.ts` initializes Shiki with multiple languages
@@ -549,10 +552,11 @@ dev-dashboard/
 
 ### Typography
 
-- **Font Family**: System font stack (sans-serif)
+- **UI Fonts**: 17 customizable fonts (Inter, Geist, Poppins, Raleway, Outfit, etc.)
+- **Mono Fonts**: 13 monospace options (JetBrains Mono, Fira Code, SF Mono, etc.)
 - **Headings**: Bold, uppercase for section titles
 - **Body**: Regular weight, 1.5 line height
-- **Code**: Monospace font for code blocks
+- **Code**: Selected mono font for code blocks and technical content
 
 ### Spacing
 

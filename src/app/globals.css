@@ -392,8 +392,9 @@ strong {
 
 /* Keyboard shortcut badge */
 .view-mode-dropdown-kbd {
-  background-color: rgba(148, 163, 184, 0.15);
-  color: rgba(248, 250, 252, 0.7);
+  background-color: rgba(30, 41, 59, 0.8);
+  color: rgba(248, 250, 252, 0.95);
+  border: 1px solid rgba(148, 163, 184, 0.32);
 }
 
 /* Footer section */
@@ -403,5 +404,5 @@ strong {
 }
 
 .view-mode-dropdown-hint {
-  color: rgba(248, 250, 252, 0.7);
+  color: rgba(248, 250, 252, 0.95);
 }

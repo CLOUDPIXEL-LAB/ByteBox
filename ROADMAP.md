@@ -1,8 +1,8 @@
 # ByteBox Development Roadmap 🗺️
 
-**Last Updated:** November 29, 2025  
-**Current Version:** 1.5.0  
-**Next Version:** 1.6.0 (Planned - Phase 4)  
+**Last Updated:** December 1, 2025  
+**Current Version:** 2.0.0  
+**Next Version:** 2.1.0 (Planned - Phase 4)  
 **Status:** 🚀 Active Development
 
 ---
@@ -13,15 +13,15 @@ ByteBox is a **developer's personal command center** - a beautiful, glassmorphic
 
 ---
 
-## ✅ Completed Features (v1.0.0 - v1.5.0)
+## ✅ Completed Features (v1.0.0 - v2.0.0)
 
 ### Core Foundation ✨
-- [x] **Next.js 16** with App Router & React 19
-- [x] **TypeScript 5** with strict type checking
-- [x] **Tailwind CSS 4.1.16** utility-first styling
-- [x] **Prisma 6.18.0** ORM with SQLite database
+- [x] **Next.js 16.0.6** with App Router & React 19.2.0
+- [x] **TypeScript 5.9.x** with strict type checking
+- [x] **Tailwind CSS 4.x** utility-first styling
+- [x] **Prisma 7.0.1** ORM with SQLite database (better-sqlite3 adapter)
 - [x] **@dnd-kit** drag-and-drop system
-- [x] **Shiki 3.13.0** syntax highlighting (35+ languages)
+- [x] **Shiki 3.17.0** syntax highlighting (35+ languages)
 
 ### Dashboard & Organization 📦
 - [x] **6 Category System** (Bookmarks, Code Snippets, Commands, Documentation, Images, Notes)
@@ -53,8 +53,13 @@ ByteBox is a **developer's personal command center** - a beautiful, glassmorphic
 - [x] **6 Accent Palettes** - Byte Classic, Neon Night, Rainbow Sprint, Midnight Carbon, Sunset Espresso, Pastel Haze
 - [x] **6 Icon Palettes** - Neon Grid, Carbon Tech, Espresso Circuit, Rainbow Loop, Pink Pulse, Custom Single
 - [x] **Light/Dark Mode** - System detection + manual toggle
-- [x] **Wallpaper Support** - Optional background uploader with preview
-- [x] **Theme Persistence** - All settings stored in localStorage
+- [x] **Wallpaper Support** - 12 built-in wallpapers + custom upload with preview
+- [x] **Theme Persistence** - All settings database-backed (survives browser clears)
+- [x] **Custom Accent Themes** - Build and save 2-6 color palettes
+- [x] **8 Gradient Presets** - Aurora, Sunset Glow, Ocean Depth, Forest Mist, Cosmic Purple, Midnight Slate, Warm Earth, Cyber Pink
+- [x] **17 UI Fonts** - System, Inter, Geist, Roboto, Poppins, and stylized options
+- [x] **13 Mono Fonts** - Geist Mono, JetBrains, Fira Code, and more
+- [x] **Settings Presets** - Save/load entire appearance as named profiles
 
 ### Image Features 🖼️
 - [x] **Image Card Type** - Base64 storage (max 1920×1920, 5MB limit)
@@ -72,98 +77,23 @@ ByteBox is a **developer's personal command center** - a beautiful, glassmorphic
 
 ## 🚧 In Progress Features
 
-_No features currently in progress. Phase 2 complete, ready for Phase 3!_
+_No features currently in progress. Ready for Phase 4!_
 
 ---
 
 ## ✅ Recently Completed
 
-### Phase 2: Starred/Favorited Cards ⭐
-**Status:** ✅ Complete (2025-11-29)  
-**Priority:** Medium  
-**Released:** v1.4.0
-
-Implemented starring functionality for cards with visual star toggle, dashboard filtering, and keyboard shortcuts.
-
-### Phase 1: File Upload for Documentation 📄
-**Status:** ✅ Complete (2025-10-24)  
+### v2.0.0: Database-Backed Settings & Appearance Overhaul 🎨
+**Status:** ✅ Complete (2025-12-01)  
 **Priority:** High  
-**Released:** v1.3.0
+**Released:** v2.0.0
 
-#### Goals
-Enable users to upload `.md` and `.pdf` files to Documentation cards for easy reference.
-
-#### Technical Approach
-- **File Types:** Markdown (.md), PDF (.pdf)
-- **Size Limit:** 5-10MB per file
-- **Storage:** Base64 encoding in database (similar to images)
-- **Processing:**
-  - Extract text from PDFs for searchability (use `pdf-parse` or similar)
-  - Parse markdown for preview rendering
-  - Keep original file for download
-- **UI Updates:**
-  - File upload in `CreateCardModal` for doc type
-  - Preview button in `CardModal` (markdown renderer + PDF viewer)
-  - Download button (like images)
-  - File metadata display (name, size, type)
-
-#### Database Changes
-- Add `fileData?: string` field to Card model (base64)
-- Add `fileMetadata?: { name, size, type }` JSON field
-
-#### Files to Update
-- `prisma/schema.prisma` - Add file fields
-- `src/types/index.ts` - Extend Card interface
-- `src/lib/utils/fileUtils.ts` - NEW file processing utilities
-- `src/components/cards/CreateCardModal.tsx` - File upload UI
-- `src/components/cards/CardModal.tsx` - File preview/download
-- `src/app/api/cards/route.ts` - Handle fileData in POST
-
-#### Subtasks
-- [x] Add fileData and file metadata fields to schema
-- [x] Create migration and update Prisma client
-- [x] Build file processing utilities (validate, extract, compress)
-- [x] Add file upload UI to CreateCardModal
-- [x] Build PDF text extraction with lazy-loaded pdf-parse
-- [x] Add file display to Card component
-- [x] Update API to handle file data
-- [x] Add file size validation and error handling
-- [x] Extracted text stored in content field (searchable)
-- [x] Build passes and typechecks clean
-
----
-
-### Phase 2: Starred/Favorited Cards ⭐
-**Status:** ✅ Complete  
-**Priority:** Medium  
-**Released:** v1.4.0
-
-#### Goals
-Allow users to "star" important cards for quick access.
-
-#### Technical Approach
-- Add `starred: boolean` field to Card model
-- Star toggle button in Card component
-- Filter dashboard by starred items
-- Show starred count in sidebar or stats
-
-#### Database Changes
-- Add `starred Boolean @default(false)` to Card model
-
-#### UI Updates
-- Star icon button on cards (filled when starred)
-- "Starred" filter in dashboard header and filter panel
-- Starred count badge
-
-#### Subtasks
-- [x] Add starred field to schema and migrate
-- [x] Add star toggle button to Card component
-- [x] Update API routes to handle starred updates
-- [x] Add starred filter to dashboard
-- [x] Show starred count in UI
-- [x] Add keyboard shortcut (Cmd/Ctrl+Shift+S to toggle starred filter)
-
----
+Major release introducing full database persistence for all user settings:
+- **UserSettings Model** - New singleton Prisma model for all theme/appearance preferences
+- **Settings API** - New `/api/settings` route (GET/PATCH/PUT) for persistence
+- **Font Selection Fix** - Fixed critical bug where UI and mono fonts wouldn't apply
+- **Prisma 7 Upgrade** - Updated to Prisma 7.0.1 with better-sqlite3 adapter
+- **Database-backed Presets** - Custom themes, presets, and backgrounds all persist to SQLite
 
 ### Phase 3: Customizable Dashboard Filters 🎛️
 **Status:** ✅ Complete  
@@ -372,6 +302,8 @@ Make ByteBox fully responsive and mobile-friendly with proper touch interactions
 | File Upload (Docs) | ✅ Complete | 1.3.0 | 2025-10-24 |
 | Starred Cards | ✅ Complete | 1.4.0 | 2025-11-29 |
 | Customizable Dashboard | ✅ Complete | 1.5.0 | 2025-11-29 |
+| Database-Backed Settings | ✅ Complete | 2.0.0 | 2025-12-01 |
+| Appearance Overhaul | ✅ Complete | 2.0.0 | 2025-12-01 |
 | Category Pages | 💭 Concept | TBD | TBD |
 | Quick Links Bar | 💭 Concept | TBD | TBD |
 | Mobile App Layout | 💭 Concept | TBD | TBD |
@@ -382,13 +314,13 @@ Make ByteBox fully responsive and mobile-friendly with proper touch interactions
 
 | Category | Technology | Version |
 |----------|-----------|---------|
-| **Framework** | Next.js | 16.0.0 |
+| **Framework** | Next.js | 16.0.6 |
 | **UI Library** | React | 19.2.0 |
-| **Language** | TypeScript | 5.x |
-| **Styling** | Tailwind CSS | 4.1.16 |
-| **Database** | SQLite + Prisma | 6.18.0 |
-| **Drag & Drop** | @dnd-kit | 6.3.1 |
-| **Syntax Highlighting** | Shiki | 3.13.0 |
+| **Language** | TypeScript | 5.9.x |
+| **Styling** | Tailwind CSS | 4.x |
+| **Database** | SQLite + Prisma | 7.0.1 |
+| **Drag & Drop** | @dnd-kit | 6.3.1 / 10.0.0 |
+| **Syntax Highlighting** | Shiki | 3.17.0 |
 | **Icons** | Heroicons | 2.2.0 |
 | **UI Components** | Headless UI | 2.2.9 |
 
@@ -428,11 +360,13 @@ Make ByteBox fully responsive and mobile-friendly with proper touch interactions
 3. ✅ ~~**File Upload for Docs**~~ DONE
 4. ✅ ~~**Starred/Favorited Cards**~~ DONE (v1.4.0)
 5. ✅ ~~**Customizable Dashboard Filters**~~ DONE (v1.5.0)
-   - ✅ View Mode Selector UI with dropdown
-   - ✅ View modes: All, Recent, Starred, By Tag
-   - ✅ localStorage persistence for view preference
-   - ✅ Keyboard shortcuts (⌘1-4)
-   - ✅ Clear filters button
+6. ✅ ~~**Database-Backed Settings**~~ DONE (v2.0.0)
+   - ✅ UserSettings Prisma model
+   - ✅ /api/settings API route
+   - ✅ Font selection fix (CSS variables on body)
+   - ✅ Prisma 7 upgrade with better-sqlite3 adapter
+   - ✅ Custom accent themes persistence
+   - ✅ Settings presets persistence
 
 ### Upcoming Sprint (Phase 4)
 1. **Category-Specific Pages** 📑 (Next Priority)

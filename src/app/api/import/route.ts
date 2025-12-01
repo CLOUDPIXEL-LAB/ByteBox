@@ -118,8 +118,8 @@ export async function POST(request: NextRequest) {
         const cardTags = card.tags || [];
         const tagConnections = cardTags
           .map((tagName: string) => tagMap.get(tagName))
-          .filter((id): id is string => Boolean(id))
-          .map((tagId: string) => ({ id: tagId }));
+          .filter((tagId): tagId is string => tagId != null)
+          .map((tagId) => ({ id: tagId }));
 
         await tx.card.upsert({
           where: { id: card.id },

@@ -13,7 +13,8 @@ const globalForPrisma = globalThis as unknown as {
 
 function createPrismaClient() {
   // Get the database path from env, removing 'file:' prefix if present
-  let dbPath = process.env.DATABASE_URL?.replace('file:', '') || './prisma/dev.db';
+  // Default to bytebox.db in data directory for production-like setup
+  let dbPath = process.env.DATABASE_URL?.replace('file:', '') || './data/bytebox.db';
   
   // If it's a relative path, resolve it from the project root
   if (dbPath.startsWith('./') || dbPath.startsWith('../')) {

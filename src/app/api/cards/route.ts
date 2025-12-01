@@ -22,14 +22,22 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
-    // Extract tag names from tags array
-    const tagNames = body.tags?.map((tag: unknown) => {
-      if (typeof tag === 'string') return tag;
-      if (tag && typeof tag === 'object' && 'name' in tag) {
-        return (tag as { name: string }).name;
-      }
-      return null;
-    }).filter((name: string | null): name is string => name !== null) || [];
+    // Extract tag names - support both body.tags (for compatibility) and body.tagNames (from CreateCardModal)
+    let tagNames: string[] = [];
+    
+    if (body.tagNames && Array.isArray(body.tagNames)) {
+      // From CreateCardModal - already an array of strings
+      tagNames = body.tagNames.filter((name: unknown): name is string => typeof name === 'string');
+    } else if (body.tags && Array.isArray(body.tags)) {
+      // For compatibility - extract names from tags array
+      tagNames = body.tags.map((tag: unknown) => {
+        if (typeof tag === 'string') return tag;
+        if (tag && typeof tag === 'object' && 'name' in tag) {
+          return (tag as { name: string }).name;
+        }
+        return null;
+      }).filter((name: string | null): name is string => name !== null);
+    }
     
     // Create card with tags
     const card = await createCardWithTags({

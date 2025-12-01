@@ -1,0 +1,407 @@
+@import "tailwindcss";
+
+:root {
+  color-scheme: dark;
+
+  /* Base color tokens (overridden in ThemeContext) - Updated to slate grays */
+  --background: #0f1115;
+  --background-muted: #1a1d24;
+  --foreground: #f8fafc;
+  --foreground-soft: rgba(248, 250, 252, 0.7);
+  --card-bg: rgba(26, 29, 36, 0.62);
+  --card-border: rgba(148, 163, 184, 0.22);
+  --hover-bg: rgba(148, 163, 184, 0.12);
+  --glass-bg: rgba(26, 29, 36, 0.55);
+  --glass-border: rgba(148, 163, 184, 0.32);
+  --glass-shadow: 0 30px 120px rgba(15, 17, 21, 0.55);
+  --glass-blur: 22px;
+  --glass-tint: rgba(247, 37, 133, 0.12);
+  --text-strong: rgba(248, 250, 252, 0.95);
+  --text-soft: rgba(226, 232, 240, 0.7);
+
+  /* Custom background support */
+  --custom-background: none;
+
+  /* Accent defaults (overridden via ThemeContext) */
+  --accent-primary: #f72585;
+  --accent-secondary: #7209b7;
+  --accent-tertiary: #4361ee;
+  --accent-soft: #f725851f;
+  --accent-border: #f7258555;
+  --accent-shadow: 0 16px 60px rgba(247, 37, 133, 0.2);
+  --accent-highlight: #f72585;
+  --accent-gradient: linear-gradient(132deg, #f72585 0%, #7209b7 55%, #4361ee 100%);
+  --accent-1: #f72585;
+  --accent-2: #7209b7;
+  --accent-3: #3a0ca3;
+  --accent-4: #4361ee;
+  --accent-5: #4cc9f0;
+
+  /* Icon defaults */
+  --icon-1: #f472b6;
+  --icon-2: #ec4899;
+  --icon-3: #db2777;
+  --icon-4: #be185d;
+  --icon-5: #9d174d;
+  --icon-primary: #f472b6;
+
+  /* Font tokens - these get overwritten by ThemeContext */
+  --font-ui-active: var(--font-geist-sans);
+  --font-mono-active: var(--font-geist-mono);
+  --user-background-image: none;
+}
+
+/* Font selection via data attributes on body - where Next.js font vars are defined */
+body[data-ui-font="system"] { --font-ui-active: system-ui, -apple-system, sans-serif; }
+body[data-ui-font="inter"] { --font-ui-active: var(--font-inter), system-ui, sans-serif; }
+body[data-ui-font="geist"] { --font-ui-active: var(--font-geist-sans), system-ui, sans-serif; }
+body[data-ui-font="roboto"] { --font-ui-active: var(--font-roboto), system-ui, sans-serif; }
+body[data-ui-font="open-sans"] { --font-ui-active: var(--font-open-sans), system-ui, sans-serif; }
+body[data-ui-font="poppins"] { --font-ui-active: var(--font-poppins), system-ui, sans-serif; }
+body[data-ui-font="lato"] { --font-ui-active: var(--font-lato), system-ui, sans-serif; }
+body[data-ui-font="nunito"] { --font-ui-active: var(--font-nunito), system-ui, sans-serif; }
+body[data-ui-font="source-sans"] { --font-ui-active: var(--font-source-sans), system-ui, sans-serif; }
+body[data-ui-font="ubuntu"] { --font-ui-active: var(--font-ubuntu), system-ui, sans-serif; }
+body[data-ui-font="shadows-into-light"] { --font-ui-active: var(--font-shadows-into-light), cursive; }
+body[data-ui-font="indie-flower"] { --font-ui-active: var(--font-indie-flower), cursive; }
+body[data-ui-font="permanent-marker"] { --font-ui-active: var(--font-permanent-marker), cursive; }
+body[data-ui-font="caveat-brush"] { --font-ui-active: var(--font-caveat-brush), cursive; }
+body[data-ui-font="gochi-hand"] { --font-ui-active: var(--font-gochi-hand), cursive; }
+body[data-ui-font="delius"] { --font-ui-active: var(--font-delius), cursive; }
+body[data-ui-font="acme"] { --font-ui-active: var(--font-acme), sans-serif; }
+
+body[data-mono-font="geist-mono"] { --font-mono-active: var(--font-geist-mono), monospace; }
+body[data-mono-font="jetbrains"] { --font-mono-active: var(--font-jetbrains-mono), monospace; }
+body[data-mono-font="fira-code"] { --font-mono-active: var(--font-fira-code), monospace; }
+body[data-mono-font="source-code"] { --font-mono-active: var(--font-source-code-pro), monospace; }
+body[data-mono-font="roboto-mono"] { --font-mono-active: var(--font-roboto-mono), monospace; }
+body[data-mono-font="ubuntu-mono"] { --font-mono-active: var(--font-ubuntu-mono), monospace; }
+body[data-mono-font="consolas"] { --font-mono-active: "Consolas", monospace; }
+body[data-mono-font="menlo"] { --font-mono-active: "Menlo", monospace; }
+body[data-mono-font="monaco"] { --font-mono-active: "Monaco", monospace; }
+body[data-mono-font="space-mono"] { --font-mono-active: var(--font-space-mono), monospace; }
+body[data-mono-font="syne-mono"] { --font-mono-active: var(--font-syne-mono), monospace; }
+body[data-mono-font="nova-mono"] { --font-mono-active: var(--font-nova-mono), monospace; }
+body[data-mono-font="kode-mono"] { --font-mono-active: var(--font-kode-mono), monospace; }
+
+/* Override Tailwind's font utilities to use our CSS variables */
+.font-sans {
+  font-family: var(--font-ui-active, var(--font-geist-sans, system-ui)), -apple-system, sans-serif !important;
+}
+
+.font-mono {
+  font-family: var(--font-mono-active, var(--font-geist-mono, monospace)), ui-monospace, monospace !important;
+}
+
+/* Ensure code elements pick up the active monospace selection */
+code,
+pre,
+.shiki code,
+.shiki pre {
+  font-family: var(--font-mono-active, var(--font-geist-mono, monospace)), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  position: relative;
+  margin: 0;
+  background-color: var(--background);
+  background-image: var(--custom-background, var(--user-background-image));
+  background-size: cover;
+  background-attachment: fixed;
+  background-position: center;
+  color: var(--foreground);
+  font-family: var(--font-ui-active, var(--font-geist-sans, system-ui)), -apple-system, sans-serif;
+  transition: background-color 200ms ease, color 200ms ease;
+}
+
+/* Override background when custom gradient is set */
+[data-background-type="gradient"] body {
+  background-image: var(--custom-background);
+}
+
+/* Override background when user wallpaper is set */
+[data-has-user-wallpaper="true"] body {
+  background-image: var(--user-background-image);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--background) 85%, transparent),
+    color-mix(in srgb, var(--background-muted) 70%, transparent)
+  );
+  opacity: 0.95;
+  z-index: -2;
+}
+
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: radial-gradient(circle at 20% 20%, var(--glass-tint), transparent 55%),
+    radial-gradient(circle at 80% 0%, rgba(76, 201, 240, 0.12), transparent 60%);
+  mix-blend-mode: screen;
+  opacity: 0.6;
+  z-index: -1;
+  transition: opacity 200ms ease;
+}
+
+.glass {
+  background: color-mix(in srgb, var(--glass-bg) 75%, transparent);
+  backdrop-filter: blur(var(--glass-blur));
+  -webkit-backdrop-filter: blur(var(--glass-blur));
+  border: 1px solid color-mix(in srgb, var(--glass-border) 85%, transparent);
+  box-shadow: var(--glass-shadow);
+  border-radius: 18px;
+  position: relative;
+  isolation: isolate;
+}
+
+.glass::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  background: linear-gradient(145deg, transparent 0%, var(--glass-tint) 100%);
+  mix-blend-mode: screen;
+  opacity: 0.45;
+  z-index: -1;
+}
+
+.glass--dense {
+  background: color-mix(in srgb, var(--glass-bg) 86%, transparent);
+}
+
+.glass-bar {
+  background: color-mix(in srgb, var(--glass-bg) 80%, rgba(255, 255, 255, 0.05));
+  border-bottom: 1px solid color-mix(in srgb, var(--glass-border) 80%, transparent);
+}
+
+.surface-card {
+  background: var(--card-bg);
+  border: 1px solid var(--card-border);
+  backdrop-filter: blur(calc(var(--glass-blur) / 1.4));
+  -webkit-backdrop-filter: blur(calc(var(--glass-blur) / 1.4));
+  border-radius: 18px;
+  box-shadow: rgba(15, 23, 42, 0.12) 0 12px 48px;
+}
+
+.surface-card--subtle {
+  background: color-mix(in srgb, var(--card-bg) 70%, transparent);
+}
+
+.text-accent {
+  color: var(--accent-primary);
+}
+
+.text-accent-soft {
+  color: color-mix(in srgb, var(--accent-primary) 65%, var(--foreground) 40%);
+}
+
+.bg-accent {
+  background-color: var(--accent-primary);
+}
+
+.bg-accent-soft {
+  background-color: var(--accent-soft);
+}
+
+.border-accent {
+  border-color: var(--accent-border);
+}
+
+input.glass-range {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 0.6rem;
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--card-border) 40%, transparent);
+  border: 1px solid color-mix(in srgb, var(--card-border) 55%, transparent);
+  cursor: pointer;
+  transition: border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+input.glass-range:hover {
+  border-color: color-mix(in srgb, var(--accent-border) 50%, transparent);
+  box-shadow: 0 8px 24px color-mix(in srgb, var(--accent-primary) 25%, transparent);
+}
+
+input.glass-range:focus-visible {
+  outline: none;
+  border-color: color-mix(in srgb, var(--accent-border) 70%, transparent);
+  box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent-primary) 18%, transparent);
+}
+
+input.glass-range::-webkit-slider-runnable-track {
+  height: 100%;
+  border-radius: inherit;
+  background: transparent;
+}
+
+input.glass-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  border: 2px solid color-mix(in srgb, var(--background) 70%, transparent);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--accent-primary) 35%, transparent);
+  transition: transform 0.2s ease;
+  margin-top: -8px;
+}
+
+input.glass-range:active::-webkit-slider-thumb {
+  transform: scale(1.08);
+}
+
+input.glass-range::-moz-range-track {
+  height: 100%;
+  border-radius: inherit;
+  background: transparent;
+}
+
+input.glass-range::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: var(--accent-primary);
+  border: 2px solid color-mix(in srgb, var(--background) 70%, transparent);
+  box-shadow: 0 12px 28px color-mix(in srgb, var(--accent-primary) 35%, transparent);
+  transition: transform 0.2s ease;
+}
+
+input.glass-range:active::-moz-range-thumb {
+  transform: scale(1.08);
+}
+
+.ring-accent {
+  box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 25%, transparent);
+}
+
+.accent-gradient {
+  background-image: var(--accent-gradient);
+  color: #fff;
+}
+
+.font-brand {
+  font-family: var(--font-mono-active, var(--font-jetbrains-mono, monospace)), monospace;
+  letter-spacing: -0.03em;
+  font-feature-settings: "ss02" 1, "ss03" 1;
+}
+
+.icon-accent {
+  color: var(--icon-primary);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+strong {
+  color: var(--text-strong);
+}
+
+::selection {
+  background: color-mix(in srgb, var(--accent-primary) 45%, transparent);
+  color: var(--text-strong);
+}
+
+::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+::-webkit-scrollbar-track {
+  background: color-mix(in srgb, var(--background) 92%, transparent);
+}
+
+::-webkit-scrollbar-thumb {
+  border-radius: 9999px;
+  background: color-mix(in srgb, var(--card-border) 85%, transparent);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in srgb, var(--accent-primary) 55%, var(--card-border) 45%);
+}
+
+/* ViewModeSelector Dropdown Styles - Slate gray theme */
+
+/* Main dropdown container - FULLY OPAQUE */
+.view-mode-dropdown {
+  background-color: #1a1d24 !important;
+  border: 1px solid rgba(148, 163, 184, 0.32) !important;
+  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.65) !important;
+  isolation: isolate !important;
+  transform: translate3d(0, 0, 0) !important;
+  will-change: transform !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  opacity: 1 !important;
+}
+
+/* Inner content area */
+.view-mode-dropdown-inner {
+  background-color: #1a1d24;
+  color: #f8fafc;
+}
+
+/* Label text */
+.view-mode-dropdown-label {
+  color: rgba(248, 250, 252, 0.7);
+}
+
+/* Menu item hover state */
+.view-mode-dropdown-item-hover {
+  background-color: rgba(148, 163, 184, 0.12);
+}
+
+/* Active menu item */
+.view-mode-dropdown-item-active {
+  background-color: rgba(247, 37, 133, 0.12);
+  border-color: rgba(247, 37, 133, 0.33);
+}
+
+/* Icon container */
+.view-mode-dropdown-icon {
+  background-color: rgba(148, 163, 184, 0.12);
+}
+
+.view-mode-dropdown-icon-active {
+  background-color: rgba(247, 37, 133, 0.12);
+}
+
+/* Item text colors handled by inline styles for dynamic theming */
+
+.view-mode-dropdown-item-desc {
+  color: rgba(248, 250, 252, 0.7);
+}
+
+/* Keyboard shortcut badge */
+.view-mode-dropdown-kbd {
+  background-color: rgba(148, 163, 184, 0.15);
+  color: rgba(248, 250, 252, 0.7);
+}
+
+/* Footer section */
+.view-mode-dropdown-footer {
+  background-color: rgba(26, 29, 36, 0.98);
+  border-top-color: rgba(148, 163, 184, 0.32);
+}
+
+.view-mode-dropdown-hint {
+  color: rgba(248, 250, 252, 0.7);
+}

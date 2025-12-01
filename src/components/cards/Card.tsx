@@ -1,0 +1,233 @@
+'use client';
+
+/**
+ * ByteBox - Card Component
+ * Made with ❤️ by Pink Pixel
+ */
+
+import React, { useState } from 'react';
+import { cn } from '@/lib/utils';
+import type { Card as CardType } from '@/types';
+import { BookmarkIcon, CodeBracketIcon, CommandLineIcon, DocumentTextIcon, PhotoIcon, PencilSquareIcon, ArrowDownTrayIcon, StarIcon } from '@heroicons/react/24/outline';
+import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Lightbox } from '@/components/ui/Lightbox';
+import { downloadFile, formatFileSize, getFileIcon } from '@/lib/utils/fileUtils';
+
+interface CardProps {
+  card: CardType;
+  onClick?: () => void;
+  onStarToggle?: (cardId: string, starred: boolean) => void;
+  className?: string;
+}
+
+const cardTypeIcons = {
+  bookmark: BookmarkIcon,
+  snippet: CodeBracketIcon,
+  command: CommandLineIcon,
+  doc: DocumentTextIcon,
+  image: PhotoIcon,
+  note: PencilSquareIcon,
+};
+
+export function Card({ card, onClick, onStarToggle, className }: CardProps) {
+  const Icon = cardTypeIcons[card.cardType[0] as keyof typeof cardTypeIcons];
+  const { getIconColor } = useTheme();
+  const iconColor = getIconColor(card.cardType[0]);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
+  const [isStarring, setIsStarring] = useState(false);
+
+  const handleCardClick = () => {
+    if (onClick) {
+      onClick();
+    }
+  };
+
+  const handleImageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setLightboxOpen(true);
+  };
+
+  const handleStarClick = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (isStarring || !onStarToggle) return;
+    
+    setIsStarring(true);
+    try {
+      await onStarToggle(card.id, !card.starred);
+    } finally {
+      setIsStarring(false);
+    }
+  };
+
+  return (
+    <>
+      <div
+        onClick={handleCardClick}
+        className={cn(
+          'group relative glass glass--dense rounded-2xl p-4 transition-all duration-200',
+          'hover:-translate-y-1 hover:shadow-[0_28px_70px_color-mix(in_srgb,var(--accent-primary)_18%,transparent)]',
+          'cursor-pointer border border-transparent',
+          className
+        )}
+      >
+      {/* Card Header */}
+      <div className="flex items-start justify-between gap-3 mb-2">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          <Icon className="w-5 h-5 shrink-0" style={{ color: iconColor }} />
+          <h3 className="font-semibold text-(--text-strong) truncate group-hover:text-accent transition-colors">
+            {card.title}
+          </h3>
+        </div>
+        
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Star Button */}
+          <button
+            onClick={handleStarClick}
+            disabled={isStarring}
+            className={cn(
+              'p-1 rounded-lg transition-all duration-200',
+              'hover:bg-[color-mix(in_srgb,var(--hover-bg)_80%,transparent)]',
+              'focus:outline-none focus:ring-2 focus:ring-amber-400/50',
+              isStarring && 'opacity-50 cursor-not-allowed'
+            )}
+            title={card.starred ? 'Unstar card' : 'Star card'}
+            aria-label={card.starred ? 'Unstar card' : 'Star card'}
+          >
+            {card.starred ? (
+              <StarIconSolid className="w-4 h-4 text-amber-400 drop-shadow-[0_0_4px_rgba(251,191,36,0.5)]" />
+            ) : (
+              <StarIcon className="w-4 h-4 text-(--foreground-soft) hover:text-amber-400 transition-colors" />
+            )}
+          </button>
+          
+          {/* Card Type Badge */}
+          <span className="text-xs px-2 py-1 rounded-full border capitalize"
+            style={{
+              borderColor: 'color-mix(in srgb, var(--accent-border) 60%, transparent)',
+              background: 'color-mix(in srgb, var(--accent-primary) 10%, transparent)',
+              color: iconColor,
+            }}
+          >
+            {card.cardType[0]}
+          </span>
+        </div>
+      </div>
+
+      {/* Card Description */}
+      {card.description && (
+        <p className="text-sm text-(--text-soft) mb-3 line-clamp-2">
+          {card.description}
+        </p>
+      )}
+
+      {/* Card Content Preview */}
+      {card.cardType[0] === 'image' && card.imageData ? (
+        <div 
+          className="relative mb-3 rounded-xl overflow-hidden group-hover:ring-2 ring-(--accent-primary) transition-all cursor-zoom-in"
+          onClick={handleImageClick}
+          title="Click to view full-screen"
+        >
+          <img
+            src={card.imageData.trim()}
+            alt={card.title}
+            className="w-full h-auto max-h-64 object-cover"
+            onError={(e) => {
+              // Hide broken data URIs to avoid noisy console errors
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+          <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <span className="text-xs px-2 py-1 rounded-full glass glass--dense text-white">
+              Click to zoom
+            </span>
+          </div>
+        </div>
+      ) : card.cardType[0] === 'doc' && card.fileData ? (
+        /* File Attachment for Doc Cards */
+        <div className="mb-3">
+          <div className="relative surface-card surface-card--subtle border border-transparent rounded-xl p-3 overflow-hidden">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl shrink-0">{getFileIcon(card.fileType || '')}</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium truncate">{card.fileName || 'Document'}</p>
+                <p className="text-xs text-(--text-soft)">
+                  {card.fileType?.toUpperCase()} {card.fileSize && `· ${formatFileSize(card.fileSize)}`}
+                </p>
+              </div>
+              <button
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (card.fileData && card.fileName) {
+                    downloadFile(card.fileData, card.fileName);
+                  }
+                }}
+                className="p-2 rounded-lg hover:bg-hover transition-colors shrink-0"
+                title="Download file"
+              >
+                <ArrowDownTrayIcon className="w-4 h-4" style={{ color: iconColor }} />
+              </button>
+            </div>
+            {card.content && (
+              <p className="text-xs text-(--text-soft) mt-2 line-clamp-2">
+                {card.content.substring(0, 100)}...
+              </p>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="text-sm font-mono text-(--foreground-soft) surface-card surface-card--subtle border border-transparent rounded-xl p-3 mb-3 line-clamp-3 overflow-hidden">
+          {card.cardType[0] === 'bookmark' ? (
+            <a
+              href={card.content}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-accent hover:underline"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {card.content}
+            </a>
+          ) : (
+            <code className="whitespace-pre-wrap wrap-break-word">{card.content}</code>
+          )}
+        </div>
+      )}
+
+      {/* Tags */}
+      {card.tags && card.tags.length > 0 && (
+        <div className="flex flex-wrap gap-1.5">
+          {card.tags.map((tag) => (
+            <span
+              key={tag.id}
+              className="text-xs px-2 py-0.5 rounded-full border"
+              style={{
+                backgroundColor: `${tag.color}20`,
+                color: tag.color,
+                border: `1px solid ${tag.color}40`,
+              }}
+            >
+              {tag.name}
+            </span>
+          ))}
+        </div>
+      )}
+
+      {/* Hover Gradient Border Effect */}
+      <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
+        <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_top,var(--accent-soft),transparent_65%)]" />
+      </div>
+    </div>
+
+    {/* Lightbox for image cards */}
+    {card.cardType[0] === 'image' && card.imageData && (
+      <Lightbox 
+        isOpen={lightboxOpen}
+        onClose={() => setLightboxOpen(false)}
+        imageUrl={card.imageData}
+        title={card.title}
+      />
+    )}
+    </>
+  );
+}

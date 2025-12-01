@@ -1,0 +1,82 @@
+// ByteBox - Prisma Database Schema
+// Made with ❤️ by Pink Pixel
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+// Category model - represents boards/columns in the UI
+model Category {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  color       String   @default("#ec4899") // Pink Pixel brand color
+  order       Int      @default(0)
+  cards       Card[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("categories")
+}
+
+// Tag model - for organizing and filtering cards
+model Tag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  color     String   @default("#8b5cf6") // Purple brand color
+  cards     Card[]   @relation("CardTags")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("tags")
+}
+
+// Card model - main content type (bookmarks, snippets, commands, docs, images)
+model Card {
+  id          String   @id @default(cuid())
+  type        String   // 'bookmark' | 'snippet' | 'command' | 'doc' | 'image'
+  title       String
+  description String?
+  content     String   // Main content (URL for bookmarks, code for snippets, etc.)
+  imageData   String?  // Base64 encoded image data for image cards
+  fileData    String?  // Base64 encoded file data for doc cards (markdown, pdf)
+  fileName    String?  // Original filename of uploaded file
+  fileType    String?  // MIME type of file (e.g., 'application/pdf', 'text/markdown')
+  fileSize    Int?     // Size of file in bytes
+  language    String?  // For syntax highlighting (e.g., 'typescript', 'python')
+  starred     Boolean  @default(false) // Whether the card is starred/favorited
+  categoryId  String
+  category    Category @relation(fields: [categoryId], references: [id], onDelete: Cascade)
+  tags        Tag[]    @relation("CardTags")
+  order       Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([categoryId])
+  @@index([type])
+  @@map("cards")
+}
+
+// UserSettings - single row for app-wide theme/UI settings
+// Uses singleton pattern (id always "default")
+model UserSettings {
+  id                  String   @id @default("default")
+  mode                String   @default("dark")       // 'dark' | 'light'
+  accentThemeId       String   @default("byte-classic")
+  iconThemeId         String   @default("neon-grid")
+  customIconColor     String   @default("#f472b6")
+  glassIntensity      Int      @default(60)
+  backgroundConfig    String   @default("{\"type\":\"default\"}") // JSON string
+  fontConfig          String   @default("{\"uiFont\":\"system\",\"monoFont\":\"geist-mono\"}") // JSON string
+  customAccentThemes  String   @default("[]")         // JSON array of custom AccentTheme objects
+  settingsPresets     String   @default("[]")         // JSON array of SettingsPreset objects
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  @@map("user_settings")
+}

@@ -43,29 +43,31 @@ function CardContentPreview({ card, iconColor, onImageClick }: Readonly<CardCont
   // Image card preview
   if (cardType === 'image' && card.imageData) {
     return (
-      <button
-        type="button"
-        className="relative mb-3 rounded-xl overflow-hidden group-hover:ring-2 ring-(--accent-primary) transition-all cursor-zoom-in w-full"
-        onClick={onImageClick}
-        title="Click to view full-screen"
-        aria-label="View image full-screen"
-      >
-        <img
-          src={card.imageData.trim()}
-          alt={card.title}
-          className="w-full h-auto max-h-64 object-cover"
-          onError={(e) => {
-            // Hide broken data URIs to avoid noisy console errors
-            e.currentTarget.style.display = 'none';
-          }}
-        />
-        <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
-        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div className="relative mb-3 rounded-xl overflow-hidden group-hover:ring-2 ring-(--accent-primary) transition-all w-full">
+        <button
+          type="button"
+          className="w-full cursor-zoom-in bg-transparent border-0 p-0 relative z-10"
+          onClick={onImageClick}
+          title="Click to view full-screen"
+          aria-label="View image full-screen"
+        >
+          <img
+            src={card.imageData.trim()}
+            alt={card.title}
+            className="w-full h-auto max-h-64 object-cover"
+            onError={(e) => {
+              // Hide broken data URIs to avoid noisy console errors
+              e.currentTarget.style.display = 'none';
+            }}
+          />
+        </button>
+        <div className="absolute inset-0 bg-linear-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
+        <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
           <span className="text-xs px-2 py-1 rounded-full glass glass--dense text-white">
             Click to zoom
           </span>
         </div>
-      </button>
+      </div>
     );
   }
 
@@ -89,8 +91,9 @@ function CardContentPreview({ card, iconColor, onImageClick }: Readonly<CardCont
                   downloadFile(card.fileData, card.fileName);
                 }
               }}
-              className="p-2 rounded-lg hover:bg-hover transition-colors shrink-0"
+              className="p-2 rounded-lg hover:bg-hover transition-colors shrink-0 z-10 relative"
               title="Download file"
+              aria-label="Download file"
             >
               <ArrowDownTrayIcon className="w-4 h-4" style={{ color: iconColor }} />
             </button>
@@ -157,18 +160,24 @@ export function Card({ card, onClick, onStarToggle, className }: Readonly<CardPr
 
   return (
     <>
-      <button
-        type="button"
-        onClick={handleCardClick}
+      <div
         className={cn(
-          'group relative glass glass--dense rounded-2xl p-4 transition-all duration-200 w-full text-left',
+          'group relative glass glass--dense rounded-2xl p-4 transition-all duration-200 w-full',
           'hover:-translate-y-1 hover:shadow-[0_28px_70px_color-mix(in_srgb,var(--accent-primary)_18%,transparent)]',
-          'cursor-pointer border border-transparent',
+          'border border-transparent',
           className
         )}
       >
+      {/* Clickable backdrop button - covers the card for click handling */}
+      <button
+        type="button"
+        onClick={handleCardClick}
+        className="absolute inset-0 w-full h-full rounded-2xl cursor-pointer bg-transparent border-0 z-0 focus:outline-none focus:ring-2 focus:ring-(--accent-primary) focus:ring-offset-2 focus:ring-offset-(--glass-bg)"
+        aria-label={`Open ${card.title}`}
+      />
+      
       {/* Card Header */}
-      <div className="flex items-start justify-between gap-3 mb-2">
+      <div className="flex items-start justify-between gap-3 mb-2 relative z-10 pointer-events-none">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <Icon className="w-5 h-5 shrink-0" style={{ color: iconColor }} />
           <h3 className="font-semibold text-(--text-strong) truncate group-hover:text-accent transition-colors">
@@ -176,9 +185,10 @@ export function Card({ card, onClick, onStarToggle, className }: Readonly<CardPr
           </h3>
         </div>
         
-        <div className="flex items-center gap-1.5 shrink-0">
+        <div className="flex items-center gap-1.5 shrink-0 pointer-events-auto">
           {/* Star Button */}
           <button
+            type="button"
             onClick={handleStarClick}
             disabled={isStarring}
             className={cn(
@@ -198,7 +208,7 @@ export function Card({ card, onClick, onStarToggle, className }: Readonly<CardPr
           </button>
           
           {/* Card Type Badge */}
-          <span className="text-xs px-2 py-1 rounded-full border capitalize"
+          <span className="text-xs px-2 py-1 rounded-full border capitalize pointer-events-none"
             style={{
               borderColor: 'color-mix(in srgb, var(--accent-border) 60%, transparent)',
               background: 'color-mix(in srgb, var(--accent-primary) 10%, transparent)',
@@ -212,21 +222,23 @@ export function Card({ card, onClick, onStarToggle, className }: Readonly<CardPr
 
       {/* Card Description */}
       {card.description && (
-        <p className="text-sm text-(--text-soft) mb-3 line-clamp-2">
+        <p className="text-sm text-(--text-soft) mb-3 line-clamp-2 relative z-10 pointer-events-none">
           {card.description}
         </p>
       )}
 
       {/* Card Content Preview */}
-      <CardContentPreview 
-        card={card}
-        iconColor={iconColor}
-        onImageClick={handleImageClick}
-      />
+      <div className="relative z-10">
+        <CardContentPreview 
+          card={card}
+          iconColor={iconColor}
+          onImageClick={handleImageClick}
+        />
+      </div>
 
       {/* Tags */}
       {card.tags && card.tags.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
+        <div className="flex flex-wrap gap-1.5 relative z-10 pointer-events-none">
           {card.tags.map((tag) => (
             <span
               key={tag.id}
@@ -247,7 +259,7 @@ export function Card({ card, onClick, onStarToggle, className }: Readonly<CardPr
       <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
         <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_top,var(--accent-soft),transparent_65%)]" />
       </div>
-      </button>
+    </div>
 
     {/* Lightbox for image cards */}
     {card.cardType[0] === 'image' && card.imageData && (

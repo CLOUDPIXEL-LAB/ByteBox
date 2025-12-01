@@ -5,6 +5,8 @@
   "version": "2.1.0",
   "private": true,
   "type": "module",
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
+  "exclude": ["/DEV/*", "node_modules"],
   "overrides": {
     "baseline-browser-mapping": "2.9.0-beta2",
     "hono": "^4.10.3",

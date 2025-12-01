@@ -33,9 +33,12 @@ This release adds full card editing capabilities to the card detail modal and fi
 
 #### Fixed
 - **Nested Button Hydration Error** – Fixed HTML validation error where `<button>` contained nested `<button>` elements
-  - Changed Card component's outer element from `<button>` to `<div role="button">`
-  - Added proper keyboard handling (Enter/Space) for accessibility
-  - Star button, download button, and image zoom button now work without hydration errors
+  - Refactored Card component to use backdrop button pattern for proper accessibility
+  - Main card wrapper is now a non-interactive `<div>` with an absolutely positioned `<button>` at `z-0` for click handling
+  - All interactive elements (star, download, image zoom) are proper `<button>` elements positioned at `z-10`
+  - Uses `pointer-events-none` on content with `pointer-events-auto` on interactive elements
+  - Resolves SonarQube S6819 accessibility warnings ("Use `<button>` instead of `role='button'`")
+  - Maintains full keyboard accessibility with proper focus rings
   - Console error "In HTML, `<button>` cannot be a descendant of `<button>`" is now resolved
 - **Dark Theme Dropdown Styling** – Fixed select dropdowns appearing white in dark mode
   - Added global CSS for `select` and `option` elements with proper dark theme colors
@@ -44,10 +47,13 @@ This release adds full card editing capabilities to the card detail modal and fi
   - Options styled with `--background-muted` and `--text-strong` variables
 
 #### Changed
-- **Card Component** – Refactored for proper HTML structure
-  - Uses `div` with `role="button"` instead of native `button`
-  - Maintains full keyboard accessibility
-  - Allows nested interactive elements (buttons) without HTML violations
+- **Card Component** – Refactored for proper HTML structure and accessibility compliance
+  - Uses backdrop `<button>` pattern instead of `role="button"` on div
+  - Non-interactive wrapper `<div>` for styling with hidden backdrop button for clicks
+  - Content layered at `z-10` with `pointer-events-none`, interactive elements use `pointer-events-auto`
+  - Maintains full keyboard accessibility with proper focus rings on the backdrop button
+  - Allows nested interactive elements (buttons) without HTML violations or accessibility warnings
+  - Compliant with SonarQube S6819 and ESLint jsx-a11y rules
 - **CardModal Props** – Extended interface with new optional props:
   - `onUpdate?: (updatedCard: CardType) => void` – Callback for card updates
   - `allTags?: Tag[]` – Available tags for editing

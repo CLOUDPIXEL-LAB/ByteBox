@@ -121,7 +121,7 @@ bytebox/
 │   │
 │   ├── components/
 │   │   ├── cards/                     # Card-related components
-│   │   │   ├── Card.tsx               # Card display component with star toggle (uses div role="button")
+│   │   │   ├── Card.tsx               # Card display component with backdrop button pattern for accessibility
 │   │   │   ├── CardModal.tsx          # Card view/edit modal with full editing, tag management, copy & delete
 │   │   │   ├── CreateCardModal.tsx    # New card creation modal with file upload and dark theme support
 │   │   │   └── DraggableCard.tsx      # Card with @dnd-kit drag wrapper
@@ -528,9 +528,12 @@ bytebox/
   - Accepts `{ action: 'toggleStar' }` body
   - Returns updated card with new starred status
 - **Card Component**:
+  - Uses backdrop button pattern: non-interactive `<div>` wrapper with hidden `<button>` at z-0 for click handling
+  - Interactive elements (star, download, image zoom) are real `<button>` elements at z-10
   - Star button in header (outline/solid star icon)
   - Amber color scheme (#fbbf24) with glow effect
   - Loading state during API call
+  - Compliant with SonarQube S6819 and ESLint jsx-a11y accessibility rules
 - **Dashboard Filtering**:
   - `useSearch` hook extended with `showStarredOnly` state
   - `starredCount` computed from all cards

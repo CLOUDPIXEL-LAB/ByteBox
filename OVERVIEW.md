@@ -1,7 +1,7 @@
 # 📚 ByteBox – Project Overview
 
 **Last Updated**: December 1, 2025  
-**Version**: 2.0.0  
+**Version**: 2.1.0  
 **Author**: [Pink Pixel](https://pinkpixel.dev)  
 **License**: Apache 2.0  
 **Status**: ✅ Stable & Complete
@@ -121,9 +121,9 @@ bytebox/
 │   │
 │   ├── components/
 │   │   ├── cards/                     # Card-related components
-│   │   │   ├── Card.tsx               # Card display component with star toggle
-│   │   │   ├── CardModal.tsx          # Card view/edit modal with copy & delete
-│   │   │   ├── CreateCardModal.tsx    # New card creation modal with file upload
+│   │   │   ├── Card.tsx               # Card display component with star toggle (uses div role="button")
+│   │   │   ├── CardModal.tsx          # Card view/edit modal with full editing, tag management, copy & delete
+│   │   │   ├── CreateCardModal.tsx    # New card creation modal with file upload and dark theme support
 │   │   │   └── DraggableCard.tsx      # Card with @dnd-kit drag wrapper
 │   │   ├── layout/                    # Layout components
 │   │   │   ├── AppLayout.tsx          # Main app shell (sidebar, header, collapsible with icon/banner logo)
@@ -149,7 +149,7 @@ bytebox/
 │   │   ├── db/
 │   │   │   ├── index.ts               # Database exports
 │   │   │   ├── prisma.ts              # Prisma client singleton
-│   │   │   └── queries.ts             # Database query functions (createCardWithTags, toggleCardStarred, etc.)
+│   │   │   └── queries.ts             # Database query functions (createCardWithTags, updateCardWithTags, toggleCardStarred, etc.)
 │   │   ├── themeRegistry.ts           # Accent/icon palettes, gradients, wallpapers, fonts
 │   │   └── utils/
 │   │       ├── fileUtils.ts           # File processing (PDF/Markdown extraction, validation)
@@ -427,11 +427,18 @@ bytebox/
 
 ---
 
-### 7️⃣ Copy & Delete Functionality
+### 7️⃣ Card Editing, Copy & Delete Functionality
 
-**Technology**: Clipboard API + Two-step confirmation pattern
+**Technology**: Clipboard API + Two-step confirmation pattern + Form state management
 
 **Implementation**:
+- **Edit Cards** (`CardModal.tsx`):
+  - Toggle between view and edit modes with Edit/Cancel buttons
+  - Edit title, description, content, and language (for snippets/commands)
+  - Tag management: toggle tags on/off with visual tag pills
+  - Star toggle directly in modal header
+  - Save changes via PATCH `/api/cards/[id]` with `updateCardWithTags()` query
+  - Minimum modal height (400px) prevents cramped appearance with short content
 - **Copy Content** (`CardModal.tsx`):
   - Copy button on all text-based cards (bookmarks, snippets, commands, docs)
   - Uses `navigator.clipboard.writeText()` for reliable copying
@@ -447,11 +454,16 @@ bytebox/
   - Confirmation state resets when modal closes or different card opens (via `useEffect`)
 
 **User Experience**:
+- Click "Edit" to switch to edit mode
+- Modify any field: title, description, content, language
+- Click tags to add/remove them from the card
+- Toggle starred status directly in modal
+- Click "Save" to persist changes, "Cancel" to discard
 - Click copy button to copy card content to clipboard
 - See "Copied!" confirmation for 2 seconds
 - Click red trash icon to start deletion
 - Confirm or cancel the deletion
-- Board refreshes automatically after deletion
+- Board refreshes automatically after save or deletion
 
 ---
 

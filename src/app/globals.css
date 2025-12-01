@@ -287,6 +287,36 @@ input.glass-range:active::-moz-range-thumb {
   transform: scale(1.08);
 }
 
+/* Form select and option styling for dark theme compatibility */
+select {
+  color-scheme: dark;
+}
+
+select option {
+  background-color: var(--background-muted);
+  color: var(--text-strong);
+  padding: 8px 12px;
+}
+
+select option:hover,
+select option:focus,
+select option:checked {
+  background-color: var(--accent-soft);
+  color: var(--text-strong);
+}
+
+/* Firefox-specific select styling */
+@-moz-document url-prefix() {
+  select {
+    background-color: var(--background-muted);
+  }
+  
+  select option {
+    background-color: var(--background-muted);
+    color: var(--text-strong);
+  }
+}
+
 .ring-accent {
   box-shadow: 0 0 0 2px color-mix(in srgb, var(--accent-primary) 25%, transparent);
 }

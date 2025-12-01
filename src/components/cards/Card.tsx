@@ -157,9 +157,17 @@ export function Card({ card, onClick, onStarToggle, className }: Readonly<CardPr
 
   return (
     <>
-      <button
-        type="button"
+      {/* Using div with role="button" since nested buttons are invalid HTML */}
+      <div
+        role="button"
         onClick={handleCardClick}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleCardClick();
+          }
+        }}
+        tabIndex={0}
         className={cn(
           'group relative glass glass--dense rounded-2xl p-4 transition-all duration-200 w-full text-left',
           'hover:-translate-y-1 hover:shadow-[0_28px_70px_color-mix(in_srgb,var(--accent-primary)_18%,transparent)]',
@@ -247,7 +255,7 @@ export function Card({ card, onClick, onStarToggle, className }: Readonly<CardPr
       <div className="absolute inset-0 rounded-2xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
         <div className="absolute inset-0 rounded-2xl bg-[radial-gradient(circle_at_top,var(--accent-soft),transparent_65%)]" />
       </div>
-    </button>
+    </div>
 
     {/* Lightbox for image cards */}
     {card.cardType[0] === 'image' && card.imageData && (

@@ -277,7 +277,7 @@ export default function CreateCardModal({
           onChange={(e) => setContent(e.target.value)}
           placeholder={type === 'bookmark' ? 'https://example.com' : 'Enter content...'}
           rows={6}
-          className={cn('w-full px-3 py-2 rounded-lg font-mono text-sm bg-background border border-card-border focus:outline-none focus:ring-2')}
+          className={cn('w-full px-3 py-2 rounded-lg font-mono text-sm bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] text-(--text-strong) placeholder:text-(--text-soft) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)]')}
           required={!imageData && !fileData}
         />
       </div>
@@ -336,7 +336,7 @@ export default function CreateCardModal({
                           setContent('');
                           resetFileState();
                         }}
-                        className="w-full rounded-lg border px-3 py-2 bg-background"
+                        className="w-full rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] [&>option]:bg-[var(--surface-card)] [&>option]:text-[var(--text-strong)]"
                       >
                         {['bookmark', 'snippet', 'command', 'doc', 'image', 'note'].map((t) => (
                           <option key={t} value={t}>
@@ -351,7 +351,7 @@ export default function CreateCardModal({
                         id="card-category"
                         value={categoryId}
                         onChange={(e) => setCategoryId(e.target.value)}
-                        className="w-full rounded-lg border px-3 py-2 bg-background"
+                        className="w-full rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] [&>option]:bg-[var(--surface-card)] [&>option]:text-[var(--text-strong)]"
                       >
                         {categories.map((c) => (
                           <option key={c.id} value={c.id}>
@@ -370,13 +370,13 @@ export default function CreateCardModal({
                         id="card-title"
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className="w-full rounded-lg border px-3 py-2 bg-background"
+                        className="w-full rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)]"
                         required
                       />
                     </div>
                     <div>
                       <label htmlFor="card-description" className="block text-xs font-medium mb-1">Description</label>
-                      <input id="card-description" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full rounded-lg border px-3 py-2 bg-background" />
+                      <input id="card-description" value={description} onChange={(e) => setDescription(e.target.value)} className="w-full rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)]" />
                     </div>
                   </div>
 
@@ -387,7 +387,7 @@ export default function CreateCardModal({
                   {(type === 'snippet' || type === 'command') && (
                     <div>
                       <label htmlFor="card-language" className="block text-xs font-medium mb-1">Language</label>
-                      <input id="card-language" value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full rounded-lg border px-3 py-2 bg-background" />
+                      <input id="card-language" value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)]" />
                     </div>
                   )}
 

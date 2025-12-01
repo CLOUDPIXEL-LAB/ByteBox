@@ -207,7 +207,7 @@ export function AppLayout({
             const Icon = item.icon;
             const iconColor = getIconColor(item.name);
             return (
-              <a
+              <Link
                 key={item.name}
                 href={item.href}
                 className={cn(
@@ -236,7 +236,7 @@ export function AppLayout({
                     {item.name}
                   </span>
                 )}
-              </a>
+              </Link>
             );
           })}
         </nav>

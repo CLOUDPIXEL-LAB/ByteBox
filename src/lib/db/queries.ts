@@ -368,15 +368,15 @@ export async function getUserSettings(): Promise<UserSettingsData> {
     await prisma.userSettings.create({
       data: {
         id: SETTINGS_ID,
-        mode: 'light',
-        accentThemeId: 'default',
-        iconThemeId: 'default',
+        mode: 'dark',
+        accentThemeId: 'byte-classic',
+        iconThemeId: 'neon-grid',
         customAccentThemes: '[]',
         settingsPresets: '[]',
-        backgroundConfig: '{}',
-        fontConfig: '{}',
-        customIconColor: '',
-        glassIntensity: 0,
+        backgroundConfig: '{"type":"default"}',
+        fontConfig: '{"uiFont":"system","monoFont":"geist-mono"}',
+        customIconColor: '#f472b6',
+        glassIntensity: 60,
       },
     });
     

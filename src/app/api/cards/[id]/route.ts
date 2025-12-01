@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getCardById, updateCard, deleteCard, toggleCardStarred } from '@/lib/db';
+import { getCardById, updateCard, updateCardWithTags, deleteCard, toggleCardStarred } from '@/lib/db';
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -54,6 +54,19 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     const card = await getCardById(id);
     if (!card) {
       return NextResponse.json({ error: 'Card not found' }, { status: 404 });
+    }
+    
+    // If tagNames is provided, use the special update function
+    if (body.tagNames !== undefined) {
+      const updatedCard = await updateCardWithTags(id, {
+        title: body.title,
+        description: body.description,
+        content: body.content,
+        language: body.language,
+        starred: body.starred,
+        tagNames: body.tagNames,
+      });
+      return NextResponse.json(updatedCard);
     }
     
     const updatedCard = await updateCard(id, body);

@@ -237,6 +237,44 @@ export async function updateCard(id: string, data: Prisma.CardUpdateInput): Prom
   return toDomainCard(c);
 }
 
+export async function updateCardWithTags(id: string, cardData: {
+  title?: string;
+  description?: string | null;
+  content?: string;
+  language?: string;
+  starred?: boolean;
+  tagNames?: string[];
+}): Promise<Card> {
+  // If tagNames is provided, resolve them to tag IDs
+  let tagConnect: { id: string }[] | undefined;
+  if (cardData.tagNames !== undefined) {
+    const tags = await Promise.all(cardData.tagNames.map((name) => getOrCreateTag(name)));
+    tagConnect = tags.map((t) => ({ id: t.id }));
+  }
+
+  // Build update data, excluding tagNames
+  const updateData: Prisma.CardUpdateInput = {};
+  if (cardData.title !== undefined) updateData.title = cardData.title;
+  if (cardData.description !== undefined) updateData.description = cardData.description;
+  if (cardData.content !== undefined) updateData.content = cardData.content;
+  if (cardData.language !== undefined) updateData.language = cardData.language;
+  if (cardData.starred !== undefined) updateData.starred = cardData.starred;
+  
+  // Handle tags - disconnect all existing and connect new ones
+  if (tagConnect !== undefined) {
+    updateData.tags = {
+      set: tagConnect, // This replaces all existing tag connections
+    };
+  }
+
+  const c = await prisma.card.update({
+    where: { id },
+    data: updateData,
+    include: { category: true, tags: true },
+  });
+  return toDomainCard(c);
+}
+
 export async function deleteCard(id: string) {
   return prisma.card.delete({ where: { id } });
 }

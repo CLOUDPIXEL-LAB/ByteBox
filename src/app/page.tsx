@@ -101,6 +101,14 @@ export default function Home() {
     ),
   });
 
+  // Helper to replace a card in a category
+  const replaceCardInCategory = (category: CategoryWithCards, updatedCard: CardType) => ({
+    ...category,
+    cards: category.cards.map(card =>
+      card.id === updatedCard.id ? updatedCard : card
+    ),
+  });
+
   // Helper to update a card's starred status in board data
   const updateCardStarred = useCallback((cardId: string, starred: boolean) => {
     setBoardData(prev => {
@@ -167,6 +175,19 @@ export default function Home() {
     // Refresh the board data after deletion
     await refreshData();
   };
+
+  // Handle card update from modal
+  const handleUpdateCard = useCallback((updatedCard: CardType) => {
+    setBoardData(prev => {
+      if (!prev) return prev;
+      return {
+        ...prev,
+        categories: prev.categories.map(category => replaceCardInCategory(category, updatedCard)),
+      };
+    });
+    // Also update the selected card so the modal shows fresh data
+    setSelectedCard(updatedCard);
+  }, []);
 
   // Keyboard shortcut for starring selected card (Cmd/Ctrl+S)
   useEffect(() => {
@@ -291,6 +312,8 @@ export default function Home() {
         isOpen={Boolean(selectedCard) && isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onDelete={handleDeleteCard}
+        onUpdate={handleUpdateCard}
+        allTags={allTags}
       />
 
       {/* Create Card Modal */}

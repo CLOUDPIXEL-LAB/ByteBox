@@ -1,0 +1,26 @@
+---
+import MobileMenuFooter from 'virtual:starlight/components/MobileMenuFooter';
+import SidebarPersister from '@astrojs/starlight/components/SidebarPersister.astro';
+import SidebarSublist from '@astrojs/starlight/components/SidebarSublist.astro';
+
+const { sidebar } = Astro.locals.starlightRoute;
+---
+
+<SidebarPersister>
+	<div class="bbx-sidebar-brand">
+		<p class="bbx-sidebar-kicker">ByteBox Docs</p>
+		<p class="bbx-sidebar-copy">
+			Local-first docs for setup, operations, theming, API behavior, and deployment.
+		</p>
+		<div class="bbx-sidebar-actions">
+			<a href="/getting-started/">Quick Start</a>
+			<a href="/api-overview/">API</a>
+		</div>
+	</div>
+
+	<SidebarSublist sublist={sidebar} />
+</SidebarPersister>
+
+<div class="md:sl-hidden">
+	<MobileMenuFooter />
+</div>

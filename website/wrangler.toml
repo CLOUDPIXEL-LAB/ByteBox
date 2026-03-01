@@ -1,0 +1,6 @@
+name = "bytebox-docs"
+compatibility_date = "2026-03-01"
+pages_build_output_dir = "./dist"
+
+[vars]
+NODE_VERSION = "22"

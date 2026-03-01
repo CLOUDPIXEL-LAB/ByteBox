@@ -1,0 +1,19 @@
+---
+interface Props {
+	method: 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
+	path: string;
+}
+
+const { method, path } = Astro.props;
+const methodClass = `bbx-method bbx-method-${method.toLowerCase()}`;
+---
+
+<div class="bbx-endpoint">
+	<div class="bbx-endpoint-head">
+		<span class={methodClass}>{method}</span>
+		<code>{path}</code>
+	</div>
+	<div class="bbx-endpoint-body">
+		<slot />
+	</div>
+</div>

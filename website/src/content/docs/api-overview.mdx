@@ -1,0 +1,134 @@
+---
+title: API Reference
+description: Endpoint-level behavior for ByteBox route handlers.
+---
+
+import Endpoint from '../../components/docs/Endpoint.astro';
+
+ByteBox APIs are Next.js route handlers under `src/app/api/*`.
+
+## Cards Collection
+
+<Endpoint method="GET" path="/api/cards">
+- Returns `{ boardData, cards, tags }`.
+- Ensures default categories exist when DB is empty.
+</Endpoint>
+
+<Endpoint method="POST" path="/api/cards">
+- Creates a card with optional tags.
+- Accepts `tagNames: string[]` (preferred) and legacy `tags` compatibility input.
+</Endpoint>
+
+<Endpoint method="PATCH" path="/api/cards">
+- Bulk reorder/move endpoint.
+- Request shape:
+
+```json
+{
+  "updates": [
+    { "id": "card_1", "categoryId": "cat_2", "order": 3 }
+  ]
+}
+```
+</Endpoint>
+
+<Endpoint method="DELETE" path="/api/cards">
+- Destructive maintenance endpoint.
+- Deletes all cards, tags, and categories.
+</Endpoint>
+
+## Single Card
+
+<Endpoint method="GET" path="/api/cards/[id]">
+- Fetches one card by ID.
+- Returns `404` if not found.
+</Endpoint>
+
+<Endpoint method="PUT" path="/api/cards/[id]">
+- Full update path.
+- Returns updated card.
+</Endpoint>
+
+<Endpoint method="PATCH" path="/api/cards/[id]">
+- Supports star toggle action:
+  - `{ "action": "toggleStar" }`
+- Supports partial updates:
+  - `title`, `description`, `content`, `language`, `starred`, `categoryId`, `tagNames`
+</Endpoint>
+
+<Endpoint method="DELETE" path="/api/cards/[id]">
+- Deletes one card by ID.
+- Returns `404` if not found.
+</Endpoint>
+
+## Categories
+
+<Endpoint method="GET" path="/api/categories">
+- Returns all categories.
+</Endpoint>
+
+<Endpoint method="POST" path="/api/categories">
+- Requires `name`.
+- Optional `description`.
+- Defaults `color` to `#ec4899`.
+</Endpoint>
+
+<Endpoint method="PATCH" path="/api/categories/[id]">
+- Supports `name` and `color`.
+- Validates target category exists.
+</Endpoint>
+
+<Endpoint method="DELETE" path="/api/categories/[id]">
+- Deletes a category by ID.
+- Existing cards cascade via relation.
+</Endpoint>
+
+## Tags
+
+<Endpoint method="GET" path="/api/tags">
+- Returns tags sorted by name.
+- Includes `_count.cards` for each tag.
+</Endpoint>
+
+<Endpoint method="POST" path="/api/tags">
+- Requires non-empty `name` with max length 32.
+- Restricts `color` to allowed palette values.
+</Endpoint>
+
+<Endpoint method="DELETE" path="/api/tags/[id]">
+- Deletes one tag by ID.
+</Endpoint>
+
+## Settings
+
+<Endpoint method="GET" path="/api/settings">
+- Returns singleton user settings payload.
+</Endpoint>
+
+<Endpoint method="PATCH" path="/api/settings">
+- Partial update for appearance/settings state.
+</Endpoint>
+
+<Endpoint method="PUT" path="/api/settings">
+- Replace-style update path (same update helper currently).
+</Endpoint>
+
+## Data Portability
+
+<Endpoint method="GET" path="/api/export">
+- Exports metadata + categories/tags/cards payload.
+- Does not currently include rich fields like `imageData`, `fileData`, `starred`.
+</Endpoint>
+
+<Endpoint method="POST" path="/api/import">
+- Validates payload shape and app identity (`ByteBox`).
+- Upserts categories, tags, and cards in a transaction.
+</Endpoint>
+
+## Health and Response Patterns
+
+- Health check endpoint: `GET /api/cards`
+- Success responses are entity payloads or `{ success: true }`
+- Error payload shape: `{ error: "..." }` with HTTP status
+- Dynamic route params are awaited in handlers:
+  - `{ params }: { params: Promise<{ id: string }> }`

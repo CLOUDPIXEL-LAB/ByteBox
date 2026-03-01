@@ -15,6 +15,7 @@ import {
   HomeIcon,
   MagnifyingGlassIcon,
   TagIcon,
+  FolderIcon,
   Cog6ToothIcon,
   PlusIcon,
   FunnelIcon,
@@ -116,6 +117,7 @@ export function AppLayout({
   const navItems = [
     { name: 'Dashboard', icon: HomeIcon, href: '/', active: true },
     { name: 'Search', icon: MagnifyingGlassIcon, href: '/search' },
+    { name: 'Categories', icon: FolderIcon, href: '/categories' },
     { name: 'Tags', icon: TagIcon, href: '/tags' },
     { name: 'Settings', icon: Cog6ToothIcon, href: '/settings' },
   ];

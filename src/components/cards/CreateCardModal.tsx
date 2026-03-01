@@ -5,12 +5,13 @@
 
 'use client';
 
-import { Fragment, useEffect, useRef, useState } from 'react';
+import { Fragment, useCallback, useEffect, useRef, useState } from 'react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
-import { XMarkIcon, PhotoIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, PhotoIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import { processImage, validateImageFile } from '@/lib/utils/imageUtils';
 import { processDocFile, validateDocFile, formatFileSize, getFileIcon } from '@/lib/utils/fileUtils';
+import { LANGUAGE_OPTIONS } from '@/lib/utils/syntax';
 
 interface CreateCardModalProps {
   isOpen: boolean;
@@ -19,7 +20,6 @@ interface CreateCardModalProps {
   categories: Array<{ id: string; name: string }>;
   allTags: Array<{ id: string; name: string; color: string }>;
   preselectedCategoryId?: string;
-  onCategoryCreated?: (category: { id: string; name: string }) => void;
 }
 
 export default function CreateCardModal({
@@ -29,15 +29,19 @@ export default function CreateCardModal({
   categories,
   allTags,
   preselectedCategoryId,
-  onCategoryCreated,
 }: Readonly<CreateCardModalProps>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const categoryIdRef = useRef<string>('');
   const [type, setType] = useState<'bookmark' | 'snippet' | 'command' | 'doc' | 'image' | 'note'>('snippet');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [content, setContent] = useState('');
   const [language, setLanguage] = useState('javascript');
-  const [categoryId, setCategoryId] = useState<string>('');
+  const [categoryId, _setCategoryId] = useState<string>('');
+  const setCategoryId = useCallback((id: string) => {
+    categoryIdRef.current = id;
+    _setCategoryId(id);
+  }, []);
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
   const [imageData, setImageData] = useState<string>('');
   const [fileData, setFileData] = useState<string>('');
@@ -47,38 +51,16 @@ export default function CreateCardModal({
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
-  const [categoryError, setCategoryError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       setCategoryId(preselectedCategoryId || categories[0]?.id || '');
     }
-  }, [isOpen, preselectedCategoryId, categories]);
-
-  const handleCreateCategory = async () => {
-    const name = newCategoryName.trim();
-    if (!name) return;
-    setIsCreatingCategory(true);
-    setCategoryError('');
-    try {
-      const res = await fetch('/api/categories', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name }),
-      });
-      if (!res.ok) throw new Error('Failed to create category');
-      const created: { id: string; name: string } = await res.json();
-      onCategoryCreated?.(created);
-      setCategoryId(created.id);
-      setNewCategoryName('');
-    } catch (e) {
-      setCategoryError(e instanceof Error ? e.message : 'Failed to create category');
-    } finally {
-      setIsCreatingCategory(false);
-    }
-  };
+    // Only reset on modal open/close and preselectedCategoryId changes.
+    // Do NOT include `categories` — adding a new category would fire this
+    // effect and reset the selection back to the first category.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isOpen, preselectedCategoryId]);
 
   const toggleTag = (tagId: string) => {
     setSelectedTagIds((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]));
@@ -150,7 +132,7 @@ export default function CreateCardModal({
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (!title || !categoryId) {
+    if (!title || !categoryIdRef.current) {
       setError('Please provide a title and category');
       return;
     }
@@ -178,7 +160,7 @@ export default function CreateCardModal({
           fileType: type === 'doc' ? fileType : undefined,
           fileSize: type === 'doc' ? fileSize : undefined,
           language: type === 'snippet' || type === 'command' ? language : undefined,
-          categoryId,
+          categoryId: categoryIdRef.current,
           tagNames,
         }),
       });
@@ -374,44 +356,19 @@ export default function CreateCardModal({
                       </select>
                     </div>
                     <div>
-                      <label htmlFor="card-category" className="block text-xs font-medium mb-1">Category</label>
-                      {categories.length > 0 ? (
-                        <select
-                          id="card-category"
-                          value={categoryId}
-                          onChange={(e) => setCategoryId(e.target.value)}
-                          className="w-full rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] [&>option]:bg-[var(--surface-card)] [&>option]:text-[var(--text-strong)]"
-                        >
-                          {categories.map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.name}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
-                        <div className="space-y-2">
-                          <div className="flex gap-2">
-                            <input
-                              id="card-category"
-                              value={newCategoryName}
-                              onChange={(e) => setNewCategoryName(e.target.value)}
-                              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleCreateCategory())}
-                              placeholder="New category name…"
-                              className="flex-1 rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)]"
-                            />
-                            <button
-                              type="button"
-                              onClick={handleCreateCategory}
-                              disabled={isCreatingCategory || !newCategoryName.trim()}
-                              className="px-3 py-2 rounded-lg accent-gradient text-sm disabled:opacity-50"
-                            >
-                              {isCreatingCategory ? '…' : 'Create'}
-                            </button>
-                          </div>
-                          {categoryError && <p className="text-xs text-red-400">{categoryError}</p>}
-                          <p className="text-xs text-(--text-soft)">No categories yet — create one first</p>
-                        </div>
-                      )}
+                      <div className="flex items-center justify-between mb-1">
+                        <label htmlFor="card-category" className="text-xs font-medium">Category</label>
+                      </div>
+                      <select
+                        id="card-category"
+                        value={categoryId}
+                        onChange={(e) => setCategoryId(e.target.value)}
+                        className="w-full rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] [&>option]:bg-[var(--surface-card)] [&>option]:text-[var(--text-strong)]"
+                      >
+                        {categories.map((c) => (
+                          <option key={c.id} value={c.id}>{c.name}</option>
+                        ))}
+                      </select>
                     </div>
                   </div>
 
@@ -440,30 +397,55 @@ export default function CreateCardModal({
                   {(type === 'snippet' || type === 'command') && (
                     <div>
                       <label htmlFor="card-language" className="block text-xs font-medium mb-1">Language</label>
-                      <input id="card-language" value={language} onChange={(e) => setLanguage(e.target.value)} className="w-full rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)]" />
+                      <select
+                        id="card-language"
+                        value={language}
+                        onChange={(e) => setLanguage(e.target.value)}
+                        className="w-full rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] [&>option]:bg-[var(--surface-card)] [&>option]:text-[var(--text-strong)]"
+                      >
+                        {LANGUAGE_OPTIONS.map((lang) => (
+                          <option key={lang.value} value={lang.value}>{lang.label}</option>
+                        ))}
+                      </select>
                     </div>
                   )}
 
                   {/* Tags */}
                   <fieldset>
                     <legend className="block text-xs font-medium mb-2">Tags</legend>
-                    <div className="flex flex-wrap gap-2">
-                      {allTags.map((tag) => (
-                        <button
-                          key={tag.id}
-                          type="button"
-                          onClick={() => toggleTag(tag.id)}
-                          className={cn('px-3 py-1.5 rounded-full text-xs font-medium transition-all', selectedTagIds.includes(tag.id) ? 'ring-2' : 'hover:scale-105')}
-                          style={{
-                            backgroundColor: selectedTagIds.includes(tag.id) ? `${tag.color}30` : `${tag.color}20`,
-                            color: tag.color,
-                            border: `1px solid ${tag.color}${selectedTagIds.includes(tag.id) ? '60' : '40'}`,
-                          }}
-                        >
-                          {tag.name}
-                        </button>
-                      ))}
-                    </div>
+                    {allTags.length === 0 ? (
+                      <p className="text-xs text-(--text-soft)">
+                        No tags yet.{' '}
+                        <a href="/tags" className="underline hover:text-(--text-strong) transition-colors">Create tags on the Tags page</a>
+                        {' '}to organize your cards.
+                      </p>
+                    ) : (
+                      <div className="flex flex-wrap gap-2">
+                        {allTags.map((tag) => {
+                          const isSelected = selectedTagIds.includes(tag.id);
+                          return (
+                            <button
+                              key={tag.id}
+                              type="button"
+                              onClick={() => toggleTag(tag.id)}
+                              className={cn(
+                                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all',
+                                isSelected ? 'scale-105' : 'opacity-60 hover:opacity-100 hover:scale-105'
+                              )}
+                              style={{
+                                backgroundColor: isSelected ? `${tag.color}35` : `${tag.color}18`,
+                                color: tag.color,
+                                border: `1px solid ${tag.color}${isSelected ? '70' : '35'}`,
+                                boxShadow: isSelected ? `0 0 0 2px ${tag.color}35` : undefined,
+                              }}
+                            >
+                              {isSelected && <CheckIcon className="w-3 h-3" />}
+                              {tag.name}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
                   </fieldset>
 
                   {/* Footer */}

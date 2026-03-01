@@ -5,14 +5,25 @@
 
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { Card } from '@/components/cards/Card';
-import { TagIcon, HashtagIcon } from '@heroicons/react/24/outline';
+import { TagIcon, HashtagIcon, PlusIcon, TrashIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import { cn } from '@/lib/utils';
 import type { Tag as PrismaTag, Card as PrismaCard, Category as PrismaCategory } from '@prisma/client';
 import type { Card as CardType } from '@/types';
 import { useTheme } from '@/contexts/ThemeContext';
+
+const TAG_COLORS = [
+  { value: '#ec4899', label: 'Pink' },
+  { value: '#8b5cf6', label: 'Purple' },
+  { value: '#06b6d4', label: 'Cyan' },
+  { value: '#f59e0b', label: 'Amber' },
+  { value: '#22c55e', label: 'Green' },
+  { value: '#ef4444', label: 'Red' },
+  { value: '#f97316', label: 'Orange' },
+  { value: '#3b82f6', label: 'Blue' },
+];
 
 type CardWithRelations = PrismaCard & {
   category: PrismaCategory;
@@ -34,13 +45,23 @@ export default function TagsPage() {
   const [loading, setLoading] = useState(true);
   const [sortBy, setSortBy] = useState<'name' | 'count'>('name');
 
+  // Create form state
+  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [newTagName, setNewTagName] = useState('');
+  const [newTagColor, setNewTagColor] = useState('#8b5cf6');
+  const [creating, setCreating] = useState(false);
+  const [createError, setCreateError] = useState('');
+
+  // Per-tag delete tracking
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
   useEffect(() => {
     fetchData();
   }, []);
 
   useEffect(() => {
     if (selectedTag) {
-      const filtered = cards.filter(card => 
+      const filtered = cards.filter(card =>
         card.tags.some(tag => tag.id === selectedTag)
       );
       setFilteredCards(filtered);
@@ -51,22 +72,83 @@ export default function TagsPage() {
 
   const fetchData = async () => {
     try {
-      const response = await fetch('/api/cards');
-      const data = await response.json();
-      
+      setLoading(true);
+      const [cardsRes, tagsRes] = await Promise.all([
+        fetch('/api/cards'),
+        fetch('/api/tags'),
+      ]);
+      const cardsData = await cardsRes.json();
+      const tagsData: TagWithCount[] = await tagsRes.json();
+
       const allCards: CardWithRelations[] = [];
-      for (const cat of data.boardData.categories as { cards: CardWithRelations[] }[]) {
+      for (const cat of cardsData.boardData.categories as { cards: CardWithRelations[] }[]) {
         allCards.push(...cat.cards);
       }
-      
+
       setCards(allCards);
-      setTags(data.tags);
+      setTags(tagsData);
     } catch (error) {
       console.error('Error fetching data:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const handleCreateTag = useCallback(async () => {
+    const trimmed = newTagName.trim();
+    if (!trimmed) {
+      setCreateError('Tag name is required');
+      return;
+    }
+    if (trimmed.length > 32) {
+      setCreateError('Tag name must be 32 characters or fewer');
+      return;
+    }
+    if (tags.some(t => t.name.toLowerCase() === trimmed.toLowerCase())) {
+      setCreateError('A tag with this name already exists');
+      return;
+    }
+
+    setCreating(true);
+    setCreateError('');
+    try {
+      const res = await fetch('/api/tags', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: trimmed, color: newTagColor }),
+      });
+      if (!res.ok) {
+        const err = await res.json();
+        setCreateError(err.error ?? 'Failed to create tag');
+        return;
+      }
+      setNewTagName('');
+      setNewTagColor('#8b5cf6');
+      setShowCreateForm(false);
+      await fetchData();
+    } catch {
+      setCreateError('Failed to create tag');
+    } finally {
+      setCreating(false);
+    }
+  }, [newTagName, newTagColor, tags]);
+
+  const handleDeleteTag = useCallback(async (id: string) => {
+    setDeletingId(id);
+    try {
+      const res = await fetch(`/api/tags/${id}`, { method: 'DELETE' });
+      if (!res.ok) {
+        console.error('Failed to delete tag');
+        return;
+      }
+      if (selectedTag === id) setSelectedTag(null);
+      await fetchData();
+    } catch (error) {
+      console.error('Error deleting tag:', error);
+    } finally {
+      setDeletingId(null);
+    }
+  }, [selectedTag]);
 
   const sortedTags = [...tags].sort((a, b) => {
     if (sortBy === 'name') {
@@ -111,9 +193,21 @@ export default function TagsPage() {
         <div className="text-center py-12">
           <TagIcon className="w-16 h-16 mx-auto text-foreground/20 mb-4" />
           <h3 className="text-xl font-semibold mb-2">No tags yet</h3>
-          <p className="text-foreground/60">
-            Tags will appear here as you add them to cards
+          <p className="text-[var(--text-soft)] mb-4">
+            Create your first tag to start organizing your cards
           </p>
+          <button
+            onClick={() => setShowCreateForm(true)}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--accent-primary) 20%, transparent)',
+              color: 'var(--accent-primary)',
+              border: '1px solid color-mix(in srgb, var(--accent-primary) 40%, transparent)',
+            }}
+          >
+            <PlusIcon className="w-4 h-4" />
+            Create Tag
+          </button>
         </div>
       );
     }
@@ -122,30 +216,52 @@ export default function TagsPage() {
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
         {sortedTags.map((tag) => {
           const cardCount = tag._count?.cards ?? 0;
+          const isDeleting = deletingId === tag.id;
           return (
-            <button
+            <div
               key={tag.id}
-              onClick={() => setSelectedTag(selectedTag === tag.id ? null : tag.id)}
               className={cn(
-                'group relative surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 text-left transition-all',
+                'group relative surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 transition-all',
                 'hover:border-[color-mix(in_srgb,var(--accent-border)_50%,transparent)] hover:shadow-[0_16px_45px_color-mix(in_srgb,var(--accent-primary)_18%,transparent)]',
                 selectedTag === tag.id && 'border-[color-mix(in_srgb,var(--accent-border)_80%,transparent)] bg-accent-soft/40 shadow-[0_18px_50px_color-mix(in_srgb,var(--accent-primary)_22%,transparent)]'
               )}
             >
-              <div className="flex items-start justify-between mb-2">
-                <div
-                  className="w-3 h-3 rounded-full"
-                  style={{ backgroundColor: tag.color }}
-                />
-                <span className="text-xs font-medium px-2 py-0.5 rounded-full surface-card surface-card--subtle text-[var(--text-soft)] border border-[color-mix(in_srgb,var(--card-border)_70%,transparent)]">
-                  {cardCount}
-                </span>
-              </div>
-              <p className="font-medium truncate text-[var(--text-strong)]">{tag.name}</p>
-              <p className="text-xs text-[var(--text-soft)] mt-1">
-                {cardCount} card{cardCount === 1 ? '' : 's'}
-              </p>
-            </button>
+              {/* Delete button */}
+              <button
+                onClick={() => handleDeleteTag(tag.id)}
+                disabled={isDeleting}
+                className={cn(
+                  'absolute top-2 right-2 w-6 h-6 rounded-lg flex items-center justify-center transition-all',
+                  'opacity-0 group-hover:opacity-100',
+                  'hover:bg-red-500/20 text-[var(--text-soft)] hover:text-red-400',
+                  isDeleting && 'opacity-100 animate-pulse'
+                )}
+                aria-label={`Delete ${tag.name} tag`}
+                title="Delete tag"
+              >
+                <TrashIcon className="w-3.5 h-3.5" />
+              </button>
+
+              {/* Clickable area */}
+              <button
+                className="w-full text-left"
+                onClick={() => setSelectedTag(selectedTag === tag.id ? null : tag.id)}
+              >
+                <div className="flex items-start justify-between mb-2 pr-5">
+                  <div
+                    className="w-3 h-3 rounded-full mt-0.5 flex-shrink-0"
+                    style={{ backgroundColor: tag.color }}
+                  />
+                  <span className="text-xs font-medium px-2 py-0.5 rounded-full surface-card surface-card--subtle text-[var(--text-soft)] border border-[color-mix(in_srgb,var(--card-border)_70%,transparent)]">
+                    {cardCount}
+                  </span>
+                </div>
+                <p className="font-medium truncate text-[var(--text-strong)] pr-5">{tag.name}</p>
+                <p className="text-xs text-[var(--text-soft)] mt-1">
+                  {cardCount} card{cardCount === 1 ? '' : 's'}
+                </p>
+              </button>
+            </div>
           );
         })}
       </div>
@@ -156,15 +272,135 @@ export default function TagsPage() {
     <AppLayout onQuickAdd={() => alert('Please navigate to the Dashboard to create cards')}>
       <div className="max-w-6xl mx-auto space-y-6">
         {/* Header */}
-        <div>
-          <h1 className="text-3xl font-bold font-brand text-[var(--text-strong)]">
-            Tags
-          </h1>
-          <div className="h-1 w-16 rounded-full mt-2" style={{ backgroundColor: 'var(--accent-primary)' }} />
-          <p className="text-[var(--text-soft)] mt-3">
-            Organize and filter by tags
-          </p>
+        <div className="flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl font-bold font-brand text-[var(--text-strong)]">
+              Tags
+            </h1>
+            <div className="h-1 w-16 rounded-full mt-2" style={{ backgroundColor: 'var(--accent-primary)' }} />
+            <p className="text-[var(--text-soft)] mt-3">
+              Organize and filter by tags
+            </p>
+          </div>
+          <button
+            onClick={() => { setShowCreateForm(true); setCreateError(''); }}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all mt-1"
+            style={{
+              backgroundColor: 'color-mix(in srgb, var(--accent-primary) 20%, transparent)',
+              color: 'var(--accent-primary)',
+              border: '1px solid color-mix(in srgb, var(--accent-primary) 40%, transparent)',
+            }}
+          >
+            <PlusIcon className="w-4 h-4" />
+            New Tag
+          </button>
         </div>
+
+        {/* Create Tag Form */}
+        {showCreateForm && (
+          <div className="glass glass--dense rounded-3xl p-6">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold text-[var(--text-strong)]">Create New Tag</h2>
+              <button
+                onClick={() => { setShowCreateForm(false); setNewTagName(''); setCreateError(''); }}
+                className="w-7 h-7 rounded-lg flex items-center justify-center hover:bg-[color-mix(in_srgb,var(--card-border)_30%,transparent)] text-[var(--text-soft)] transition-colors"
+                aria-label="Close"
+              >
+                <XMarkIcon className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Tag Name */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-soft)] mb-1.5">
+                  Tag Name
+                </label>
+                <input
+                  type="text"
+                  value={newTagName}
+                  onChange={(e) => { setNewTagName(e.target.value); setCreateError(''); }}
+                  onKeyDown={(e) => { if (e.key === 'Enter') handleCreateTag(); }}
+                  placeholder="e.g. typescript, important, todo…"
+                  maxLength={32}
+                  className="w-full px-3 py-2 rounded-xl text-sm bg-[color-mix(in_srgb,var(--surface-base)_60%,transparent)] border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] text-[var(--text-strong)] placeholder:text-[var(--text-soft)] focus:outline-none focus:border-[color-mix(in_srgb,var(--accent-primary)_60%,transparent)] transition-colors"
+                  autoFocus
+                />
+                {createError && (
+                  <p className="mt-1.5 text-xs text-red-400">{createError}</p>
+                )}
+              </div>
+
+              {/* Color Picker */}
+              <div>
+                <label className="block text-sm font-medium text-[var(--text-soft)] mb-2">
+                  Color
+                </label>
+                <div className="flex flex-wrap gap-2">
+                  {TAG_COLORS.map((c) => (
+                    <button
+                      key={c.value}
+                      type="button"
+                      onClick={() => setNewTagColor(c.value)}
+                      className={cn(
+                        'w-8 h-8 rounded-full transition-all focus:outline-none hover:scale-105'
+                      )}
+                      style={{
+                        backgroundColor: c.value,
+                        ...(newTagColor === c.value ? { outline: `3px solid ${c.value}`, outlineOffset: '3px', transform: 'scale(1.15)' } : {}),
+                      }}
+                      aria-label={c.label}
+                      title={c.label}
+                    />
+                  ))}
+                </div>
+                {/* Preview */}
+                <div className="mt-3 flex items-center gap-2">
+                  <span className="text-xs text-[var(--text-soft)]">Preview:</span>
+                  <span
+                    className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium"
+                    style={{
+                      backgroundColor: `${newTagColor}20`,
+                      color: newTagColor,
+                      border: `1px solid ${newTagColor}40`,
+                    }}
+                  >
+                    {newTagName.trim() || 'tag-name'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={handleCreateTag}
+                  disabled={creating}
+                  className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-all disabled:opacity-50"
+                  style={{
+                    backgroundColor: 'var(--accent-primary)',
+                    color: '#fff',
+                  }}
+                >
+                  {creating ? (
+                    <div
+                      className="w-4 h-4 border-2 rounded-full animate-spin"
+                      style={{ borderColor: 'rgba(255,255,255,0.3)', borderTopColor: '#fff' }}
+                    />
+                  ) : (
+                    <PlusIcon className="w-4 h-4" />
+                  )}
+                  Create Tag
+                </button>
+                <button
+                  onClick={() => { setShowCreateForm(false); setNewTagName(''); setCreateError(''); }}
+                  className="px-4 py-2 rounded-xl text-sm font-medium text-[var(--text-soft)] hover:text-[var(--text-strong)] transition-colors border border-[color-mix(in_srgb,var(--card-border)_60%,transparent)] hover:border-[color-mix(in_srgb,var(--card-border)_100%,transparent)]"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -217,32 +453,36 @@ export default function TagsPage() {
         {/* Tags Grid */}
         <div className="glass glass--dense rounded-3xl p-6 space-y-4">
           <div className="flex items-center justify-between">
-            <h2 className="text-xl font-semibold">All Tags</h2>
-            <div className="flex items-center gap-2">
-              <span className="text-sm text-[var(--text-soft)]">Sort by:</span>
-              <button
-                onClick={() => setSortBy('name')}
-                className={cn(
-                  'px-3 py-1.5 rounded-lg text-sm font-medium transition-all border',
-                  sortBy === 'name'
-                    ? 'accent-gradient border-transparent shadow-[0_12px_32px_color-mix(in_srgb,var(--accent-primary)_25%,transparent)]'
-                    : 'surface-card surface-card--subtle border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_45%,transparent)]'
-                )}
-              >
-                Name
-              </button>
-              <button
-                onClick={() => setSortBy('count')}
-                className={cn(
-                  'px-3 py-1.5 rounded-lg text-sm font-medium transition-all border',
-                  sortBy === 'count'
-                    ? 'accent-gradient border-transparent shadow-[0_12px_32px_color-mix(in_srgb,var(--accent-primary)_25%,transparent)]'
-                    : 'surface-card surface-card--subtle border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_45%,transparent)]'
-                )}
-              >
-                Usage
-              </button>
-            </div>
+            <h2 className="text-xl font-semibold">
+              {tags.length > 0 ? `All Tags (${tags.length})` : 'All Tags'}
+            </h2>
+            {tags.length > 1 && (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-[var(--text-soft)]">Sort by:</span>
+                <button
+                  onClick={() => setSortBy('name')}
+                  className={cn(
+                    'px-3 py-1.5 rounded-lg text-sm font-medium transition-all border',
+                    sortBy === 'name'
+                      ? 'accent-gradient border-transparent shadow-[0_12px_32px_color-mix(in_srgb,var(--accent-primary)_25%,transparent)]'
+                      : 'surface-card surface-card--subtle border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_45%,transparent)]'
+                  )}
+                >
+                  Name
+                </button>
+                <button
+                  onClick={() => setSortBy('count')}
+                  className={cn(
+                    'px-3 py-1.5 rounded-lg text-sm font-medium transition-all border',
+                    sortBy === 'count'
+                      ? 'accent-gradient border-transparent shadow-[0_12px_32px_color-mix(in_srgb,var(--accent-primary)_25%,transparent)]'
+                      : 'surface-card surface-card--subtle border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_45%,transparent)]'
+                  )}
+                >
+                  Usage
+                </button>
+              </div>
+            )}
           </div>
 
           {renderTagGridContent()}
@@ -253,13 +493,14 @@ export default function TagsPage() {
           <div className="space-y-4">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold">
-                Cards with {tags.find(t => t.id === selectedTag)?.name}
+                Cards with &ldquo;{tags.find(t => t.id === selectedTag)?.name}&rdquo;
               </h2>
               <button
                 onClick={() => setSelectedTag(null)}
-                className="text-sm text-accent hover:underline"
+                className="text-sm flex items-center gap-1 text-[var(--text-soft)] hover:text-[var(--text-strong)] transition-colors"
               >
-                Clear selection
+                <XMarkIcon className="w-4 h-4" />
+                Clear
               </button>
             </div>
 

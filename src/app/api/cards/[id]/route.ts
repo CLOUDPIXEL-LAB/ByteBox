@@ -57,13 +57,14 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
     }
     
     // If tagNames is provided, use the special update function
-    if (body.tagNames !== undefined) {
+    if (body.tagNames !== undefined || body.categoryId !== undefined) {
       const updatedCard = await updateCardWithTags(id, {
         title: body.title,
         description: body.description,
         content: body.content,
         language: body.language,
         starred: body.starred,
+        categoryId: body.categoryId,
         tagNames: body.tagNames,
       });
       return NextResponse.json(updatedCard);

@@ -23,12 +23,16 @@ export default function Home() {
   useEffect(() => {
     async function fetchData() {
       try {
-        const response = await fetch('/api/cards');
-        if (!response.ok) throw new Error('Failed to fetch cards');
+        const [cardsRes, tagsRes] = await Promise.all([
+          fetch('/api/cards'),
+          fetch('/api/tags'),
+        ]);
+        if (!cardsRes.ok) throw new Error('Failed to fetch cards');
         
-        const data = await response.json();
+        const data = await cardsRes.json();
+        const tagsData = tagsRes.ok ? await tagsRes.json() : data.tags;
         setBoardData(data.boardData);
-        setAllTags(data.tags);
+        setAllTags(tagsData);
       } catch (error) {
         console.error('Error fetching data:', error);
       } finally {
@@ -101,14 +105,6 @@ export default function Home() {
     ),
   });
 
-  // Helper to replace a card in a category
-  const replaceCardInCategory = (category: CategoryWithCards, updatedCard: CardType) => ({
-    ...category,
-    cards: category.cards.map(card =>
-      card.id === updatedCard.id ? updatedCard : card
-    ),
-  });
-
   // Helper to update a card's starred status in board data
   const updateCardStarred = useCallback((cardId: string, starred: boolean) => {
     setBoardData(prev => {
@@ -141,12 +137,16 @@ export default function Home() {
   // Refresh data after card creation
   const refreshData = async () => {
     try {
-      const response = await fetch('/api/cards');
-      if (!response.ok) throw new Error('Failed to fetch cards');
+      const [cardsRes, tagsRes] = await Promise.all([
+        fetch('/api/cards'),
+        fetch('/api/tags'),
+      ]);
+      if (!cardsRes.ok) throw new Error('Failed to fetch cards');
       
-      const data = await response.json();
+      const data = await cardsRes.json();
+      const tagsData = tagsRes.ok ? await tagsRes.json() : data.tags;
       setBoardData(data.boardData);
-      setAllTags(data.tags);
+      setAllTags(tagsData);
     } catch (error) {
       console.error('Error refreshing data:', error);
     }
@@ -170,44 +170,6 @@ export default function Home() {
     setPreselectedCategoryId(undefined);
   };
 
-  // Handle a new category created inline from the modal
-  const handleCategoryCreated = useCallback((category: { id: string; name: string }) => {
-    setBoardData(prev => {
-      if (!prev) {
-        return {
-          categories: [{
-            id: category.id,
-            name: category.name,
-            description: null,
-            color: '#ec4899',
-            order: 0,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            cards: [],
-          }],
-        };
-      }
-      // Avoid duplicates
-      if (prev.categories.some(c => c.id === category.id)) return prev;
-      return {
-        ...prev,
-        categories: [
-          ...prev.categories,
-          {
-            id: category.id,
-            name: category.name,
-            description: null,
-            color: '#ec4899',
-            order: prev.categories.length,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            cards: [],
-          },
-        ],
-      };
-    });
-  }, []);
-
   // Handle card deletion
   const handleDeleteCard = async () => {
     // Refresh the board data after deletion
@@ -220,11 +182,67 @@ export default function Home() {
       if (!prev) return prev;
       return {
         ...prev,
-        categories: prev.categories.map(category => replaceCardInCategory(category, updatedCard)),
+        categories: prev.categories.map(category => {
+          const hasCard = category.cards.some(c => c.id === updatedCard.id);
+          // Card moved away from this category
+          if (hasCard && category.id !== updatedCard.categoryId) {
+            return { ...category, cards: category.cards.filter(c => c.id !== updatedCard.id) };
+          }
+          // Card belongs here — update or append
+          if (category.id === updatedCard.categoryId) {
+            if (hasCard) {
+              return { ...category, cards: category.cards.map(c => c.id === updatedCard.id ? updatedCard : c) };
+            }
+            return { ...category, cards: [...category.cards, updatedCard] };
+          }
+          return category;
+        }),
       };
     });
     // Also update the selected card so the modal shows fresh data
     setSelectedCard(updatedCard);
+  }, []);
+
+  // Handle category rename
+  const handleCategoryRename = useCallback(async (id: string, newName: string) => {
+    try {
+      const res = await fetch(`/api/categories/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: newName }),
+      });
+      if (!res.ok) throw new Error('Failed to rename category');
+      setBoardData(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          categories: prev.categories.map(c =>
+            c.id === id ? { ...c, name: newName } : c
+          ),
+        };
+      });
+    } catch (error) {
+      console.error('Error renaming category:', error);
+    }
+  }, []);
+
+  // Handle category delete
+  const handleCategoryDelete = useCallback(async (id: string) => {
+    try {
+      const res = await fetch(`/api/categories/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Failed to delete category');
+      setBoardData(prev => {
+        if (!prev) return prev;
+        return {
+          ...prev,
+          categories: prev.categories.filter(c => c.id !== id),
+        };
+      });
+      // If selected card was in deleted category, close modal
+      setSelectedCard(prev => prev?.categoryId === id ? null : prev);
+    } catch (error) {
+      console.error('Error deleting category:', error);
+    }
   }, []);
 
   // Keyboard shortcut for starring selected card (Cmd/Ctrl+S)
@@ -314,6 +332,8 @@ export default function Home() {
               onCardClick={handleCardClick}
               onAddCard={handleAddCard}
               onStarToggle={handleStarToggle}
+              onCategoryRename={handleCategoryRename}
+              onCategoryDelete={handleCategoryDelete}
             />
           ) : (
             <div className="text-center py-12">
@@ -352,6 +372,7 @@ export default function Home() {
         onDelete={handleDeleteCard}
         onUpdate={handleUpdateCard}
         allTags={allTags}
+        categories={(boardData?.categories ?? []).map((cat) => ({ id: cat.id, name: cat.name, color: cat.color }))}
       />
 
       {/* Create Card Modal */}
@@ -362,7 +383,6 @@ export default function Home() {
         categories={(boardData?.categories ?? []).map((cat) => ({ id: cat.id, name: cat.name }))}
         allTags={allTags}
         preselectedCategoryId={preselectedCategoryId}
-        onCategoryCreated={handleCategoryCreated}
       />
     </AppLayout>
   );

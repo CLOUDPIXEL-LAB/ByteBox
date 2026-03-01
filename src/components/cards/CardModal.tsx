@@ -2,10 +2,10 @@
 
 import { Fragment, useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogPanel, DialogTitle, Transition, TransitionChild } from '@headlessui/react';
-import { XMarkIcon, BookmarkIcon, CodeBracketIcon, CommandLineIcon, DocumentTextIcon, PhotoIcon, ClipboardIcon, TrashIcon, MagnifyingGlassPlusIcon, PencilSquareIcon, StarIcon } from '@heroicons/react/24/outline';
+import { XMarkIcon, BookmarkIcon, CodeBracketIcon, CommandLineIcon, DocumentTextIcon, PhotoIcon, ClipboardIcon, TrashIcon, MagnifyingGlassPlusIcon, PencilSquareIcon, StarIcon, CheckIcon } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import type { Card as CardType, Tag } from '@/types';
-import { normalizeLanguage } from '@/lib/utils/syntax';
+import { normalizeLanguage, LANGUAGE_OPTIONS } from '@/lib/utils/syntax';
 import { CodeBlock } from '@/components/ui/CodeBlock';
 import { Lightbox } from '@/components/ui/Lightbox';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -18,6 +18,7 @@ interface CardModalProps {
   onDelete?: (cardId: string) => void;
   onUpdate?: (updatedCard: CardType) => void;
   allTags?: Tag[];
+  categories?: Array<{ id: string; name: string; color?: string }>;
 }
 
 const cardTypeIcons = {
@@ -29,7 +30,7 @@ const cardTypeIcons = {
   note: PencilSquareIcon,
 };
 
-export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags = [] }: Readonly<CardModalProps>) {
+export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags = [], categories = [] }: Readonly<CardModalProps>) {
   const { getIconColor } = useTheme();
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -43,8 +44,9 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
   const [editContent, setEditContent] = useState('');
   const [editLanguage, setEditLanguage] = useState('');
   const [editStarred, setEditStarred] = useState(false);
+  const [editCategoryId, setEditCategoryId] = useState('');
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
-  
+
   const cardId = card?.id ?? null;
   
   // Initialize edit form when card changes or edit mode is entered
@@ -55,6 +57,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
       setEditContent(card.content);
       setEditLanguage(card.language || (card.type === 'command' ? 'bash' : 'javascript'));
       setEditStarred(card.starred);
+      setEditCategoryId(card.categoryId);
       setSelectedTagIds(card.tags?.map(t => t.id) || []);
     }
   }, [card]);
@@ -122,6 +125,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
           content: editContent,
           language: (card.type === 'snippet' || card.type === 'command') ? editLanguage : undefined,
           starred: editStarred,
+          categoryId: editCategoryId !== card.categoryId ? editCategoryId : undefined,
           tagNames: allTagNames,
         }),
       });
@@ -142,7 +146,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
     initializeEditForm();
     setIsEditing(false);
   };
-  
+
   const handleToggleStar = async () => {
     if (!card || !onUpdate) return;
     
@@ -280,6 +284,23 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
     
     return (
       <div className="space-y-4">
+        {/* Category */}
+        {categories.length > 0 && (
+          <div>
+            <label htmlFor="edit-category" className="block text-xs font-medium text-(--text-soft) mb-1">Category</label>
+            <select
+              id="edit-category"
+              value={editCategoryId}
+              onChange={(e) => setEditCategoryId(e.target.value)}
+              className="w-full rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] [&>option]:bg-[var(--surface-card)] [&>option]:text-[var(--text-strong)]"
+            >
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>{c.name}</option>
+              ))}
+            </select>
+          </div>
+        )}
+
         {/* Title */}
         <div>
           <label htmlFor="edit-title" className="block text-xs font-medium text-(--text-soft) mb-1">Title</label>
@@ -325,44 +346,55 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
         {(card.type === 'snippet' || card.type === 'command') && (
           <div>
             <label htmlFor="edit-language" className="block text-xs font-medium text-(--text-soft) mb-1">Language</label>
-            <input
+            <select
               id="edit-language"
-              type="text"
               value={editLanguage}
               onChange={(e) => setEditLanguage(e.target.value)}
-              placeholder="javascript, python, bash..."
-              className="w-full px-3 py-2 rounded-lg bg-[color-mix(in_srgb,var(--surface-card)_80%,transparent)] border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] text-(--text-strong)"
-            />
+              className="w-full px-3 py-2 rounded-lg bg-[color-mix(in_srgb,var(--surface-card)_80%,transparent)] border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] text-(--text-strong) [&>option]:bg-[var(--surface-card)] [&>option]:text-[var(--text-strong)]"
+            >
+              {LANGUAGE_OPTIONS.map((lang) => (
+                <option key={lang.value} value={lang.value}>{lang.label}</option>
+              ))}
+            </select>
           </div>
         )}
         
         {/* Tags */}
         <fieldset>
           <legend className="block text-xs font-medium text-(--text-soft) mb-2">Tags</legend>
-          <div className="flex flex-wrap gap-2">
-            {availableTags.map((tag) => (
-              <button
-                key={tag.id}
-                type="button"
-                onClick={() => toggleTag(tag.id)}
-                className={cn(
-                  'px-3 py-1.5 rounded-full text-xs font-medium transition-all',
-                  selectedTagIds.includes(tag.id) ? 'ring-2 ring-offset-1 ring-offset-transparent' : 'hover:scale-105'
-                )}
-                style={{
-                  backgroundColor: selectedTagIds.includes(tag.id) ? `${tag.color}30` : `${tag.color}20`,
-                  color: tag.color,
-                  border: `1px solid ${tag.color}${selectedTagIds.includes(tag.id) ? '60' : '40'}`,
-                  boxShadow: selectedTagIds.includes(tag.id) ? `0 0 0 2px ${tag.color}40` : undefined,
-                }}
-              >
-                {tag.name}
-              </button>
-            ))}
-            {availableTags.length === 0 && (
-              <span className="text-xs text-(--text-soft)">No tags available. Create tags from the Tags page.</span>
-            )}
-          </div>
+          {availableTags.length === 0 ? (
+            <p className="text-xs text-(--text-soft)">
+              No tags yet.{' '}
+              <a href="/tags" className="underline hover:text-(--text-strong) transition-colors">Create tags on the Tags page</a>
+              {' '}to organize your cards.
+            </p>
+          ) : (
+            <div className="flex flex-wrap gap-2">
+              {availableTags.map((tag) => {
+                const isSelected = selectedTagIds.includes(tag.id);
+                return (
+                  <button
+                    key={tag.id}
+                    type="button"
+                    onClick={() => toggleTag(tag.id)}
+                    className={cn(
+                      'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium transition-all',
+                      isSelected ? 'scale-105' : 'opacity-60 hover:opacity-100 hover:scale-105'
+                    )}
+                    style={{
+                      backgroundColor: isSelected ? `${tag.color}35` : `${tag.color}18`,
+                      color: tag.color,
+                      border: `1px solid ${tag.color}${isSelected ? '70' : '35'}`,
+                      boxShadow: isSelected ? `0 0 0 2px ${tag.color}35` : undefined,
+                    }}
+                  >
+                    {isSelected && <CheckIcon className="w-3 h-3" />}
+                    {tag.name}
+                  </button>
+                );
+              })}
+            </div>
+          )}
         </fieldset>
         
         {/* Starred toggle */}

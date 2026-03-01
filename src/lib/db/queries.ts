@@ -261,6 +261,7 @@ export async function updateCardWithTags(id: string, cardData: {
   content?: string;
   language?: string;
   starred?: boolean;
+  categoryId?: string;
   tagNames?: string[];
 }): Promise<Card> {
   // If tagNames is provided, resolve them to tag IDs
@@ -277,6 +278,7 @@ export async function updateCardWithTags(id: string, cardData: {
   if (cardData.content !== undefined) updateData.content = cardData.content;
   if (cardData.language !== undefined) updateData.language = cardData.language;
   if (cardData.starred !== undefined) updateData.starred = cardData.starred;
+  if (cardData.categoryId !== undefined) updateData.category = { connect: { id: cardData.categoryId } };
   
   // Handle tags - disconnect all existing and connect new ones
   if (tagConnect !== undefined) {

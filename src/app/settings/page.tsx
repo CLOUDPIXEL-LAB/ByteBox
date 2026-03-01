@@ -186,6 +186,8 @@ export default function SettingsPage() {
     setIsCreatingPreset(false);
   };
 
+
+
   const handleSetSolidBackground = (color: string) => {
     setSolidBackground(color);
     setBackgroundConfig({

@@ -1,5 +1,6 @@
 {
-  "name": "@pinkpixel/bytebox",
+  "name": "bytebox",
+  "private": true,
   "author": {
     "name": "Pink Pixel",
     "email": "admino@pinkpixel.dev",

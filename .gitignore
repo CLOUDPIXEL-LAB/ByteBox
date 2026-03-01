@@ -44,5 +44,9 @@ next-env.d.ts
 /src/generated/prisma
 glass_theming_guide.md
 
+# Electron build artifacts
+/dist-electron
+/release
+
 # other
 /DEV

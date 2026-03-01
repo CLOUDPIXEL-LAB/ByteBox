@@ -1,0 +1,27 @@
+## ── Build output ──────────────────────────────────────────────────────────────
+node_modules
+.next
+out
+
+## ── Source files not needed in the image ─────────────────────────────────────
+.git
+.github
+.vscode
+DEV
+
+## ── Local database & env ──────────────────────────────────────────────────────
+dev.db
+data/
+.env
+.env.local
+
+## ── Electron artifacts (not part of the Docker build) ────────────────────────
+dist-electron
+release
+
+## ── Misc ──────────────────────────────────────────────────────────────────────
+*.log
+*.tsbuildinfo
+.DS_Store
+npm-debug.log*
+coverage

@@ -1,0 +1,112 @@
+# ByteBox - electron-builder configuration
+# Made with ❤️ by Pink Pixel
+#
+# Build targets:
+#   Linux  → AppImage + .deb
+#   Windows → NSIS installer (.exe)
+#   macOS  → .dmg  (requires a macOS build host)
+#
+# Run:
+#   npm run electron:build:linux   (from Linux)
+#   npm run electron:build:win     (cross-compile from Linux, needs Wine)
+#   npm run electron:build         (current platform)
+
+appId: dev.pinkpixel.bytebox
+productName: ByteBox
+copyright: "Copyright © 2025 Pink Pixel"
+
+# ── Packaging ─────────────────────────────────────────────────────────────────
+
+# Disable asar so the Next.js server can read its own files from disk.
+# Asar patching is unreliable with some Next.js internals.
+asar: false
+
+directories:
+  output: release
+  buildResources: electron/assets
+
+# Files to include in the packaged app.
+# electron-builder starts from the project root.
+files:
+  - dist-electron/** # compiled main + preload
+  - .next/** # built Next.js output
+  - public/** # static assets
+  - package.json
+  - next.config.ts
+  - prisma.config.ts
+  - tsconfig.json
+  - prisma/schema.prisma
+  - prisma/migrations/**
+  - scripts/**
+  - node_modules/**
+  # Exclude noise from node_modules to reduce bundle size
+  - "!node_modules/**/{README,readme,Readme,CHANGELOG,changelog}.md"
+  - "!node_modules/**/{CONTRIBUTING,contributing,AUTHORS,AUTHOR}.md"
+  - "!node_modules/**/{test,tests,__tests__,spec,specs}/**"
+  - "!node_modules/**/*.{ts,tsx,map,d.ts}"
+  - "!node_modules/**/{.github,.vscode,docs,doc,example,examples}/**"
+  - "!node_modules/.cache/**"
+
+# Native modules (better-sqlite3) need to be rebuilt for the Electron ABI.
+# electron-builder handles this automatically before packaging.
+npmRebuild: true
+
+# ── Linux ─────────────────────────────────────────────────────────────────────
+
+linux:
+  target:
+    - AppImage
+    - deb
+  category: Development
+  icon: public/icon.png # 256×256+ PNG
+  synopsis: Developer reference cards & bookmarks dashboard
+  description: >
+    ByteBox is a local-first dashboard for developers. Store bookmarks,
+    code snippets, shell commands, notes, and images — all in one place,
+    fully offline.
+  desktop:
+    Name: ByteBox
+    Comment: Developer reference cards and bookmarks dashboard
+    Categories: Development;Utility;
+
+deb:
+  depends:
+    - libgtk-3-0
+    - libnotify4
+    - libnss3
+    - libxss1
+    - libxtst6
+    - xdg-utils
+    - libatspi2.0-0
+    - libsecret-1-0
+
+# ── Windows ───────────────────────────────────────────────────────────────────
+
+win:
+  target:
+    - target: nsis
+      arch:
+        - x64
+  # electron-builder can convert a PNG to .ico if @electron/windows-sign
+  # or nsis-resources are available; otherwise supply a real .ico here.
+  icon: public/icon.png
+
+nsis:
+  oneClick: false
+  allowDirChange: true
+  createDesktopShortcut: true
+  createStartMenuShortcut: true
+  shortcutName: ByteBox
+  installerIcon: public/icon.png
+  uninstallerIcon: public/icon.png
+
+# ── macOS (cross-compile not supported — must build on macOS) ─────────────────
+
+mac:
+  target:
+    - dmg
+  category: public.app-category.developer-tools
+  icon: public/icon.png # ideally a 1024×1024 PNG or .icns
+
+# ── Do not publish automatically ──────────────────────────────────────────────
+publish: null

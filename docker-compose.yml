@@ -1,0 +1,49 @@
+# ByteBox - Docker Compose
+# Made with ❤️ by Pink Pixel
+#
+# Quick start:
+#   docker compose up --build -d
+#
+# The SQLite database is stored in the "bytebox-data" named volume so your
+# cards, categories, and settings survive container restarts and upgrades.
+#
+# To upgrade:
+#   docker compose pull   (or rebuild with --build)
+#   docker compose up -d
+#   Your data is untouched — migrations run automatically on startup.
+#
+# To back up your data:
+#   docker run --rm -v bytebox-data:/data -v $(pwd):/backup \
+#     alpine tar czf /backup/bytebox-backup.tar.gz /data
+#
+# To restore from backup:
+#   docker run --rm -v bytebox-data:/data -v $(pwd):/backup \
+#     alpine tar xzf /backup/bytebox-backup.tar.gz -C /
+
+services:
+  bytebox:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: bytebox:latest
+    container_name: bytebox
+    ports:
+      - "1334:1334"
+    volumes:
+      - bytebox-data:/data # SQLite database lives here
+    environment:
+      - NODE_ENV=production
+      - DATABASE_URL=file:/data/bytebox.db
+      - PORT=1334
+      - NEXT_TELEMETRY_DISABLED=1
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:1334/api/cards || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 45s # Give Next.js time to boot on first run
+
+volumes:
+  bytebox-data:
+    name: bytebox-data

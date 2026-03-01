@@ -2,17 +2,18 @@
 
 ## Tech Stack
 
-| Technology       | Version  | Purpose                         |
-| ---------------- | -------- | ------------------------------- |
-| Next.js          | 16.x     | React framework with App Router |
-| React            | 19.x     | UI library                      |
-| TypeScript       | 5.9.x    | Type safety                     |
-| Tailwind CSS     | 4.x      | Utility-first styling           |
-| Prisma           | 7.x      | ORM with better-sqlite3 adapter |
-| SQLite           | -        | Local database (`dev.db`)       |
-| @dnd-kit         | 6.x/10.x | Accessible drag-and-drop        |
-| Shiki            | 4.x      | Syntax highlighting             |
-| @heroicons/react | 2.x      | Icon library                    |
+| Technology        | Version  | Purpose                         |
+| ----------------- | -------- | ------------------------------- |
+| Next.js           | 16.x     | React framework with App Router |
+| React             | 19.x     | UI library                      |
+| TypeScript        | 5.9.x    | Type safety                     |
+| Tailwind CSS      | 4.x      | Utility-first styling           |
+| Prisma            | 7.x      | ORM with better-sqlite3 adapter |
+| SQLite            | -        | Local database (`dev.db`)       |
+| @dnd-kit          | 6.x/10.x | Accessible drag-and-drop        |
+| Shiki             | 4.x      | Syntax highlighting             |
+| @heroicons/react  | 2.x      | Icon library                    |
+| @headlessui/react | 2.x      | Modal Dialog + Transition       |
 
 ## Build & Dev Commands
 
@@ -27,9 +28,14 @@ npm run db:generate   # Regenerate Prisma client after schema changes
 npm run db:migrate    # Run pending migrations (interactive)
 npx prisma studio     # Open database GUI
 npx prisma migrate dev --name <name>  # Create new migration
+npm run db:studio             # Shorthand for npx prisma studio
 ```
 
+> **Note**: `next.config.ts` sets `typescript.ignoreBuildErrors: true` — TypeScript errors will NOT fail `npm run build`. Always run `npx tsc --noEmit` manually to catch type errors.
+
 All three checks must pass before merging: `npm run lint && npx tsc --noEmit && npm run build`
+
+**No test suite exists** — there are no unit or integration tests, and no CI/CD workflow.
 
 ## Project Structure
 
@@ -87,6 +93,27 @@ export async function GET(
 
 All routes use `NextRequest` / `NextResponse`. Use `Response.json(data)` for responses.
 
+**Error handling convention** — wrap every route handler body in `try/catch`:
+
+```typescript
+console.error("VERB /api/route failed:", error);
+return NextResponse.json({ error: "Human-readable message" }, { status: 500 });
+```
+
+Error responses always use key `"error"`, never `"message"`. Success responses return the data directly or `{ success: true }`.
+
+**Validation**: No schema library (no Zod). Validate manually at the boundary:
+
+```ts
+if (!name || typeof name !== "string" || !name.trim()) {
+  return NextResponse.json({ error: "..." }, { status: 400 });
+}
+```
+
+**404 pattern**: Query the record first with `getById()`, return 404 if null — never rely on Prisma to throw.
+
+**Exception**: `src/app/api/import/route.ts` uses `prisma.$transaction` directly (the only route that bypasses `@/lib/db`).
+
 ### Database Layer
 
 - **Always import from `@/lib/db`** (barrel), never use `PrismaClient` directly in routes or components.
@@ -114,6 +141,14 @@ All cards share one DB table. Field usage by type:
 | `image`    | Alt text/caption | `imageData` (base64 data URI)                  |
 | `note`     | Free-form text   | —                                              |
 
+### Types Location
+
+`src/types/index.ts` is just `export * from './indev'`. All actual type definitions live in `src/types/indev.ts`. Edit `indev.ts` when adding or changing domain types.
+
+### Client-Side Guard
+
+Use `globalThis.window !== undefined` (not `typeof window !== 'undefined'`) to gate localStorage and DOM access in hooks and contexts.
+
 ### UserSettings Singleton
 
 The `UserSettings` table always has exactly one row with `id = "default"`. Never query it with a dynamic ID. Fields `backgroundConfig`, `fontConfig`, `customAccentThemes`, `settingsPresets` are **JSON strings** in SQLite — always `JSON.parse`/`JSON.stringify` when reading/writing. Use `getUserSettings()` and `updateUserSettings()` from `@/lib/db`.
@@ -128,6 +163,8 @@ The `UserSettings` table always has exactly one row with `id = "default"`. Never
 - **No file storage server**: Images and uploaded files are stored as base64 strings in SQLite. Avoid storing very large files (>1 MB).
 - **Tags are sent as `tagNames: string[]`**: The API normalizes both `tagNames` (preferred) and legacy `tags: (string | {name})[]` arrays from the client.
 - **`PATCH /api/cards` is bulk reorder only**: Use `PATCH /api/cards/[id]` for single-card updates. For star toggle, send `{ action: 'toggleStar' }`.
+- **`deleteAllData()` is destructive**: Exported from `@/lib/db`, wipes all cards, categories, and tags with no confirmation step. Used by `DELETE /api/cards`.
+- **PDF lazy-loading**: `src/lib/utils/fileUtils.ts` uses dynamic `import('pdf-parse')` — only runs on first use. Do not import it statically or it will bloat the bundle.
 
 ## Styling
 

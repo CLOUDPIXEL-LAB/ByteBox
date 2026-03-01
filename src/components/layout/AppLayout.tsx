@@ -140,7 +140,7 @@ export function AppLayout({
           {sidebarOpen ? (
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="relative h-30 w-60 shrink-0 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]"
+              className="relative h-24 w-48 shrink-0 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]"
               aria-label="Collapse sidebar"
             >
               <Image
@@ -157,7 +157,7 @@ export function AppLayout({
           ) : (
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="relative h-12 w-12 shrink-0 cursor-pointer transition-all duration-300 hover:scale-110 hover:brightness-110 active:scale-95"
+              className="relative h-10 w-10 shrink-0 cursor-pointer transition-all duration-300 hover:scale-110 hover:brightness-110 active:scale-95"
               aria-label="Expand sidebar"
             >
               <Image

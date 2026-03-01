@@ -33,13 +33,14 @@ files:
   - .next/** # built Next.js output
   - public/** # static assets
   - package.json
-  - next.config.ts
+  - next.config.mjs
   - prisma.config.ts
   - tsconfig.json
   - prisma/schema.prisma
   - prisma/migrations/**
   - scripts/**
   - node_modules/**
+  # .prisma/client is copied by the afterPack hook (electron-builder skips dot-dirs)
   # Exclude noise from node_modules to reduce bundle size
   - "!node_modules/**/{README,readme,Readme,CHANGELOG,changelog}.md"
   - "!node_modules/**/{CONTRIBUTING,contributing,AUTHORS,AUTHOR}.md"
@@ -48,9 +49,11 @@ files:
   - "!node_modules/**/{.github,.vscode,docs,doc,example,examples}/**"
   - "!node_modules/.cache/**"
 
-# Native modules (better-sqlite3) need to be rebuilt for the Electron ABI.
-# electron-builder handles this automatically before packaging.
-npmRebuild: true
+# Native modules (better-sqlite3) must be compiled against the Electron ABI.
+# electron-builder's npmRebuild is unreliable, so we disable it and use a
+# custom afterPack hook that runs node-gyp directly.
+npmRebuild: false
+afterPack: ./scripts/electron-rebuild-native.cjs
 
 # ── Linux ─────────────────────────────────────────────────────────────────────
 
@@ -68,9 +71,10 @@ linux:
     code snippets, shell commands, notes, and images — all in one place,
     fully offline.
   desktop:
-    Name: ByteBox
-    Comment: Developer reference cards and bookmarks dashboard
-    Categories: Development;Utility;
+    entry:
+      Name: ByteBox
+      Comment: Developer reference cards and bookmarks dashboard
+      Categories: Development;Utility;
 
 deb:
   depends:

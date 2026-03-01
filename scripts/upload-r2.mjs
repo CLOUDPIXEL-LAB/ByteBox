@@ -17,6 +17,12 @@ if (!filePath) {
   console.error('Usage: node scripts/upload-r2.mjs <file-path>');
   process.exit(1);
 }
+if (!/^[a-f0-9]{32}$/i.test(R2_ACCOUNT_ID)) {
+  console.error(
+    'R2_ACCOUNT_ID should be your Cloudflare Account ID (32 hex chars), not the R2 secret key or API token.'
+  );
+  process.exit(1);
+}
 
 const fileSize = statSync(filePath).size;
 const fileName = basename(filePath);
@@ -27,6 +33,7 @@ console.log(`Uploading ${fileName} (${mb} MB) → r2://${R2_BUCKET}/${fileName}`
 const client = new S3Client({
   region: 'auto',
   endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
+  forcePathStyle: true,
   credentials: {
     accessKeyId: R2_ACCESS_KEY,
     secretAccessKey: R2_SECRET_KEY,

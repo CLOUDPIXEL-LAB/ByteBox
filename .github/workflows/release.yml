@@ -1,0 +1,163 @@
+# ByteBox - Release Build Workflow
+# Made with ❤️ by Pink Pixel
+#
+# Triggers on any tag that looks like a version: v2.4.0, v3.0.0-beta.1, etc.
+#
+# Produces:
+#   • Windows  → NSIS installer (.exe)       — built on windows-latest
+#   • Linux    → AppImage + .deb + .rpm
+#                + .pacman + .snap            — built on ubuntu-latest
+#
+# Artifacts are attached to the GitHub Release that triggered the workflow.
+# Create a release like this to trigger it:
+#   git tag v2.4.0 && git push origin v2.4.0
+#   (then create the Release on GitHub, or use the gh CLI)
+
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: write # needed to upload release assets
+
+jobs:
+  # ── Windows installer (.exe) ────────────────────────────────────────────────
+  build-windows:
+    name: Windows installer
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        env:
+          DATABASE_URL: "file:./dev.db"
+        run: npx prisma generate
+
+      - name: Build Next.js
+        env:
+          DATABASE_URL: "file:./dev.db"
+          NEXT_TELEMETRY_DISABLED: "1"
+          NODE_ENV: production
+          PORT: "1334"
+        run: npm run build
+
+      - name: Compile Electron main process
+        run: npm run electron:compile
+
+      - name: Package Windows installer
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx electron-builder --win --publish never
+
+      - name: Upload Windows artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: bytebox-windows
+          path: release/**/*.exe
+          if-no-files-found: error
+
+  # ── Linux packages ──────────────────────────────────────────────────────────
+  build-linux:
+    name: Linux packages
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install system dependencies
+        # Required for better-sqlite3 native compile + rpm/snap packaging
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 make g++ rpm snapcraft
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Generate Prisma client
+        env:
+          DATABASE_URL: "file:./dev.db"
+        run: npx prisma generate
+
+      - name: Build Next.js
+        env:
+          DATABASE_URL: "file:./dev.db"
+          NEXT_TELEMETRY_DISABLED: "1"
+          NODE_ENV: production
+          PORT: "1334"
+        run: npm run build
+
+      - name: Compile Electron main process
+        run: npm run electron:compile
+
+      - name: Package Linux installers
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Pass --linux with explicit targets so snap is included in CI
+        # (snapcraft is available here; it's excluded from local builds)
+        run: npx electron-builder --linux AppImage deb rpm pacman snap --publish never
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: bytebox-linux
+          path: |
+            release/**/*.AppImage
+            release/**/*.deb
+            release/**/*.rpm
+            release/**/*.pacman
+            release/**/*.snap
+          if-no-files-found: error
+
+  # ── Attach artifacts to the GitHub Release ──────────────────────────────────
+  release:
+    name: Publish release assets
+    needs: [build-windows, build-linux]
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Download Windows artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: bytebox-windows
+          path: dist/windows
+
+      - name: Download Linux artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: bytebox-linux
+          path: dist/linux
+
+      - name: Upload to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            dist/windows/**/*.exe
+            dist/linux/**/*.AppImage
+            dist/linux/**/*.deb
+            dist/linux/**/*.rpm
+            dist/linux/**/*.pacman
+            dist/linux/**/*.snap
+          fail_on_unmatched_files: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

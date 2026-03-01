@@ -2,12 +2,13 @@
 # Made with ❤️ by Pink Pixel
 #
 # Build targets:
-#   Linux  → AppImage + .deb
+#   Linux  → AppImage (universal) + .deb + .rpm + .pacman
+#            .snap is built only in CI (requires snapcraft)
 #   Windows → NSIS installer (.exe)
 #   macOS  → .dmg  (requires a macOS build host)
 #
 # Run:
-#   npm run electron:build:linux   (from Linux)
+#   npm run electron:build:linux   (from Linux — AppImage, .deb, .rpm, .pacman)
 #   npm run electron:build:win     (cross-compile from Linux, needs Wine)
 #   npm run electron:build         (current platform)
 
@@ -55,8 +56,12 @@ npmRebuild: true
 
 linux:
   target:
-    - AppImage
-    - deb
+    - AppImage # universal — works on any distro
+    - deb # Debian / Ubuntu / Mint
+    - rpm # Fedora / RHEL / openSUSE
+    - pacman # Arch / Manjaro / CachyOS
+    # snap is excluded from local builds — requires snapcraft to be installed.
+    # It is built automatically in the GitHub Actions release workflow.
   category: Development
   icon: public/icon.png # 256×256+ PNG
   synopsis: Developer reference cards & bookmarks dashboard
@@ -80,6 +85,13 @@ deb:
     - libatspi2.0-0
     - libsecret-1-0
 
+# snap config — used only in CI (GitHub Actions installs snapcraft).
+# productName "ByteBox" is used as the snap name automatically.
+snap:
+  summary: Developer reference cards & bookmarks dashboard
+  grade: stable
+  confinement: classic # classic needed — app reads/writes arbitrary files (SQLite)
+
 # ── Windows ───────────────────────────────────────────────────────────────────
 
 win:
@@ -93,7 +105,7 @@ win:
 
 nsis:
   oneClick: false
-  allowDirChange: true
+  allowToChangeInstallationDirectory: true
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: ByteBox

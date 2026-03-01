@@ -1,6 +1,10 @@
 {
   "name": "@pinkpixel/bytebox",
-  "author": "Pink Pixel",
+  "author": {
+    "name": "Pink Pixel",
+    "email": "hello@pinkpixel.dev",
+    "url": "https://pinkpixel.dev"
+  },
   "description": "A dashboard app for developers",
   "version": "2.4.0",
   "type": "module",

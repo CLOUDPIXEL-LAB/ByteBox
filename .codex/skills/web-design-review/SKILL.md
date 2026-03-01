@@ -187,10 +187,6 @@ Identify source files from problematic elements:
 
 ### 3.3 Applying Fixes
 
-#### Framework-specific Fix Guidelines
-
-See [references/framework-fixes.md](references/framework-fixes.md) for details.
-
 #### Fix Principles
 
 1. **Minimal Changes**: Only make the minimum changes necessary to resolve the issue

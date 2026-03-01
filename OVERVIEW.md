@@ -1,7 +1,7 @@
 # 📚 ByteBox – Project Overview
 
 **Last Updated**: March 1, 2026  
-**Version**: 2.3.0  
+**Version**: 2.4.0  
 **Author**: [Pink Pixel](https://pinkpixel.dev)  
 **License**: Apache 2.0  
 **Status**: ✅ Stable & Complete

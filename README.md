@@ -83,6 +83,46 @@ npm run dev
 
 The `setup` script handles everything: creates `.env`, installs dependencies, generates the Prisma client, applies migrations, and seeds example data.
 
+Then open **http://localhost:1334**.
+
+---
+
+### 🐳 **Docker (zero-dependency deploy)**
+
+No Node.js required on the host — just Docker.
+
+```bash
+git clone https://github.com/pinkpixel-dev/bytebox.git
+cd bytebox
+docker compose up --build -d
+```
+
+Open **http://localhost:1334**. Data persists in the `bytebox-data` Docker volume across restarts and upgrades.
+
+```bash
+docker compose down          # stop
+docker compose up -d         # start again (no rebuild needed)
+docker compose up --build -d # rebuild after pulling updates
+docker compose logs -f       # follow logs
+```
+
+---
+
+### 🖥️ **Desktop App (Electron)**
+
+Runs ByteBox as a native installed application.
+
+```bash
+# Dev mode (hot-reload)
+npm run electron:dev
+
+# Build installers
+npm run electron:build:linux   # → release/*.AppImage + *.deb
+npm run electron:build:win     # → release/*-Setup.exe
+```
+
+The database is stored in the OS user-data directory (`~/.config/ByteBox/` on Linux, `%APPDATA%\ByteBox\` on Windows) and survives app updates.
+
 ---
 
 ### 🔧 **Manual Setup**
@@ -127,7 +167,7 @@ npm run db:seed
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser. 🎉
+Open [http://localhost:1334](http://localhost:1334) in your browser. 🎉
 
 > **Note:** On first load, ByteBox automatically creates 5 default categories (Frontend, Backend, DevOps, Learning & Research, Ideas & Inspiration) if none exist. You can rename or delete them anytime.
 

@@ -9,7 +9,8 @@
   "overrides": {
     "baseline-browser-mapping": "2.9.0-beta2",
     "hono": "^4.10.3",
-    "valibot": "^1.1.1"
+    "valibot": "^1.1.1",
+    "lodash": "4.17.23"
   },
   "scripts": {
     "setup": "bash scripts/setup.sh",
@@ -47,7 +48,7 @@
     "@types/node": "^25",
     "@types/react": "^19",
     "@types/react-dom": "^19",
-    "eslint": "^10",
+    "eslint": "^9",
     "eslint-config-next": "16.1.6",
     "prisma": "^7.4.2",
     "tailwindcss": "^4",

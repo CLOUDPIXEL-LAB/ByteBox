@@ -1,7 +1,7 @@
 # 📚 ByteBox – Project Overview
 
 **Last Updated**: March 1, 2026  
-**Version**: 2.2.0  
+**Version**: 2.3.0  
 **Author**: [Pink Pixel](https://pinkpixel.dev)  
 **License**: Apache 2.0  
 **Status**: ✅ Stable & Complete
@@ -19,7 +19,7 @@
 - ⭐ **Star** — Mark important cards as favorites for quick access
 - 🔍 **Search** — Find anything instantly with full-text search
 - 🎨 **Drag & Drop** — Visually reorder and move cards between boards
-- 💻 **Code-Friendly** — Syntax highlighting for 35+ languages (Shiki)
+- 💻 **Code-Friendly** — Syntax highlighting for 100+ languages (Shiki)
 - 🖼️ **Image Storage** — Save screenshots and images with full-screen lightbox preview, download, and clipboard support
 - 📋 **Copy & Delete** — One-click content copying and safe two-step card deletion
 - 🌌 **Customize** — Glassmorphic UI with accent/icon themes, custom gradients/solids, wallpaper library or uploads, font picks, and saveable presets
@@ -106,7 +106,9 @@ bytebox/
 │   │   │   │   └── [id]/
 │   │   │   │       └── route.ts       # GET (single), PUT (update), DELETE, PATCH (toggle star)
 │   │   │   ├── categories/
-│   │   │   │   └── route.ts           # GET (list), POST (create)
+│   │   │   │   ├── route.ts           # GET (list), POST (create)
+│   │   │   │   └── [id]/
+│   │   │   │       └── route.ts       # PATCH (rename/recolor), DELETE
 │   │   │   ├── settings/
 │   │   │   │   └── route.ts           # GET, PATCH, PUT (user settings persistence)
 │   │   │   ├── export/
@@ -120,14 +122,16 @@ bytebox/
 │   │   │   └── page.tsx               # Search page with advanced filtering
 │   │   ├── settings/
 │   │   │   └── page.tsx               # Settings page (theme, data management, about)
-│   │   └── tags/
-│   │       └── page.tsx               # Tags page with statistics and management
+│   │   ├── categories/
+│   │   │   └── page.tsx               # Categories page with CRUD, color editing, and card counts
+│   │   ├── tags/
+│   │   │   └── page.tsx               # Tags page with statistics and management
 │   │
 │   ├── components/
 │   │   ├── cards/                     # Card-related components
 │   │   │   ├── Card.tsx               # Card display component with backdrop button pattern for accessibility
-│   │   │   ├── CardModal.tsx          # Card view/edit modal with full editing, tag management, copy & delete
-│   │   │   ├── CreateCardModal.tsx    # New card creation modal with file upload, inline category creation
+│   │   │   ├── CardModal.tsx          # Card view/edit modal with full editing, tag management, language dropdown, copy & delete
+│   │   │   ├── CreateCardModal.tsx    # New card creation modal with file upload and language dropdown
 │   │   │   └── DraggableCard.tsx      # Card with @dnd-kit drag wrapper
 │   │   ├── layout/                    # Layout components
 │   │   │   ├── AppLayout.tsx          # Main app shell (sidebar with Next.js Link navigation, header, collapsible with icon/banner logo)
@@ -376,7 +380,7 @@ bytebox/
 
 - `syntax.ts` initializes Shiki with multiple languages
 - `CodeBlock.tsx` renders highlighted code blocks
-- Supports 35+ languages (JavaScript, Python, Go, Rust, etc.)
+- Supports 100+ languages via validated dropdown (JavaScript, Python, Go, Rust, etc.)
 - Light and dark themes match app theme
 - Copy-to-clipboard button for easy code copying
 
@@ -463,7 +467,7 @@ bytebox/
 
 - **Edit Cards** (`CardModal.tsx`):
   - Toggle between view and edit modes with Edit/Cancel buttons
-  - Edit title, description, content, and language (for snippets/commands)
+  - Edit title, description, content, and language via dropdown (for snippets/commands)
   - Tag management: toggle tags on/off with visual tag pills
   - Star toggle directly in modal header
   - Save changes via PATCH `/api/cards/[id]` with `updateCardWithTags()` query

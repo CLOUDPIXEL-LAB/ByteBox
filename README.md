@@ -25,7 +25,7 @@
 - **🔍 Lightning Search** — Press `Cmd/Ctrl+K` to search across titles, descriptions, tags, and content
 - **🎨 Drag & Drop** — Reorder cards and move them between boards seamlessly with @dnd-kit
 - **✍️ CRUD Everything** — Create, edit, delete cards with a slick modal interface and two-step deletion confirmation
-- **💻 Syntax Highlighting** — Code snippets with 35+ languages (powered by Shiki)
+- **💻 Syntax Highlighting** — Code snippets with 100+ languages (powered by Shiki)
 - **📝 Copy-to-Clipboard** — One-click copy for all text content (code blocks, URLs, commands, docs)
 - **🖼️ Image/Screenshot Cards** — Save and preview images with full-screen lightbox, download, and clipboard support
 
@@ -155,12 +155,12 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. 🎉
    - **📚 Documentation** — Save notes, docs, or upload .md/.pdf files
    - **🖼️ Image** — Upload screenshots or images
    - **📝 Note** — Quick thoughts and ideas
-3. Choose a **category** (the topic/project the card belongs to — e.g. Frontend, Backend, DevOps). If no categories exist yet, type a name and click **Create** to make one inline.
+3. Choose a **category** (the topic/project the card belongs to — e.g. Frontend, Backend, DevOps). Categories can be created and managed on the **Categories** page.
 4. Fill in:
    - **Title** — Card name
    - **Description** — What's this resource about?
    - **Content** — Code snippets, URLs, notes, or drag-and-drop images
-   - **Language** (optional) — For syntax highlighting (e.g., `javascript`, `python`)
+   - **Language** (optional) — Select from 100+ supported languages for syntax highlighting
    - **Tags** — Pick from existing tags to label the card
 5. Click **"Create Card"**
 
@@ -238,10 +238,11 @@ Open [http://localhost:3000](http://localhost:3000) in your browser. 🎉
 bytebox/
 ├── src/
 │   ├── app/
-│   │   ├── api/              # API routes (cards, settings, export, import)
+│   │   ├── api/              # API routes (cards, categories, settings, export, import)
 │   │   ├── globals.css       # Tailwind CSS + glass/theming tokens
 │   │   ├── layout.tsx        # Root layout with ThemeProvider
 │   │   ├── page.tsx          # Dashboard (boards)
+│   │   ├── categories/page.tsx # Category management with color editing
 │   │   ├── search/page.tsx   # Search experience with filters
 │   │   ├── settings/page.tsx # Appearance, data management, about
 │   │   └── tags/page.tsx     # Tag directory with stats & filtering

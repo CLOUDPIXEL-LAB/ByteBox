@@ -2,7 +2,7 @@
   "name": "@pinkpixel/bytebox",
   "author": "Pink Pixel",
   "description": "A dashboard app for developers",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "type": "module",
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx"],
   "exclude": ["/DEV/*", "node_modules"],

@@ -7,6 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.3.0] - 2026-03-01
+
+### 🏷️ Tags Page, Categories Page & Modal Refinements
+
+This release adds dedicated management pages for tags and categories, removes category CRUD from card modals, replaces the free-text language input with a validated dropdown, and ships a unified edit overlay on the categories page.
+
+#### Added
+
+- **Tags management page (`/tags`)** — Full CRUD for tags with 8-color picker, usage stats, live preview, and sort options.
+- **Categories management page (`/categories`)** — Full CRUD for categories with card counts, color editing, sort by name or card count, and unified edit overlay (name + color in one panel).
+- **`/api/categories/[id]` route** — New REST endpoint (`PATCH` rename/recolor, `DELETE`) for individual category management.
+- **Categories & Tags in sidebar navigation** — Both pages accessible from the main sidebar via `FolderIcon` and `TagIcon`.
+- **Language dropdown in card modals** — Code snippet and command cards now use a `<select>` dropdown populated with 100+ Shiki-bundled languages instead of a free-text input, preventing invalid language crashes.
+- **`LANGUAGE_OPTIONS` export** — New curated array of 100+ language entries with display labels in `syntax.ts`, used by both card modals.
+
+#### Changed
+
+- **Category management removed from card modals** — Create Card and Edit Card modals no longer include category create/rename/delete controls. Categories are now managed exclusively on the dedicated `/categories` page. The category field in both modals is now a simple `<select>` dropdown.
+- **Categories page unified edit overlay** — Clicking the edit icon on a category now opens a single overlay with both a name input and an 8-color swatch picker (previously these were separate rename-only and color-only interactions).
+- **Syntax highlighting language count** — Updated from "35+" to "100+" across documentation to reflect the full set of Shiki-bundled languages now available in the dropdown.
+
+#### Fixed
+
+- **Shiki crash on invalid language** — Typing an unsupported language name in the free-text input caused a runtime error. Replaced with a validated dropdown so only supported languages can be selected.
+- **Nested `<button>` hydration error on categories page** — Changed inner color dot from `<button>` to `<div role="button">` to fix React hydration warning.
+
+#### Technical Details
+
+- New file: `src/app/categories/page.tsx`
+- New file: `src/app/api/categories/[id]/route.ts`
+- Modified: `src/components/cards/CreateCardModal.tsx`, `src/components/cards/CardModal.tsx`, `src/app/page.tsx`, `src/lib/utils/syntax.ts`, `src/components/layout/AppLayout.tsx`
+
+---
+
 ## [2.2.0] - 2026-03-01
 
 ### 🛠️ Setup, Categories & Bug Fixes

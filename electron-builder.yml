@@ -58,8 +58,6 @@ linux:
   target:
     - AppImage # universal — works on any distro
     - deb # Debian / Ubuntu / Mint
-    - rpm # Fedora / RHEL / openSUSE
-    - pacman # Arch / Manjaro / CachyOS
     # snap is excluded from local builds — requires snapcraft to be installed.
     # It is built automatically in the GitHub Actions release workflow.
   category: Development

@@ -81,7 +81,25 @@ function toDomainCategory(
 // ----------------------------------------------
 // Board
 // ----------------------------------------------
+// Default categories created automatically on a fresh database
+// ----------------------------------------------
+const DEFAULT_CATEGORIES = [
+  { name: '🌐 Frontend',              description: 'UI, CSS, frameworks and browser stuff', color: '#ec4899', order: 0 },
+  { name: '⚙️ Backend',              description: 'APIs, databases, server-side code',      color: '#8b5cf6', order: 1 },
+  { name: '🚀 DevOps',               description: 'CI/CD, Docker, infra and deployment',    color: '#06b6d4', order: 2 },
+  { name: '📚 Learning & Research',  description: 'Docs, articles and things to explore',   color: '#f59e0b', order: 3 },
+  { name: '💡 Ideas & Inspiration',  description: 'Sparks, experiments and project seeds',  color: '#a855f7', order: 4 },
+] as const;
+
+async function ensureDefaultCategories(): Promise<void> {
+  const count = await prisma.category.count();
+  if (count > 0) return;
+  await prisma.category.createMany({ data: DEFAULT_CATEGORIES.map(c => ({ ...c })) });
+}
+
 export async function getBoardData(): Promise<Board> {
+  await ensureDefaultCategories();
+
   const categoriesPrisma = await prisma.category.findMany({
     orderBy: { order: 'asc' },
     include: {

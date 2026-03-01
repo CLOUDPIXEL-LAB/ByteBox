@@ -19,6 +19,7 @@ interface CreateCardModalProps {
   categories: Array<{ id: string; name: string }>;
   allTags: Array<{ id: string; name: string; color: string }>;
   preselectedCategoryId?: string;
+  onCategoryCreated?: (category: { id: string; name: string }) => void;
 }
 
 export default function CreateCardModal({
@@ -28,6 +29,7 @@ export default function CreateCardModal({
   categories,
   allTags,
   preselectedCategoryId,
+  onCategoryCreated,
 }: Readonly<CreateCardModalProps>) {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [type, setType] = useState<'bookmark' | 'snippet' | 'command' | 'doc' | 'image' | 'note'>('snippet');
@@ -45,12 +47,38 @@ export default function CreateCardModal({
   const [isDragging, setIsDragging] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+  const [categoryError, setCategoryError] = useState('');
 
   useEffect(() => {
     if (isOpen) {
       setCategoryId(preselectedCategoryId || categories[0]?.id || '');
     }
   }, [isOpen, preselectedCategoryId, categories]);
+
+  const handleCreateCategory = async () => {
+    const name = newCategoryName.trim();
+    if (!name) return;
+    setIsCreatingCategory(true);
+    setCategoryError('');
+    try {
+      const res = await fetch('/api/categories', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name }),
+      });
+      if (!res.ok) throw new Error('Failed to create category');
+      const created: { id: string; name: string } = await res.json();
+      onCategoryCreated?.(created);
+      setCategoryId(created.id);
+      setNewCategoryName('');
+    } catch (e) {
+      setCategoryError(e instanceof Error ? e.message : 'Failed to create category');
+    } finally {
+      setIsCreatingCategory(false);
+    }
+  };
 
   const toggleTag = (tagId: string) => {
     setSelectedTagIds((prev) => (prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]));
@@ -347,18 +375,43 @@ export default function CreateCardModal({
                     </div>
                     <div>
                       <label htmlFor="card-category" className="block text-xs font-medium mb-1">Category</label>
-                      <select
-                        id="card-category"
-                        value={categoryId}
-                        onChange={(e) => setCategoryId(e.target.value)}
-                        className="w-full rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] [&>option]:bg-[var(--surface-card)] [&>option]:text-[var(--text-strong)]"
-                      >
-                        {categories.map((c) => (
-                          <option key={c.id} value={c.id}>
-                            {c.name}
-                          </option>
-                        ))}
-                      </select>
+                      {categories.length > 0 ? (
+                        <select
+                          id="card-category"
+                          value={categoryId}
+                          onChange={(e) => setCategoryId(e.target.value)}
+                          className="w-full rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] [&>option]:bg-[var(--surface-card)] [&>option]:text-[var(--text-strong)]"
+                        >
+                          {categories.map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex gap-2">
+                            <input
+                              id="card-category"
+                              value={newCategoryName}
+                              onChange={(e) => setNewCategoryName(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleCreateCategory())}
+                              placeholder="New category name…"
+                              className="flex-1 rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 bg-[color-mix(in_srgb,var(--surface-card)_90%,transparent)] text-(--text-strong) focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)]"
+                            />
+                            <button
+                              type="button"
+                              onClick={handleCreateCategory}
+                              disabled={isCreatingCategory || !newCategoryName.trim()}
+                              className="px-3 py-2 rounded-lg accent-gradient text-sm disabled:opacity-50"
+                            >
+                              {isCreatingCategory ? '…' : 'Create'}
+                            </button>
+                          </div>
+                          {categoryError && <p className="text-xs text-red-400">{categoryError}</p>}
+                          <p className="text-xs text-(--text-soft)">No categories yet — create one first</p>
+                        </div>
+                      )}
                     </div>
                   </div>
 

@@ -1,7 +1,7 @@
 # 📚 ByteBox – Project Overview
 
-**Last Updated**: December 1, 2025  
-**Version**: 2.1.1  
+**Last Updated**: March 1, 2026  
+**Version**: 2.2.0  
 **Author**: [Pink Pixel](https://pinkpixel.dev)  
 **License**: Apache 2.0  
 **Status**: ✅ Stable & Complete
@@ -13,6 +13,7 @@
 **ByteBox** is a lightweight web dashboard designed specifically for developers who want a centralized, beautiful, and efficient way to organize their digital resources. Think of it as **Trello for developer resources** — a Kanban-style board system where you can pin bookmarks, documentation links, API references, command snippets, and code examples.
 
 ### Key Goals
+
 - 📦 **Organize** — Group resources into custom categories (e.g., React, APIs, Commands, Images)
 - 🏷️ **Tag** — Add multiple tags for flexible filtering and discovery
 - ⭐ **Star** — Mark important cards as favorites for quick access
@@ -21,7 +22,7 @@
 - 💻 **Code-Friendly** — Syntax highlighting for 35+ languages (Shiki)
 - 🖼️ **Image Storage** — Save screenshots and images with full-screen lightbox preview, download, and clipboard support
 - 📋 **Copy & Delete** — One-click content copying and safe two-step card deletion
- - 🌌 **Customize** — Glassmorphic UI with accent/icon themes, custom gradients/solids, wallpaper library or uploads, font picks, and saveable presets
+- 🌌 **Customize** — Glassmorphic UI with accent/icon themes, custom gradients/solids, wallpaper library or uploads, font picks, and saveable presets
 - 🌫️ **Tune the Glow** — Real-time glass transparency slider that adapts blur, opacity, and shadows to your wallpaper
 
 ---
@@ -30,16 +31,16 @@
 
 ### Tech Stack Overview
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| **Framework** | Next.js 16.0.6 (App Router) | React-based SSR/SSG framework with modern routing |
-| **Language** | TypeScript 5.9.x | Type safety and better DX |
-| **Styling** | Tailwind CSS 4.x | Utility-first CSS framework |
-| **Database** | SQLite + Prisma 7.0.1 | Local lightweight database with ORM (better-sqlite3 adapter) |
-| **Drag & Drop** | @dnd-kit | Accessible drag-and-drop library |
-| **Syntax Highlighting** | Shiki 3.17.0 | Code highlighting with VS Code themes |
-| **UI Components** | @headlessui/react 2.2.9 | Accessible unstyled components |
-| **Icons** | @heroicons/react 2.2.0 | Beautiful SVG icons |
+| Layer                   | Technology                  | Purpose                                                      |
+| ----------------------- | --------------------------- | ------------------------------------------------------------ |
+| **Framework**           | Next.js 16.0.6 (App Router) | React-based SSR/SSG framework with modern routing            |
+| **Language**            | TypeScript 5.9.x            | Type safety and better DX                                    |
+| **Styling**             | Tailwind CSS 4.x            | Utility-first CSS framework                                  |
+| **Database**            | SQLite + Prisma 7.0.1       | Local lightweight database with ORM (better-sqlite3 adapter) |
+| **Drag & Drop**         | @dnd-kit                    | Accessible drag-and-drop library                             |
+| **Syntax Highlighting** | Shiki 3.17.0                | Code highlighting with VS Code themes                        |
+| **UI Components**       | @headlessui/react 2.2.9     | Accessible unstyled components                               |
+| **Icons**               | @heroicons/react 2.2.0      | Beautiful SVG icons                                          |
 
 ### Architecture Diagram (Conceptual)
 
@@ -55,8 +56,9 @@
 │  └─────────────────────────────────────────────────────┘  │
 │                           ↕                                 │
 │  ┌─────────────────────────────────────────────────────┐  │
-│  │  API Routes (/api/cards, /api/settings,            │  │
-│  │              /api/export, /api/import)              │  │
+│  │  API Routes (/api/cards, /api/categories,          │  │
+│  │              /api/settings, /api/export,           │  │
+│  │              /api/import)                          │  │
 │  └─────────────────────────────────────────────────────┘  │
 └─────────────────────────────────────────────────────────────┘
                            ↕
@@ -103,6 +105,8 @@ bytebox/
 │   │   │   │   ├── route.ts           # GET (all), POST (create), PATCH (reorder), DELETE (clear all)
 │   │   │   │   └── [id]/
 │   │   │   │       └── route.ts       # GET (single), PUT (update), DELETE, PATCH (toggle star)
+│   │   │   ├── categories/
+│   │   │   │   └── route.ts           # GET (list), POST (create)
 │   │   │   ├── settings/
 │   │   │   │   └── route.ts           # GET, PATCH, PUT (user settings persistence)
 │   │   │   ├── export/
@@ -123,7 +127,7 @@ bytebox/
 │   │   ├── cards/                     # Card-related components
 │   │   │   ├── Card.tsx               # Card display component with backdrop button pattern for accessibility
 │   │   │   ├── CardModal.tsx          # Card view/edit modal with full editing, tag management, copy & delete
-│   │   │   ├── CreateCardModal.tsx    # New card creation modal with file upload and dark theme support
+│   │   │   ├── CreateCardModal.tsx    # New card creation modal with file upload, inline category creation
 │   │   │   └── DraggableCard.tsx      # Card with @dnd-kit drag wrapper
 │   │   ├── layout/                    # Layout components
 │   │   │   ├── AppLayout.tsx          # Main app shell (sidebar with Next.js Link navigation, header, collapsible with icon/banner logo)
@@ -149,7 +153,7 @@ bytebox/
 │   │   ├── db/
 │   │   │   ├── index.ts               # Database exports
 │   │   │   ├── prisma.ts              # Prisma client singleton
-│   │   │   └── queries.ts             # Database query functions (createCardWithTags, updateCardWithTags, toggleCardStarred, etc.)
+│   │   │   └── queries.ts             # Database query functions (createCardWithTags, updateCardWithTags, toggleCardStarred, ensureDefaultCategories, etc.)
 │   │   ├── themeRegistry.ts           # Accent/icon palettes, gradients, wallpapers, fonts
 │   │   └── utils/
 │   │       ├── fileUtils.ts           # File processing (PDF/Markdown extraction, validation)
@@ -169,6 +173,10 @@ bytebox/
 │   └── migrations/                    # Database migration history
 │       └── [timestamp]_init/
 │           └── migration.sql          # Initial migration SQL
+│
+├── scripts/
+│   ├── setup.sh                       # One-command first-run setup (env, install, migrate, seed)
+│   └── next-with-env.cjs              # Dev/build environment wrapper
 │
 ├── public/
 │   └── wallpapers/                    # 12 built-in wallpapers (Abstract, Cyber, Dark, Gradient, etc.)
@@ -230,18 +238,25 @@ bytebox/
 ### Schema Details (Prisma)
 
 **Category**
+
 - `id`: Unique identifier (auto-generated)
-- `name`: Category name (e.g., "React", "APIs", "Commands")
+- `name`: Category name — represents a topic/project (e.g., "Frontend", "Backend", "DevOps")
+- `description`: Optional short description
+- `color`: Hex color for the column header accent
 - `order`: Display order for sorting categories
 - `cards`: One-to-many relation with Card model
 
+> On a fresh database, 5 default categories are created automatically: 🌐 Frontend, ⚙️ Backend, 🚀 DevOps, 📚 Learning & Research, 💡 Ideas & Inspiration.
+
 **Tag**
+
 - `id`: Unique identifier (auto-generated)
 - `name`: Tag name (e.g., "hooks", "typescript", "frontend")
 - `color`: Hex color code for visual differentiation
 - `cards`: Many-to-many relation with Card model
 
 **UserSettings** (Singleton)
+
 - `id`: Fixed value "default" (singleton pattern)
 - `mode`: Theme mode (dark/light)
 - `accentThemeId`: Selected accent theme ID
@@ -256,6 +271,7 @@ bytebox/
 - `updatedAt`: Timestamp when last updated
 
 **Card**
+
 - `id`: Unique identifier (auto-generated)
 - `type`: Card type (`'bookmark' | 'snippet' | 'command' | 'doc' | 'image' | 'note'`)
 - `title`: Card title
@@ -284,6 +300,7 @@ bytebox/
 **Technology**: @dnd-kit (core, sortable, utilities) + CSS Grid
 
 **Implementation**:
+
 - `Board.tsx` wraps the entire dashboard with `DndContext`
 - `DraggableBoard.tsx` uses CSS Grid with `repeat(n, minmax(280px, 1fr))` for responsive columns
 - Columns stretch evenly to fill the viewport width
@@ -295,6 +312,7 @@ bytebox/
 - Database updates persist the new state
 
 **User Experience**:
+
 - Columns automatically resize based on screen/viewport size
 - Drag cards within a category to reorder
 - Drag cards between categories to move them
@@ -307,6 +325,7 @@ bytebox/
 **Technology**: React state + custom `useSearch` hook
 
 **Implementation**:
+
 - Tags are stored as a many-to-many relation (Card ↔ Tag)
 - `FilterPanel.tsx` displays all tags with checkboxes
 - Clicking a tag toggles it in the filter state
@@ -316,6 +335,7 @@ bytebox/
 - Filtered results update in real-time
 
 **User Experience**:
+
 - Click tags on cards to add them to filters
 - Toggle AND/OR logic for complex queries
 - See filtered results immediately
@@ -327,6 +347,7 @@ bytebox/
 **Technology**: `useSearch` hook + keyboard event listeners
 
 **Implementation**:
+
 - Global keyboard listener captures `Cmd/Ctrl+K`
 - `SearchBar.tsx` opens as a modal/overlay
 - Search query filters cards by:
@@ -339,6 +360,7 @@ bytebox/
 - `ESC` key closes the search bar
 
 **User Experience**:
+
 - Press `Cmd/Ctrl+K` from anywhere
 - Type to search instantly
 - Results update as you type
@@ -351,6 +373,7 @@ bytebox/
 **Technology**: Shiki 3.17.0 (VS Code-powered highlighter)
 
 **Implementation**:
+
 - `syntax.ts` initializes Shiki with multiple languages
 - `CodeBlock.tsx` renders highlighted code blocks
 - Supports 35+ languages (JavaScript, Python, Go, Rust, etc.)
@@ -358,6 +381,7 @@ bytebox/
 - Copy-to-clipboard button for easy code copying
 
 **User Experience**:
+
 - Code snippets are beautifully highlighted
 - One-click copy to clipboard
 - Theme-aware (dark/light mode)
@@ -369,6 +393,7 @@ bytebox/
 **Technology**: JSON export/import with Prisma transactions
 
 **Implementation**:
+
 - **Export** (`/api/export`):
   - Fetches all categories, tags, and cards from database
   - Returns JSON with metadata (version, exportedAt, app name)
@@ -383,6 +408,7 @@ bytebox/
 - `ExportImport.tsx` renders compact glass tiles so the sidebar module stays slim while the settings card mirrors the new aesthetic.
 
 **User Experience**:
+
 - Tap the **Export Data** tile to download a JSON backup
 - Tap the glowing **Import Data** tile to upload and merge a backup
 - Success/error messages include import counts
@@ -395,6 +421,7 @@ bytebox/
 **Technology**: Canvas API + Clipboard API + Base64 encoding
 
 **Implementation**:
+
 - **Image Processing** (`imageUtils.ts`):
   - `processImage()` – Compress and resize images (max 1920×1920, 85% quality, 5MB limit)
   - `validateImageFile()` – Type and size validation (PNG, JPEG, WebP, GIF)
@@ -418,6 +445,7 @@ bytebox/
   - Compressed automatically to reduce storage size
 
 **User Experience**:
+
 - Select "Image" card type in creation modal
 - Drag-and-drop or browse for images
 - Preview image before saving
@@ -432,6 +460,7 @@ bytebox/
 **Technology**: Clipboard API + Two-step confirmation pattern + Form state management
 
 **Implementation**:
+
 - **Edit Cards** (`CardModal.tsx`):
   - Toggle between view and edit modes with Edit/Cancel buttons
   - Edit title, description, content, and language (for snippets/commands)
@@ -454,6 +483,7 @@ bytebox/
   - Confirmation state resets when modal closes or different card opens (via `useEffect`)
 
 **User Experience**:
+
 - Click "Edit" to switch to edit mode
 - Modify any field: title, description, content, language
 - Click tags to add/remove them from the card
@@ -472,6 +502,7 @@ bytebox/
 **Technology**: React Context API + localStorage
 
 **Implementation**:
+
 - `ThemeContext.tsx` manages base mode, accent theme, icon palette, custom icon color, wallpaper, and the new glass intensity state (0–100).
 - Preferences persist to localStorage (`bytebox-*`) and hydrate once the app mounts.
 - System preference detection (respects OS theme)
@@ -480,6 +511,7 @@ bytebox/
 - Logo shadow effects are mode-aware (dark mode uses drop-shadow, light mode uses none to prevent visual artifacts)
 
 **User Experience**:
+
 - Dark mode is the default
 - Click the icon toggle to switch bases—no duplicate buttons in Settings
 - Drag the Glass Transparency slider to move from airy to frosted instantly
@@ -492,6 +524,7 @@ bytebox/
 **Technology**: React state + Tailwind CSS transitions + Next.js Link
 
 **Implementation**:
+
 - `AppLayout.tsx` manages `sidebarOpen` state for expand/collapse behavior
 - Uses Next.js `Link` component for all sidebar navigation (Dashboard, Search, Tags, Settings)
 - Client-side navigation preserves React state and theme settings across page transitions
@@ -510,6 +543,7 @@ bytebox/
   - Export/Import section and Quick Add text hidden when collapsed
 
 **User Experience**:
+
 - Click chevron arrow to collapse/expand sidebar
 - Icons-only view when collapsed saves screen space
 - Square logo icon maintains branding in collapsed state
@@ -522,6 +556,7 @@ bytebox/
 **Technology**: React state + API route + Prisma
 
 **Implementation**:
+
 - **Database**:
   - `starred Boolean @default(false)` field on Card model
   - `toggleCardStarred()` query toggles starred status
@@ -546,6 +581,7 @@ bytebox/
   - Keyboard shortcut `Cmd/Ctrl+Shift+S`
 
 **User Experience**:
+
 - Click star icon on any card to toggle starred status
 - Starred cards show solid amber star with subtle glow
 - Click header star button to filter to starred only
@@ -558,14 +594,14 @@ bytebox/
 
 ### Color Palette
 
-| Color | Value | Usage |
-|-------|-------|-------|
-| **Pink** | `#ec4899` | Primary accent, gradients, focus states |
-| **Purple** | `#8b5cf6` | Secondary accent, gradients |
-| **Dark Background** | `#0a0a0a` | Main background (dark mode) |
-| **Light Background** | `#ffffff` | Main background (light mode) |
-| **Text Dark** | `#1f2937` | Primary text (light mode) |
-| **Text Light** | `#f9fafb` | Primary text (dark mode) |
+| Color                | Value     | Usage                                   |
+| -------------------- | --------- | --------------------------------------- |
+| **Pink**             | `#ec4899` | Primary accent, gradients, focus states |
+| **Purple**           | `#8b5cf6` | Secondary accent, gradients             |
+| **Dark Background**  | `#0a0a0a` | Main background (dark mode)             |
+| **Light Background** | `#ffffff` | Main background (light mode)            |
+| **Text Dark**        | `#1f2937` | Primary text (light mode)               |
+| **Text Light**       | `#f9fafb` | Primary text (dark mode)                |
 
 ### Typography
 
@@ -681,15 +717,15 @@ npm run dev  # → http://localhost:3000
 
 ### Available Scripts
 
-| Command | Description |
-|---------|-------------|
-| `npm run dev` | Start development server (hot reload) |
-| `npm run build` | Build for production |
-| `npm run start` | Start production server |
-| `npm run lint` | Run ESLint |
-| `npm run db:seed` | Seed database with example data |
-| `npx prisma studio` | Open Prisma Studio (database GUI) |
-| `npx tsc --noEmit` | TypeScript typecheck |
+| Command             | Description                           |
+| ------------------- | ------------------------------------- |
+| `npm run dev`       | Start development server (hot reload) |
+| `npm run build`     | Build for production                  |
+| `npm run start`     | Start production server               |
+| `npm run lint`      | Run ESLint                            |
+| `npm run db:seed`   | Seed database with example data       |
+| `npx prisma studio` | Open Prisma Studio (database GUI)     |
+| `npx tsc --noEmit`  | TypeScript typecheck                  |
 
 ### Testing Checklist
 

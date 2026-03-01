@@ -10,9 +10,13 @@ import { PrismaClient } from '@prisma/client';
 import { PrismaBetterSqlite3 } from '@prisma/adapter-better-sqlite3';
 import path from 'node:path';
 import fs from 'node:fs';
+import { config } from 'dotenv';
+
+// Load .env so DATABASE_URL is available when running via npm run db:seed
+config({ path: path.resolve(process.cwd(), '.env') });
 
 // Get the database path from env, removing 'file:' prefix if present
-let dbPath = process.env.DATABASE_URL?.replace('file:', '') || './data/bytebox.db';
+let dbPath = process.env.DATABASE_URL?.replace('file:', '') || './dev.db';
 
 // If it's a relative path, resolve it from the project root
 if (dbPath.startsWith('./') || dbPath.startsWith('../')) {

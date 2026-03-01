@@ -7,6 +7,56 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.2.0] - 2026-03-01
+
+### 🛠️ Setup, Categories & Bug Fixes
+
+This release fixes first-run setup errors, introduces topic-based default categories, adds inline category creation, and ships a one-command setup script for new clones.
+
+#### Fixed
+
+- **Turbopack `distDirRoot` panic** – Removed stale hardcoded `turbopack.root` path from `next.config.ts` that pointed to a non-existent directory, causing both `npm run dev` and `npm run build` to crash immediately with a Turbopack internal error.
+- **Missing Prisma client on build** – Fresh clones had no `.prisma/client/default` because `prisma generate` was never run. The new setup script and updated README cover this step automatically.
+- **Missing `.env` file** – `DATABASE_URL` was not set on fresh clones, causing `prisma generate` and the seed script to fail. The setup script creates `.env` from `.env.example` automatically.
+- **Database tables not found on first run** – Migrations had never been applied to `dev.db`, resulting in `P2021` errors for every API call. Fixed by documenting and automating `prisma migrate deploy`.
+- **Seed script targeting wrong database** – `npm run db:seed` defaulted to `./data/bytebox.db` when `DATABASE_URL` wasn't loaded from `.env`. Fixed by adding `dotenv/config` import at the top of `prisma/seed.ts`.
+- **Category dropdown empty in Create Card modal** – The modal was wrapped in `{boardData && ...}` so it was never mounted when the board had no data. Removed the gate so the modal always renders.
+- **No way to create a card on a fresh/empty database** – If there were no categories, the category `<select>` was empty and the form could not be submitted. The modal now detects this and shows an inline text input + "Create" button to add the first category on the fly.
+
+#### Added
+
+- **`scripts/setup.sh`** – One-command setup script for new clones:
+  ```bash
+  bash scripts/setup.sh
+  # or
+  npm run setup
+  ```
+  Automatically: checks Node.js version, creates `.env`, runs `npm install`, `prisma generate`, `prisma migrate deploy`, and `db:seed`.
+- **`npm run setup`** – New package.json script alias for the setup script.
+- **`/api/categories` route** – New REST endpoint (`GET` list, `POST` create) for category management, used by the inline category creator in the Create Card modal.
+- **Auto-seeded default categories** – On a completely empty database, `getBoardData()` now automatically creates 5 sensible topic-based default categories so the dashboard is never blank:
+  - 🌐 Frontend
+  - ⚙️ Backend
+  - 🚀 DevOps
+  - 📚 Learning & Research
+  - 💡 Ideas & Inspiration
+- **Inline category creation in Create Card modal** – When no categories exist, the Category field becomes a text input with a "Create" button so users can create one without leaving the modal.
+- **`onCategoryCreated` callback in `CreateCardModal`** – New optional prop; when a category is created inline, the parent page immediately reflects it in the board without a full refresh.
+
+#### Changed
+
+- **Default categories are now topic-based, not type-mirrors** – Previous defaults (Bookmarks, Code Snippets, Commands, Documentation, Notes) were identical to card types and caused confusion. New defaults (Frontend, Backend, DevOps, Learning & Research, Ideas & Inspiration) represent _projects/domains_ so any card type fits naturally into any category.
+- **`prisma/seed.ts`** – Now loads `.env` via `dotenv/config` before resolving `DATABASE_URL`, so `npm run db:seed` works without manually exporting the variable.
+- **`next.config.ts`** – Removed the stale `turbopack.root` override.
+
+#### Technical Details
+
+- New file: `scripts/setup.sh`
+- New file: `src/app/api/categories/route.ts`
+- Modified: `next.config.ts`, `prisma/seed.ts`, `src/lib/db/queries.ts`, `src/components/cards/CreateCardModal.tsx`, `src/app/page.tsx`, `package.json`
+
+---
+
 ## [2.1.1] - 2025-12-01
 
 ### 🐛 Bug Fixes: Theme Persistence & Navigation
@@ -14,6 +64,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 This patch release fixes critical theme persistence issues where the dark theme wasn't being applied as default and theme settings would reset when clicking sidebar navigation buttons.
 
 #### Fixed
+
 - **Dark Theme Not Default** – Fixed `getUserSettings()` in `queries.ts` to use correct default values when creating new user settings:
   - Changed `mode` default from `'light'` to `'dark'`
   - Changed `accentThemeId` default from `'default'` to `'byte-classic'`
@@ -29,6 +80,7 @@ This patch release fixes critical theme persistence issues where the dark theme 
   - Now navigation is instant and preserves all React state including theme settings
 
 #### Technical Details
+
 - **Modified Files**:
   - `src/lib/db/queries.ts`: Fixed `getUserSettings()` default values
   - `src/components/layout/AppLayout.tsx`: Changed `<a>` tags to `<Link>` components for sidebar nav
@@ -36,6 +88,7 @@ This patch release fixes critical theme persistence issues where the dark theme 
 - **Import Added**: `import Link from 'next/link'` in AppLayout.tsx
 
 #### Migration Notes
+
 - Users should hard refresh their browser (Ctrl+Shift+R / Cmd+Shift+R) after updating
 - If theme issues persist, clear localStorage keys starting with `bytebox-` or clear site data
 - New installations will automatically use dark theme as default
@@ -49,6 +102,7 @@ This patch release fixes critical theme persistence issues where the dark theme 
 This release adds full card editing capabilities to the card detail modal and fixes several UI/UX issues.
 
 #### Added
+
 - **Card Editing in Modal** – Full edit mode for cards directly in the detail modal
   - Edit title, description, and content fields
   - Change language for code snippets and commands
@@ -67,6 +121,7 @@ This release adds full card editing capabilities to the card detail modal and fi
   - Content areas also have minimum heights (120px for code, 80px for general content)
 
 #### Fixed
+
 - **Nested Button Hydration Error** – Fixed HTML validation error where `<button>` contained nested `<button>` elements
   - Refactored Card component to use backdrop button pattern for proper accessibility
   - Main card wrapper is now a non-interactive `<div>` with an absolutely positioned `<button>` at `z-0` for click handling
@@ -82,6 +137,7 @@ This release adds full card editing capabilities to the card detail modal and fi
   - Options styled with `--background-muted` and `--text-strong` variables
 
 #### Changed
+
 - **Card Component** – Refactored for proper HTML structure and accessibility compliance
   - Uses backdrop `<button>` pattern instead of `role="button"` on div
   - Non-interactive wrapper `<div>` for styling with hidden backdrop button for clicks
@@ -99,6 +155,7 @@ This release adds full card editing capabilities to the card detail modal and fi
   - Focus rings use accent color
 
 #### Technical Details
+
 - **New Database Function**: `updateCardWithTags()` in `queries.ts`
   - Updates card fields and replaces tag associations atomically
   - Uses Prisma's `tags: { set: [...] }` for tag replacement
@@ -121,6 +178,7 @@ This major release introduces full database persistence for all user settings, a
 ### 🔧 Settings & Typography Fixes
 
 #### Added
+
 - **Database-Backed Settings Persistence** – All user settings now persist to SQLite database, not just localStorage
   - New `UserSettings` Prisma model stores all theme/appearance preferences
   - New `/api/settings` API route for GET/PATCH/PUT operations
@@ -132,6 +190,7 @@ This major release introduces full database persistence for all user settings, a
   - Configuration now handled via `prisma.config.ts`
 
 #### Fixed
+
 - **Font Selection Not Applying** – Fixed critical bug where UI and mono fonts wouldn't change
   - **Root Cause**: CSS variables like `var(--font-indie-flower)` are only defined on `<body>` via Next.js font classes, but data attributes were being set on `<html>` where those variables weren't accessible
   - **Solution 1**: Changed `applyFontConfig()` to set data attributes on `<body>` instead of `<html>` (documentElement)
@@ -141,6 +200,7 @@ This major release introduces full database persistence for all user settings, a
   - Fonts now switch correctly between all 17 UI fonts and 13 mono fonts including stylized options (Indie Flower, Permanent Marker, etc.)
 
 #### Changed
+
 - **ThemeContext Refactored** – Now loads settings from API on mount
   - Uses `useRef` for debounced save timeout management
   - New `settingsLoaded` state prevents saving before initial load completes
@@ -149,6 +209,7 @@ This major release introduces full database persistence for all user settings, a
   - Added fallback font stacks to each selector for graceful degradation
 
 #### Database Changes
+
 - **UserSettings Model** – New singleton model for app-wide settings:
   - `mode` (dark/light), `accentThemeId`, `iconThemeId`, `customIconColor`
   - `glassIntensity`, `backgroundConfig` (JSON), `fontConfig` (JSON)
@@ -161,6 +222,7 @@ This major release introduces full database persistence for all user settings, a
 ### 🎨 Appearance & Presets Revamp
 
 #### Added
+
 - **Background playground** – Solid color picker, 2–4 color custom gradients with angle control, and curated gradient presets.
 - **Wallpaper library** – Built-in gradient wallpapers (no assets required) plus upload with live preview; unified reset that returns to the default glass backdrop.
 - **Typography controls** – Independent UI and code fonts selectable from installed/preset stacks (Geist, Inter, JetBrains Mono, Fira Code, etc.).
@@ -168,12 +230,14 @@ This major release introduces full database persistence for all user settings, a
 - **Settings presets** – Save the entire appearance state (mode, accents, icons, background, fonts, glass level, custom themes) as named profiles; apply or delete with one click.
 
 #### Changed
+
 - Background config now clears legacy uploads when switching away from images to prevent stale wallpapers overriding gradients/presets.
 - Default wallpapers now ship as data-URI gradients so previews work without `/public/wallpapers` assets.
 
 ### 🎯 Customizable Dashboard Filters (Phase 3: ROADMAP)
 
 #### Added
+
 - **View Mode Selector** – Dropdown in dashboard header to switch between view modes
   - **All Cards** – Show all cards (default)
   - **Most Recent** – Cards sorted by newest first (by updatedAt/createdAt)
@@ -199,6 +263,7 @@ This major release introduces full database persistence for all user settings, a
   - Matches current view mode styling
 
 #### Fixed
+
 - **Dropdown Transparency Nightmare** – Fixed ViewModeSelector dropdown being completely transparent and unreadable
   - **Root Cause**: Headless UI Menu.Items was inheriting `backdrop-filter: blur()` from parent `.glass` elements, causing the dropdown background to be transparent despite inline styles
   - **Initial Attempts Failed**: Tried numerous approaches including:
@@ -213,7 +278,7 @@ This major release introduces full database persistence for all user settings, a
     - Used `fixed` positioning with dynamic calculations based on button position
     - Added `data-viewmode-button` attribute for position reference
     - Solid `#0f172a` background with proper borders and shadows
-  - **Lessons Learned**: 
+  - **Lessons Learned**:
     - Backdrop-filter inheritance through component trees is extremely aggressive
     - CSS isolation techniques often fail with heavy blur effects
     - Portal rendering is the most reliable solution for escaping style inheritance
@@ -227,6 +292,7 @@ This major release introduces full database persistence for all user settings, a
     - Fallback to `typeof window !== 'undefined'` check for SSR safety
 
 #### Changed
+
 - **useSearch Hook** – Refactored to use ViewMode system
   - Added `viewMode` state with localStorage persistence
   - Added `setViewMode()` function for mode changes
@@ -245,6 +311,7 @@ This major release introduces full database persistence for all user settings, a
   - "(starred only)", "(most recent)", or "(n tags)" based on current mode
 
 #### Technical Details
+
 - New file: `src/components/ui/ViewModeSelector.tsx`
 - Updated exports in `src/components/ui/index.ts`
 - Type: `ViewMode = 'all' | 'recent' | 'starred' | 'by-tag'`
@@ -257,6 +324,7 @@ This major release introduces full database persistence for all user settings, a
 ### ⭐ Starred/Favorited Cards (Phase 2: ROADMAP)
 
 #### Added
+
 - **Star Toggle on Cards** — Click the star icon on any card to mark it as a favorite
   - Outline star (empty) for unstarred cards
   - Solid amber star with glow effect for starred cards
@@ -273,6 +341,7 @@ This major release introduces full database persistence for all user settings, a
   - Displayed in Filter Panel starred toggle
 
 #### Changed
+
 - **Card Component** — Added `onStarToggle` prop for star functionality
   - Star icon from heroicons (outline and solid variants)
   - Amber color scheme (#fbbf24) with drop shadow
@@ -290,10 +359,12 @@ This major release introduces full database persistence for all user settings, a
   - Starred filter applied before search/tag filters
 
 #### Database Changes
+
 - **Card Model** — Added `starred Boolean @default(false)` field
 - **Migration** — `20251129185730_add_starred_field`
 
 #### API Updates
+
 - **PATCH /api/cards/[id]** — New endpoint for toggling star
   - Accepts `{ action: 'toggleStar' }` body
   - Returns updated card with new starred status
@@ -302,6 +373,7 @@ This major release introduces full database persistence for all user settings, a
   - `getStarredCards()` — Fetch all starred cards
 
 #### Technical Details
+
 - Type updates:
   - Extended `Card` type with `starred: boolean`
   - Updated `toDomainCard()` mapping
@@ -317,6 +389,7 @@ This major release introduces full database persistence for all user settings, a
 ### 📱 Roadmap Update
 
 #### Added
+
 - **Phase 6: Mobile App Layout** — Added comprehensive mobile responsive design phase to ROADMAP.md
   - Responsive sidebar with hamburger menu
   - Mobile-first card layouts (single/double column)
@@ -331,6 +404,7 @@ This major release introduces full database persistence for all user settings, a
 ### 📄 File Upload for Documentation (Phase 1: ROADMAP)
 
 #### Added
+
 - **Documentation File Upload** – Upload .md and .pdf files to Documentation cards
   - Supports Markdown (.md) and PDF (.pdf) files
   - 10MB file size limit with validation
@@ -345,6 +419,7 @@ This major release introduces full database persistence for all user settings, a
   - Optional: Manual text entry if no file uploaded
 
 #### Changed
+
 - **Card Database Schema** – Added file fields to Card model:
   - `fileData String?` – Base64-encoded file data
   - `fileName String?` – Original filename
@@ -362,6 +437,7 @@ This major release introduces full database persistence for all user settings, a
   - Matches existing image card layout pattern
 
 #### Fixed
+
 - **PDF Text Extraction** – Fixed `pdf-parse` module loading and usage errors
   - **Issue 1**: Corrected dynamic import to use `PDFParse` named export from v2.4.5+
     - Switched from synchronous `require()` to async `import()` with proper module handling
@@ -384,6 +460,7 @@ This major release introduces full database persistence for all user settings, a
   - Graceful fallback to empty string if parsing fails (user can manually enter content)
 
 #### Technical Details
+
 - New files created:
   - `src/lib/utils/fileUtils.ts` (188 lines) – File processing utilities
 - Database migration:
@@ -409,6 +486,7 @@ This major release introduces full database persistence for all user settings, a
 ### 📝 Notes Category
 
 #### Added
+
 - **Notes Category** – New sixth category for quick thoughts and ideas
   - Purple color scheme (#a855f7)
   - 📝 Note card type with PencilSquareIcon
@@ -416,6 +494,7 @@ This major release introduces full database persistence for all user settings, a
   - Example note card in seed data
 
 #### Fixed
+
 - **Images Category Placeholder** – Added proper base64-encoded gradient image
   - Pink/purple gradient placeholder (400x300 PNG)
   - Ensures Images category is not empty on fresh install
@@ -424,6 +503,7 @@ This major release introduces full database persistence for all user settings, a
 ### 🛠️ Dashboard Modal
 
 #### Fixed
+
 - **Lingering Overlay** – Closing a card modal now removes the dark backdrop so the dashboard stays bright and interactive.
   - `CardModal` mounts at the page root instead of inside an extra full-screen `<aside>` wrapper.
   - Added a short post-close timeout that clears `selectedCard`, ensuring Headless UI tears down its backdrop before we unmount the modal.
@@ -435,6 +515,7 @@ This major release introduces full database persistence for all user settings, a
 ### 🖼️ Image/Screenshot Cards & Enhanced UX
 
 #### Added
+
 - **Image Card Type** – New card type for saving photos and screenshots
   - Base64 image storage in database (`imageData` field)
   - Image compression and resizing (max 1920×1920, 85% quality, 5MB limit)
@@ -465,6 +546,7 @@ This major release introduces full database persistence for all user settings, a
   - Confirmation state resets when modal closes or different card opens
 
 #### Changed
+
 - **Category Column Widths** – All categories now use consistent 340px fixed width
 - **CardModal Layout** – Reorganized footer into two sections:
   - Left: Delete button with confirmation UI
@@ -478,6 +560,7 @@ This major release introduces full database persistence for all user settings, a
   - `image` → Images
 
 #### Fixed
+
 - **JPEG Clipboard Issue** – JPEG images now convert to PNG for clipboard compatibility
   - Uses canvas-based conversion before clipboard write
   - Clipboard API only supports PNG format
@@ -491,6 +574,7 @@ This major release introduces full database persistence for all user settings, a
   - Removed text-only display of filenames
 
 #### Technical Details
+
 - New files created:
   - `src/lib/utils/imageUtils.ts` (173 lines) – Image processing utilities
   - `src/components/ui/Lightbox.tsx` (181 lines) – Glass lightbox modal
@@ -521,6 +605,7 @@ This major release introduces full database persistence for all user settings, a
 ### 🌌 Neon Glass Redesign & Theme Engine
 
 #### Added
+
 - **Glass Transparency Slider** – Users can fine-tune the translucency of the interface, from airy to fully frosted, with instant updates across dark and light modes.
 - **Glassmorphic Shell** – Rebuilt the entire UI chrome (sidebar, header, cards, modals, filter panels) using a reusable `glass` utility with density variants, blurred backdrops, and accent-aware tinting.
 - **Theme Registry** – Centralized `accentThemes` and `iconThemes` palettes (`src/lib/themeRegistry.ts`) providing curated presets (Byte Classic, Neon Night, Rainbow Sprint, Midnight Carbon, Sunset Espresso, Pastel Haze, and more).
@@ -530,6 +615,7 @@ This major release introduces full database persistence for all user settings, a
 - **JetBrains Mono Branding** – Introduced a dedicated Dev/Nerd logotype using JetBrains Mono for the ByteBox wordmark in the sidebar.
 
 #### Changed
+
 - **Theme Provider** – Rewrote `ThemeContext` to initialize from localStorage post-hydration, push accent/icon variables into CSS, and support wallpaper tinting without SSR mismatches.
 - **Global Tokens** – Expanded `globals.css` with shared CSS variables (`--accent-*`, `--icon-*`, `--glass-*`) and helper classes (`surface-card`, `accent-gradient`, `font-brand`).
 - **App Layout** – Sidebar widened to 18rem, navigation buttons restyled with glass panels, animated accent indicator, and gradient quick-add button; header now pulses with the active accent palette. Export/Import controls now use slim glass tiles so the sidebar stays compact.
@@ -538,10 +624,12 @@ This major release introduces full database persistence for all user settings, a
 - **Settings Experience** – Redesigned Settings page to showcase accent/icon themes, wallpaper management, and the updated appearance controls. Theme mode is now toggled exclusively via the icon button, and glass intensity has its own slider with contextual guidance.
 
 #### Fixed
+
 - **Hydration Stability** – Theme state now hydrates identically on server/client with hidden pre-mount shell, eliminating mismatched inline styles when switching palettes.
 - **Wallpaper Reset** – Added explicit “Reset background” action so user-uploaded wallpapers can be removed without replacing files.
 
 ### 📎 Documentation
+
 - Updated `README.md`, `OVERVIEW.md`, and `glass_theming_guide.md` to document the glass system, theme registry, accent/icon presets, wallpaper uploader, and new layout visuals.
 - Logged the redesign details and new customization workflow in this changelog.
 
@@ -552,6 +640,7 @@ This major release introduces full database persistence for all user settings, a
 ### 🎨 UI Polish & Bug Fixes
 
 #### Changed
+
 - **Sidebar Header Cleanup**
   - Removed "by Pink Pixel" subtitle for cleaner look
   - Removed user avatar placeholder
@@ -563,6 +652,7 @@ This major release introduces full database persistence for all user settings, a
   - Exception: Clear All Data button kept as red for safety indication
 
 #### Added
+
 - **Missing Pages**
   - Created comprehensive Settings page with theme toggle, data management, and about section
   - Created Search page with advanced filtering (All/Title/Content/Tags) and tag-based search
@@ -581,6 +671,7 @@ This major release introduces full database persistence for all user settings, a
   - Full validation and error handling
 
 #### Fixed
+
 - **Hydration Mismatch Error**
   - Added `suppressHydrationWarning` to html and body tags
   - Prevented flash of unstyled content on theme load
@@ -597,6 +688,7 @@ This major release introduces full database persistence for all user settings, a
   - Project builds successfully with `npm run build`
 
 #### Technical Details
+
 - New files created:
   - `src/app/settings/page.tsx` (241 lines)
   - `src/app/search/page.tsx` (242 lines)
@@ -620,6 +712,7 @@ The first public release of **ByteBox** — a lightweight web dashboard for deve
 ### ✨ Added
 
 #### Core Features
+
 - **Kanban-Style Boards** — Organize resources into customizable categories
 - **Smart Tagging System** — Add multiple tags to cards with color-coded filtering
 - **Lightning-Fast Search** — Global search with `Cmd/Ctrl+K` keyboard shortcut
@@ -629,12 +722,14 @@ The first public release of **ByteBox** — a lightweight web dashboard for deve
 - **Copy-to-Clipboard** — One-click copying for code snippets
 
 #### Database & Backend
+
 - **SQLite Database** — Fast local storage with Prisma ORM
 - **API Routes** — RESTful endpoints for cards, export, and import
 - **Seed Data** — Example cards and categories for quick start
 - **Data Validation** — Input validation and error handling
 
 #### UI/UX
+
 - **Dark Mode First** — Beautiful dark theme by default
 - **Light Mode** — Optional light theme with theme toggle
 - **Theme Persistence** — Theme preference saved to localStorage
@@ -644,18 +739,21 @@ The first public release of **ByteBox** — a lightweight web dashboard for deve
 - **Smooth Animations** — Tailwind CSS transitions and hover effects
 
 #### Search & Filtering
+
 - **Full-Text Search** — Search across titles, descriptions, tags, and content
 - **Tag Filtering** — Filter by one or multiple tags
 - **AND/OR Logic** — Toggle between inclusive (OR) and exclusive (AND) filtering
 - **Real-Time Results** — Instant search results as you type
 
 #### Export/Import
+
 - **Export Data** — Download all data as JSON backup
 - **Import Data** — Restore data from JSON file
 - **Validation** — Import validation with error messages
 - **Merge Logic** — Import merges data instead of replacing
 
 #### Developer Experience
+
 - **Next.js 16** — Modern React framework with App Router
 - **TypeScript 5** — Full type safety
 - **Tailwind CSS 4.1.16** — Utility-first styling
@@ -666,6 +764,7 @@ The first public release of **ByteBox** — a lightweight web dashboard for deve
 ### 🛠️ Technical Details
 
 #### Dependencies
+
 - `next`: 16.0.0
 - `react`: 19.2.0
 - `typescript`: ^5
@@ -677,11 +776,13 @@ The first public release of **ByteBox** — a lightweight web dashboard for deve
 - `shiki`: ^1.26.0
 
 #### Database Schema
+
 - **Category** — Organizing containers (e.g., React, APIs, Commands)
 - **Tag** — Metadata labels (e.g., hooks, typescript, frontend)
 - **Card** — Individual resource items with title, description, content, tags, and optional syntax highlighting
 
 #### Project Structure
+
 - `/src/app` — Next.js App Router pages and API routes
 - `/src/components` — Reusable React components
 - `/src/contexts` — React contexts (ThemeContext)
@@ -691,6 +792,7 @@ The first public release of **ByteBox** — a lightweight web dashboard for deve
 - `/prisma` — Database schema, migrations, and seed script
 
 ### 📚 Documentation
+
 - **README.md** — Comprehensive setup and usage guide
 - **CONTRIBUTING.md** — Contribution guidelines
 - **LICENSE** — Apache License 2.0
@@ -698,6 +800,7 @@ The first public release of **ByteBox** — a lightweight web dashboard for deve
 - **ROADMAP.md** — Development plan and completed tasks
 
 ### 🎨 Design System
+
 - **Colors** — Pink (#ec4899) and purple (#8b5cf6) gradients
 - **Typography** — System fonts with proper hierarchy
 - **Spacing** — Tailwind CSS spacing scale
@@ -709,6 +812,7 @@ The first public release of **ByteBox** — a lightweight web dashboard for deve
 ## [How to Update]
 
 ### From 0.x.x to 1.0.0
+
 This is the initial release. No migration required!
 
 ---

@@ -7,7 +7,6 @@ process.env.BROWSERSLIST_IGNORE_OLD_DATA ??= "1";
 const nextConfig: NextConfig = {
   turbopack: {
     debugIds: false,
-    root: "/home/sizzlebop/CURRENT/ByteBox",
   },
   experimental: {
     typedEnv: true,

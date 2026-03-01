@@ -170,6 +170,44 @@ export default function Home() {
     setPreselectedCategoryId(undefined);
   };
 
+  // Handle a new category created inline from the modal
+  const handleCategoryCreated = useCallback((category: { id: string; name: string }) => {
+    setBoardData(prev => {
+      if (!prev) {
+        return {
+          categories: [{
+            id: category.id,
+            name: category.name,
+            description: null,
+            color: '#ec4899',
+            order: 0,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            cards: [],
+          }],
+        };
+      }
+      // Avoid duplicates
+      if (prev.categories.some(c => c.id === category.id)) return prev;
+      return {
+        ...prev,
+        categories: [
+          ...prev.categories,
+          {
+            id: category.id,
+            name: category.name,
+            description: null,
+            color: '#ec4899',
+            order: prev.categories.length,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            cards: [],
+          },
+        ],
+      };
+    });
+  }, []);
+
   // Handle card deletion
   const handleDeleteCard = async () => {
     // Refresh the board data after deletion
@@ -317,16 +355,15 @@ export default function Home() {
       />
 
       {/* Create Card Modal */}
-      {boardData && (
-        <CreateCardModal
-          isOpen={isCreateModalOpen}
-          onClose={handleCreateModalClose}
-          onSuccess={refreshData}
-          categories={boardData.categories.map((cat) => ({ id: cat.id, name: cat.name }))}
-          allTags={allTags}
-          preselectedCategoryId={preselectedCategoryId}
-        />
-      )}
+      <CreateCardModal
+        isOpen={isCreateModalOpen}
+        onClose={handleCreateModalClose}
+        onSuccess={refreshData}
+        categories={(boardData?.categories ?? []).map((cat) => ({ id: cat.id, name: cat.name }))}
+        allTags={allTags}
+        preselectedCategoryId={preselectedCategoryId}
+        onCategoryCreated={handleCategoryCreated}
+      />
     </AppLayout>
   );
 }

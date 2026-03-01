@@ -11,10 +11,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### 🐳 Docker Deploy & 🖥️ Electron Desktop App
 
-This release adds two new ways to run ByteBox: a Docker container for zero-setup server deployment, and a native Electron desktop app that packages ByteBox as a proper installed application (AppImage, .deb, .exe).
+This release adds two new ways to run ByteBox: a Docker container for zero-setup server deployment, and a native Electron desktop app that packages ByteBox as a proper installed application (AppImage, .deb).
 
 #### Added
 
+- **Linux desktop downloads** — Pre-built AppImage and .deb installers now available for direct download from the [ByteBox website](https://bytebox.pro/electron-desktop/), hosted on Cloudflare R2.
 - **Docker support** — Full containerised deployment via `docker compose up --build -d`. A two-stage Dockerfile (builder + slim runtime) compiles the app and bundles only what's needed. Data persists in a named Docker volume (`bytebox-data`) that survives restarts and image rebuilds.
 - **`docker-compose.yml`** — One-command orchestration with healthcheck, restart policy, and documented backup/restore commands.
 - **`docker-entrypoint.sh`** — Container entrypoint that runs `prisma migrate deploy` (idempotent) then starts Next.js — migrations are applied automatically on every boot.
@@ -22,9 +23,9 @@ This release adds two new ways to run ByteBox: a Docker container for zero-setup
 - **Electron desktop app** — `npm run electron:dev` launches ByteBox as a native desktop window. The main process starts the Next.js server in-process, applies SQLite migrations directly (no Prisma CLI needed), and stores the database in the OS user-data directory.
 - **`electron/main.ts`** — Electron main process with in-process Next.js server, migration runner (pure `better-sqlite3`, no CLI), secure `BrowserWindow` config, and external-link routing to the system browser.
 - **`electron/preload.ts`** — Minimal secure preload exposing only `window.electronAPI.isElectron` and `platform` — `contextIsolation: true`, `nodeIntegration: false`.
-- **`electron-builder.yml`** — Build config targeting **AppImage** + **.deb** (Linux) and **NSIS .exe** (Windows), with macOS .dmg support when building on macOS.
+- **`electron-builder.yml`** — Build config targeting **AppImage** + **.deb** (Linux).
 - **`public/icon.png` as app icon** — Set as the BrowserWindow icon so ByteBox appears with its own icon in the taskbar and titlebar.
-- **New npm scripts**: `electron:compile`, `electron:dev`, `electron:build`, `electron:build:linux`, `electron:build:win`, `electron:build:mac`.
+- **New npm scripts**: `electron:compile`, `electron:dev`, `electron:build`, `electron:build:linux`.
 - **New devDependencies**: `electron`, `electron-builder`, `esbuild`, `concurrently`, `wait-on`.
 
 #### Changed

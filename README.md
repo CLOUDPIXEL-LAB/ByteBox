@@ -110,18 +110,26 @@ docker compose logs -f       # follow logs
 
 ### 🖥️ **Desktop App (Electron)**
 
-Runs ByteBox as a native installed application.
+Runs ByteBox as a native installed application. Currently available for **Linux**.
+
+**Download pre-built installers from the [ByteBox website](https://bytebox.pro/electron-desktop/):**
+
+| Format                | Link                                                                                                   |
+| --------------------- | ------------------------------------------------------------------------------------------------------ |
+| AppImage (any distro) | [ByteBox-2.4.0.AppImage](https://pub-52c1c4beebd34721b63e30b05b1b04de.r2.dev/ByteBox-2.4.0.AppImage)   |
+| .deb (Debian/Ubuntu)  | [bytebox_2.4.0_amd64.deb](https://pub-52c1c4beebd34721b63e30b05b1b04de.r2.dev/bytebox_2.4.0_amd64.deb) |
+
+Or build from source:
 
 ```bash
 # Dev mode (hot-reload)
 npm run electron:dev
 
-# Build installers
+# Build installer (Linux)
 npm run electron:build:linux   # → release/*.AppImage + *.deb
-npm run electron:build:win     # → release/*-Setup.exe
 ```
 
-The database is stored in the OS user-data directory (`~/.config/ByteBox/` on Linux, `%APPDATA%\ByteBox\` on Windows) and survives app updates.
+The database is stored in the OS user-data directory (`~/.config/ByteBox/` on Linux) and survives app updates.
 
 ---
 

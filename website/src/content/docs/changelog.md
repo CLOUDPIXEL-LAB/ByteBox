@@ -5,7 +5,7 @@ description: Major ByteBox milestones and what changed.
 
 For complete historical detail, see root `CHANGELOG.md`. This page captures major platform milestones.
 
-## `2.5.0` (March 2, 2026)
+## `2.5.0` (March 3, 2026)
 
 - Category column drag-and-drop reordering — grab the `⠿` handle and drag columns into any order
 - New categories now append to the end of the board instead of inserting at position 0
@@ -13,6 +13,7 @@ For complete historical detail, see root `CHANGELOG.md`. This page captures majo
 - Column drag resolution fixed — `closestCorners` collision now correctly resolves drops onto column headers even when hovering over a card inside the target column
 - New `PATCH /api/categories` bulk-reorder endpoint
 - Optimistic UI updates for both card and column moves — instant visual feedback with background persistence
+- **Electron packaging fixed** — AppImage and .deb builds now correctly include Turbopack alias packages; default categories and card creation work in all packaged builds
 
 ## `2.4.0` (March 1, 2026)
 

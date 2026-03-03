@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.5.0] - 2026-03-02
+## [2.5.0] - 2026-03-03
 
-### 🎯 Category Ordering & Full Drag-and-Drop
+### 🎯 Category Ordering, Full Drag-and-Drop & Electron Packaging Fix
 
-This release fixes category creation ordering and extends drag-and-drop to cover full board layout — both individual cards and entire category columns can now be freely reordered.
+This release fixes category creation ordering, extends drag-and-drop to cover full board layout, and resolves a critical bug where packaged Electron builds (AppImage, .deb) had no default categories and could not create any data.
 
 #### Added
 
@@ -26,11 +26,16 @@ This release fixes category creation ordering and extends drag-and-drop to cover
 - **Column drag-and-drop snap-back** — Column drags were also reverting because there was no optimistic state update before the async API call. Both card and column moves now update `boardData` optimistically in the same tick, so dnd-kit never re-renders from an unchanged prop.
 - **Column drag resolution** — `closestCorners` collision detection sometimes resolved a column drag over a card _inside_ the target column rather than the column itself. The `onDragEnd` handler now walks from any card `over.id` up to its parent category, ensuring column reorder always fires correctly.
 
+#### Fixed
+
+- **Electron packaged builds broken** — AppImage and .deb builds had no default categories and could not create any data. Root cause: Turbopack (Next.js 16) generates hashed alias packages under `.next/node_modules/` (e.g. `better-sqlite3-<hash>/`) for external native modules. These are required at runtime via `require("better-sqlite3-<hash>")`, but `electron-builder`'s automatic `!**/node_modules/**` exclusion rule was silently stripping the entire directory from the packaged app, causing all Prisma database operations to fail with 500 errors. Web and Docker versions were unaffected because they run from the project root where `.next/node_modules/` is always present.
+- **Native binary ABI mismatch in alias packages** — Even after re-including `.next/node_modules/` in the build, the `better-sqlite3` binary inside the Turbopack alias directory was compiled for the system Node.js ABI, not Electron's. The afterPack hook now replaces the binary in the alias directory with the Electron-ABI version compiled in the same step.
+
 #### Technical Details
 
-- Modified: `src/components/layout/DraggableBoard.tsx`, `src/app/page.tsx`, `src/app/api/categories/route.ts`, `src/lib/db/queries.ts`
-- `DraggableBoard` columns are now extracted into a `SortableCategoryColumn` sub-component using `useSortable` with prefixed IDs (`cat-{id}`) to avoid ID collisions with card IDs.
-- Card items use their raw `id`; category items use `cat-{id}` — both share the same `DndContext`.
+- Modified: `electron-builder.yml`, `scripts/electron-rebuild-native.cjs`
+- `electron-builder.yml` now explicitly includes `.next/node_modules/**` to override the automatic exclusion.
+- `scripts/electron-rebuild-native.cjs` Step 5: scans `destApp/.next/node_modules/` for any `better-sqlite3-*` alias directories and patches their `build/Release/better_sqlite3.node` with the Electron-ABI binary compiled in Step 1.
 
 ---
 

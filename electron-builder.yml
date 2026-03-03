@@ -48,6 +48,11 @@ files:
   - "!node_modules/**/*.{ts,tsx,map,d.ts}"
   - "!node_modules/**/{.github,.vscode,docs,doc,example,examples}/**"
   - "!node_modules/.cache/**"
+  # Turbopack creates alias packages in .next/node_modules/ for mangled module IDs
+  # (e.g. "better-sqlite3-<hash>"). electron-builder's !**/node_modules/** default
+  # exclusion removes them, so we explicitly re-include this directory.
+  # The afterPack hook then patches the better-sqlite3 binary for Electron's ABI.
+  - ".next/node_modules/**"
 
 # Native modules (better-sqlite3) must be compiled against the Electron ABI.
 # electron-builder's npmRebuild is unreliable, so we disable it and use a

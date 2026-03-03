@@ -78,4 +78,37 @@ module.exports = async function afterPack(context) {
   } else {
     console.warn("[afterPack] WARNING: node_modules/.prisma/client not found — run `npx prisma generate` first");
   }
+
+  // 5. Patch better-sqlite3 binaries inside the turbopack alias packages.
+  //
+  //    Turbopack (Next.js 16+) copies external packages under .next/node_modules/
+  //    with mangled IDs (e.g. "better-sqlite3-<hash>") so that chunks can call
+  //    require("better-sqlite3-<hash>") via Node.js directory traversal.
+  //    electron-builder.yml explicitly includes .next/node_modules/** so those
+  //    files are already present in the output — but the better-sqlite3 binary
+  //    inside is a system-Node build.  Replace it with the Electron-ABI binary
+  //    compiled in step 1.
+  const destNextNodeModules = path.join(appDir, ".next", "node_modules");
+
+  if (fs.existsSync(destNextNodeModules)) {
+    let patched = 0;
+    for (const entry of fs.readdirSync(destNextNodeModules)) {
+      if (!entry.startsWith("better-sqlite3")) continue;
+
+      const aliasBinary = path.join(
+        destNextNodeModules, entry, "build", "Release", "better_sqlite3.node"
+      );
+      if (fs.existsSync(aliasBinary)) {
+        // destBinary is the Electron-built binary placed in step 2.
+        fs.copyFileSync(destBinary, aliasBinary);
+        console.log(`[afterPack] Patched Electron binary → .next/node_modules/${entry} ✓`);
+        patched++;
+      }
+    }
+    if (patched === 0) {
+      console.warn("[afterPack] WARNING: no better-sqlite3 alias dirs found in .next/node_modules/");
+    }
+  } else {
+    console.warn("[afterPack] WARNING: .next/node_modules not found in packaged app — was npm run build run?");
+  }
 };

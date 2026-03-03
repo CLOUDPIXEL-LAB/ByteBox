@@ -1,9 +1,9 @@
 # 📚 ByteBox – Project Overview
 
-**Last Updated**: March 1, 2026  
-**Version**: 2.4.0  
-**Author**: [Pink Pixel](https://pinkpixel.dev)  
-**License**: Apache 2.0  
+**Last Updated**: March 2, 2026
+**Version**: 2.5.0
+**Author**: [Pink Pixel](https://pinkpixel.dev)
+**License**: Apache 2.0
 **Status**: ✅ Stable & Complete
 
 ---
@@ -18,7 +18,7 @@
 - 🏷️ **Tag** — Add multiple tags for flexible filtering and discovery
 - ⭐ **Star** — Mark important cards as favorites for quick access
 - 🔍 **Search** — Find anything instantly with full-text search
-- 🎨 **Drag & Drop** — Visually reorder and move cards between boards
+- 🎨 **Drag & Drop** — Visually reorder cards, move them between columns, and reorder the columns themselves
 - 💻 **Code-Friendly** — Syntax highlighting for 100+ languages (Shiki)
 - 🖼️ **Image Storage** — Save screenshots and images with full-screen lightbox preview, download, and clipboard support
 - 📋 **Copy & Delete** — One-click content copying and safe two-step card deletion

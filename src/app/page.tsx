@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
+import { arrayMove } from '@dnd-kit/sortable';
 import { AppLayout } from '@/components/layout/AppLayout';
 import { DraggableBoard } from '@/components/layout/DraggableBoard';
 import { FilterPanel } from '@/components/ui/FilterPanel';
@@ -28,7 +29,7 @@ export default function Home() {
           fetch('/api/tags'),
         ]);
         if (!cardsRes.ok) throw new Error('Failed to fetch cards');
-        
+
         const data = await cardsRes.json();
         const tagsData = tagsRes.ok ? await tagsRes.json() : data.tags;
         setBoardData(data.boardData);
@@ -78,22 +79,62 @@ export default function Home() {
 
   // Handle card move (drag & drop)
   const handleCardMove = async (cardId: string, newCategoryId: string, newOrder: number) => {
+    if (!boardData) return;
+
+    const srcCat = boardData.categories.find(c => c.cards.some(card => card.id === cardId));
+    const tgtCat = boardData.categories.find(c => c.id === newCategoryId);
+    if (!srcCat || !tgtCat) return;
+
+    const movingCard = srcCat.cards.find(c => c.id === cardId)!;
+    let newCategories: CategoryWithCards[];
+    let apiUpdates: { id: string; order: number; categoryId?: string }[];
+
+    if (srcCat.id === tgtCat.id) {
+      // Same column — full reorder
+      const oldIndex = srcCat.cards.findIndex(c => c.id === cardId);
+      if (oldIndex === newOrder) return;
+      const reordered = arrayMove([...srcCat.cards], oldIndex, newOrder);
+      const updatedCards = reordered.map((c, i) => ({ ...c, order: i }));
+      newCategories = boardData.categories.map(cat =>
+        cat.id === srcCat.id ? { ...cat, cards: updatedCards } : cat
+      );
+      apiUpdates = updatedCards.map(c => ({ id: c.id, order: c.order }));
+    } else {
+      // Cross-column — update both columns
+      const newSrcCards = srcCat.cards
+        .filter(c => c.id !== cardId)
+        .map((c, i) => ({ ...c, order: i }));
+      const insertAt = Math.min(newOrder, tgtCat.cards.length);
+      const newTgtCards = [
+        ...tgtCat.cards.slice(0, insertAt),
+        { ...movingCard, categoryId: newCategoryId },
+        ...tgtCat.cards.slice(insertAt),
+      ].map((c, i) => ({ ...c, order: i }));
+
+      newCategories = boardData.categories.map(cat => {
+        if (cat.id === srcCat.id) return { ...cat, cards: newSrcCards };
+        if (cat.id === tgtCat.id) return { ...cat, cards: newTgtCards };
+        return cat;
+      });
+      apiUpdates = [
+        ...newSrcCards.map(c => ({ id: c.id, order: c.order })),
+        ...newTgtCards.map(c => ({ id: c.id, order: c.order, categoryId: c.categoryId })),
+      ];
+    }
+
+    // Optimistic update — UI responds immediately
+    setBoardData({ ...boardData, categories: newCategories });
+
+    // Persist in background
     try {
-      const response = await fetch('/api/cards', {
+      await fetch('/api/cards', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          updates: [{ id: cardId, categoryId: newCategoryId, order: newOrder }],
-        }),
+        body: JSON.stringify({ updates: apiUpdates }),
       });
-
-      if (!response.ok) throw new Error('Failed to update card position');
-
-      // Refetch data after move
-      const data = await response.json();
-      setBoardData(data.boardData);
     } catch (error) {
       console.error('Error moving card:', error);
+      await refreshData();
     }
   };
 
@@ -142,7 +183,7 @@ export default function Home() {
         fetch('/api/tags'),
       ]);
       if (!cardsRes.ok) throw new Error('Failed to fetch cards');
-      
+
       const data = await cardsRes.json();
       const tagsData = tagsRes.ok ? await tagsRes.json() : data.tags;
       setBoardData(data.boardData);
@@ -245,12 +286,36 @@ export default function Home() {
     }
   }, []);
 
+  // Handle category reorder (drag & drop columns)
+  const handleCategoryReorder = useCallback(async (updates: { id: string; order: number }[]) => {
+    // Optimistic update — UI responds immediately
+    setBoardData(prev => {
+      if (!prev) return prev;
+      const orderMap = new Map(updates.map(u => [u.id, u.order]));
+      const reordered = [...prev.categories].sort(
+        (a, b) => (orderMap.get(a.id) ?? 0) - (orderMap.get(b.id) ?? 0)
+      );
+      return { ...prev, categories: reordered };
+    });
+
+    // Persist in background
+    try {
+      await fetch('/api/categories', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ updates }),
+      });
+    } catch (error) {
+      console.error('Error reordering categories:', error);
+    }
+  }, []);
+
   // Keyboard shortcut for starring selected card (Cmd/Ctrl+S)
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // Skip if typing in an input
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      
+
       // Cmd/Ctrl+Shift+S to toggle starred filter (avoid conflict with save)
       if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 's') {
         e.preventDefault();
@@ -290,7 +355,7 @@ export default function Home() {
   }
 
   return (
-    <AppLayout 
+    <AppLayout
       onSearch={setSearchQuery}
       onToggleFilters={() => setShowFilters(!showFilters)}
       showFiltersToggle={allTags.length > 0}
@@ -334,6 +399,7 @@ export default function Home() {
               onStarToggle={handleStarToggle}
               onCategoryRename={handleCategoryRename}
               onCategoryDelete={handleCategoryDelete}
+              onCategoryReorder={handleCategoryReorder}
             />
           ) : (
             <div className="text-center py-12">

@@ -5,6 +5,15 @@ description: Major ByteBox milestones and what changed.
 
 For complete historical detail, see root `CHANGELOG.md`. This page captures major platform milestones.
 
+## `2.5.0` (March 2, 2026)
+
+- Category column drag-and-drop reordering — grab the `⠿` handle and drag columns into any order
+- New categories now append to the end of the board instead of inserting at position 0
+- Card drag-and-drop snap-back bug fixed — full column reorder is now written to DB on every move
+- Column drag resolution fixed — `closestCorners` collision now correctly resolves drops onto column headers even when hovering over a card inside the target column
+- New `PATCH /api/categories` bulk-reorder endpoint
+- Optimistic UI updates for both card and column moves — instant visual feedback with background persistence
+
 ## `2.4.0` (March 1, 2026)
 
 - Docker deployment flow finalized

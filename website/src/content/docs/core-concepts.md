@@ -25,10 +25,14 @@ All card types share one table and differ by field usage:
 
 ## Board Interaction
 
-- Drag/drop uses `@dnd-kit`
-- Reordering persists through `PATCH /api/cards` bulk update
+- Drag/drop uses `@dnd-kit` (both cards and category columns)
+- **Card reorder / cross-column move** — `PATCH /api/cards` bulk update; the entire affected column(s) are rewritten so `order` values stay unique and contiguous
+- **Column reorder** — `PATCH /api/categories` bulk update (`{ updates: [{ id, order }] }`); persisted transactionally
+- Both operations apply an optimistic state update first so the UI never snaps back while the API call is in-flight
+- Card items carry their raw `id`; category columns carry `cat-{id}` inside the shared `DndContext` to avoid ID collisions
 - Category rename/delete is inline on dashboard and on Categories page
 - Star toggle is per-card (`PATCH /api/cards/[id]` with `action: "toggleStar"`)
+- New categories always append to the end (DB assigns `MAX(order) + 1` at creation time)
 
 ## Search + View Modes
 

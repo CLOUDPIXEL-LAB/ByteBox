@@ -118,7 +118,20 @@ export async function getCategoryById(id: string): Promise<CategoryWithCards | n
 }
 
 export async function createCategory(data: Prisma.CategoryCreateInput) {
+  if (data.order === undefined) {
+    const agg = await prisma.category.aggregate({ _max: { order: true } });
+    const nextOrder = (agg._max.order ?? -1) + 1;
+    return prisma.category.create({ data: { ...data, order: nextOrder } });
+  }
   return prisma.category.create({ data });
+}
+
+export async function reorderCategories(updates: { id: string; order: number }[]) {
+  return prisma.$transaction(
+    updates.map((u) =>
+      prisma.category.update({ where: { id: u.id }, data: { order: u.order } })
+    )
+  );
 }
 
 export async function updateCategory(id: string, data: Prisma.CategoryUpdateInput) {
@@ -217,7 +230,7 @@ export async function createCardWithTags(cardData: {
 export async function toggleCardStarred(id: string): Promise<Card> {
   const card = await prisma.card.findUnique({ where: { id } });
   if (!card) throw new Error('Card not found');
-  
+
   const updated = await prisma.card.update({
     where: { id },
     data: { starred: !card.starred },
@@ -264,7 +277,7 @@ export async function updateCardWithTags(id: string, cardData: {
   if (cardData.language !== undefined) updateData.language = cardData.language;
   if (cardData.starred !== undefined) updateData.starred = cardData.starred;
   if (cardData.categoryId !== undefined) updateData.category = { connect: { id: cardData.categoryId } };
-  
+
   // Handle tags - disconnect all existing and connect new ones
   if (tagConnect !== undefined) {
     updateData.tags = {
@@ -384,7 +397,7 @@ export async function getUserSettings(): Promise<UserSettingsData> {
         glassIntensity: 60,
       },
     });
-    
+
     settings = await prisma.userSettings.findUnique({
       where: { id: SETTINGS_ID },
     });
@@ -421,7 +434,7 @@ export async function updateUserSettings(data: Partial<UserSettingsData>): Promi
 
   // Prepare update data, serializing JSON fields
   const updateData: Record<string, unknown> = {};
-  
+
   if (data.mode !== undefined) updateData.mode = data.mode;
   if (data.accentThemeId !== undefined) updateData.accentThemeId = data.accentThemeId;
   if (data.iconThemeId !== undefined) updateData.iconThemeId = data.iconThemeId;

@@ -4,7 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from 'next/server';
-import { getAllCategories, createCategory } from '@/lib/db';
+import { getAllCategories, createCategory, reorderCategories, getBoardData } from '@/lib/db';
 
 export async function GET() {
   try {
@@ -35,5 +35,23 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('POST /api/categories failed:', error);
     return NextResponse.json({ error: 'Failed to create category' }, { status: 500 });
+  }
+}
+
+export async function PATCH(request: NextRequest) {
+  try {
+    const body = await request.json();
+    const { updates } = body;
+
+    if (!Array.isArray(updates)) {
+      return NextResponse.json({ error: 'updates must be an array' }, { status: 400 });
+    }
+
+    await reorderCategories(updates);
+    const boardData = await getBoardData();
+    return NextResponse.json({ success: true, boardData });
+  } catch (error) {
+    console.error('PATCH /api/categories failed:', error);
+    return NextResponse.json({ error: 'Failed to reorder categories' }, { status: 500 });
   }
 }

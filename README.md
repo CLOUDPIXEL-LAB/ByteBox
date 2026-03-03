@@ -23,7 +23,7 @@
 - **🏷️ Smart Tagging** — Add multiple tags with color-coded filtering (AND/OR logic)
 - **⭐ Star Favorites** — Mark important cards as starred for quick access with dashboard filtering
 - **🔍 Lightning Search** — Press `Cmd/Ctrl+K` to search across titles, descriptions, tags, and content
-- **🎨 Drag & Drop** — Reorder cards and move them between boards seamlessly with @dnd-kit
+- **🎨 Drag & Drop** — Reorder cards, move them between category columns, and reorder the columns themselves — all persisted with @dnd-kit
 - **✍️ CRUD Everything** — Create, edit, delete cards with a slick modal interface and two-step deletion confirmation
 - **💻 Syntax Highlighting** — Code snippets with 100+ languages (powered by Shiki)
 - **📝 Copy-to-Clipboard** — One-click copy for all text content (code blocks, URLs, commands, docs)

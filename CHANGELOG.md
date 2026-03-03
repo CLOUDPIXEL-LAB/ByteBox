@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [2.5.0] - 2026-03-02
+
+### 🎯 Category Ordering & Full Drag-and-Drop
+
+This release fixes category creation ordering and extends drag-and-drop to cover full board layout — both individual cards and entire category columns can now be freely reordered.
+
+#### Added
+
+- **Column drag-and-drop** — Category columns can be grabbed by the `⠿` handle in each column header and dragged horizontally to any position. The new order is persisted immediately to the database.
+- **`PATCH /api/categories`** — New bulk-reorder endpoint that accepts `{ updates: [{ id, order }] }` and writes all `order` values transactionally.
+- **`reorderCategories()`** — New DB helper in `src/lib/db/queries.ts` that transactionally updates `order` for a set of categories.
+
+#### Fixed
+
+- **New categories now append to the end** — Previously every new category defaulted to `order: 0`, causing it to sort before all existing columns. `createCategory()` now queries `MAX(order)` and assigns `maxOrder + 1`, so new columns always appear on the right.
+- **Card drag-and-drop snap-back** — Cards were reverting to their original position after being dropped because the handler only updated the moved card's `order` value, leaving all other cards with stale/duplicate `order` values and causing an indeterminate sort on the next render. The handler now reorders the entire affected column(s) and sends a complete set of `{ id, order }` updates so the DB is always consistent.
+- **Column drag-and-drop snap-back** — Column drags were also reverting because there was no optimistic state update before the async API call. Both card and column moves now update `boardData` optimistically in the same tick, so dnd-kit never re-renders from an unchanged prop.
+- **Column drag resolution** — `closestCorners` collision detection sometimes resolved a column drag over a card _inside_ the target column rather than the column itself. The `onDragEnd` handler now walks from any card `over.id` up to its parent category, ensuring column reorder always fires correctly.
+
+#### Technical Details
+
+- Modified: `src/components/layout/DraggableBoard.tsx`, `src/app/page.tsx`, `src/app/api/categories/route.ts`, `src/lib/db/queries.ts`
+- `DraggableBoard` columns are now extracted into a `SortableCategoryColumn` sub-component using `useSortable` with prefixed IDs (`cat-{id}`) to avoid ID collisions with card IDs.
+- Card items use their raw `id`; category items use `cat-{id}` — both share the same `DndContext`.
+
+---
+
 ## [2.4.0] - 2026-03-01
 
 ### 🐳 Docker Deploy & 🖥️ Electron Desktop App

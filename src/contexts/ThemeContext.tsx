@@ -24,6 +24,7 @@ import {
   availableMonoFonts,
   defaultBackgroundConfig,
   defaultFontConfig,
+  normalizeFontConfig,
   createCustomAccentTheme,
 } from '@/lib/themeRegistry';
 
@@ -269,16 +270,17 @@ const applyBackgroundConfig = (config: BackgroundConfig, mode: ThemeMode) => {
 const applyFontConfig = (config: FontConfig) => {
   if (!isBrowser()) return;
   const body = document.body;
+  const normalizedConfig = normalizeFontConfig(config);
 
   // Set data attributes on body (where Next.js font variables are defined)
-  body.dataset.uiFont = config.uiFont;
-  body.dataset.monoFont = config.monoFont;
+  body.dataset.uiFont = normalizedConfig.uiFont;
+  body.dataset.monoFont = normalizedConfig.monoFont;
 
   // Resolve the actual font-family value from Next.js font CSS variables.
   // Next.js fonts define variables like --font-inter on body via classes.
   // We need to read the computed value, not pass through a var() reference.
-  const uiFontDef = availableFonts.find((font) => font.id === config.uiFont);
-  const monoFontDef = availableMonoFonts.find((font) => font.id === config.monoFont);
+  const uiFontDef = availableFonts.find((font) => font.id === normalizedConfig.uiFont);
+  const monoFontDef = availableMonoFonts.find((font) => font.id === normalizedConfig.monoFont);
 
   // For system fonts or direct values, use as-is
   // For fonts using var(--font-xxx), resolve the actual computed value
@@ -308,6 +310,11 @@ const applyFontConfig = (config: FontConfig) => {
 
   body.style.setProperty('--font-ui-active', uiFontValue);
   body.style.setProperty('--font-mono-active', monoFontValue);
+  body.style.setProperty('--font-size-body', `${normalizedConfig.bodyFontSize}px`);
+  body.style.setProperty('--font-size-category-title', `${normalizedConfig.categoryTitleSize}px`);
+  body.style.setProperty('--font-size-card-title', `${normalizedConfig.cardTitleSize}px`);
+  body.style.setProperty('--font-size-code', `${normalizedConfig.codeFontSize}px`);
+  body.style.setProperty('--board-column-width', `${normalizedConfig.columnWidth}px`);
 };
 
 const readLocalStorage = <T,>(
@@ -434,7 +441,7 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
     setBackgroundImage(storedBackground);
     setGlassIntensityInternal(storedGlass);
     setBackgroundConfigInternal(storedBackgroundConfig);
-    setFontConfigInternal(storedFontConfig);
+    setFontConfigInternal(normalizeFontConfig(storedFontConfig));
     setCustomAccentThemes(storedCustomAccentThemes);
     setSettingsPresets(storedPresets);
     setMounted(true);
@@ -453,7 +460,7 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
         setCustomIconColorInternal(apiSettings.customIconColor || '#f472b6');
         setGlassIntensityInternal(apiSettings.glassIntensity ?? DEFAULT_GLASS_INTENSITY);
         setBackgroundConfigInternal(apiSettings.backgroundConfig || defaultBackgroundConfig);
-        setFontConfigInternal(apiSettings.fontConfig || defaultFontConfig);
+        setFontConfigInternal(normalizeFontConfig(apiSettings.fontConfig || defaultFontConfig));
         setCustomAccentThemes(apiSettings.customAccentThemes || []);
         setSettingsPresets(apiSettings.settingsPresets || []);
 
@@ -464,7 +471,10 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
         localStorage.setItem(STORAGE_KEYS.ICON_CUSTOM, apiSettings.customIconColor || '#f472b6');
         localStorage.setItem(STORAGE_KEYS.GLASS, String(apiSettings.glassIntensity ?? DEFAULT_GLASS_INTENSITY));
         localStorage.setItem(STORAGE_KEYS.BACKGROUND_CONFIG, JSON.stringify(apiSettings.backgroundConfig || defaultBackgroundConfig));
-        localStorage.setItem(STORAGE_KEYS.FONT_CONFIG, JSON.stringify(apiSettings.fontConfig || defaultFontConfig));
+        localStorage.setItem(
+          STORAGE_KEYS.FONT_CONFIG,
+          JSON.stringify(normalizeFontConfig(apiSettings.fontConfig || defaultFontConfig))
+        );
         localStorage.setItem(STORAGE_KEYS.CUSTOM_ACCENT_THEMES, JSON.stringify(apiSettings.customAccentThemes || []));
         localStorage.setItem(STORAGE_KEYS.SETTINGS_PRESETS, JSON.stringify(apiSettings.settingsPresets || []));
 
@@ -672,7 +682,7 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
   }, []);
 
   const setFontConfig = useCallback((config: FontConfig) => {
-    setFontConfigInternal(config);
+    setFontConfigInternal(normalizeFontConfig(config));
   }, []);
 
   const addCustomAccentTheme = useCallback((name: string, colors: string[]) => {
@@ -702,7 +712,7 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
       customIconColor: customIconColorInternal,
       glassIntensity: glassIntensityInternal,
       background: backgroundConfigInternal,
-      fonts: fontConfigInternal,
+      fonts: normalizeFontConfig(fontConfigInternal),
       customAccentThemes: customAccentThemes,
     };
     setSettingsPresets(prev => [...prev, preset]);
@@ -716,7 +726,7 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
     setGlassIntensityInternal(preset.glassIntensity);
     setCustomIconColorInternal(preset.customIconColor);
     setBackgroundConfigInternal(preset.background);
-    setFontConfigInternal(preset.fonts);
+    setFontConfigInternal(normalizeFontConfig(preset.fonts));
     
     // Load custom accent themes from preset
     if (preset.customAccentThemes) {

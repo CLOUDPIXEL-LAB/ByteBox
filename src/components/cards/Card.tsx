@@ -79,7 +79,7 @@ function CardContentPreview({ card, iconColor, onImageClick }: Readonly<CardCont
           <div className="flex items-center gap-3">
             <span className="text-2xl shrink-0">{getFileIcon(card.fileType || '')}</span>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate">{card.fileName || 'Document'}</p>
+              <p className="text-sm font-medium truncate text-dynamic-body">{card.fileName || 'Document'}</p>
               <p className="text-xs text-(--text-soft)">
                 {card.fileType?.toUpperCase()} {card.fileSize && `· ${formatFileSize(card.fileSize)}`}
               </p>
@@ -99,7 +99,7 @@ function CardContentPreview({ card, iconColor, onImageClick }: Readonly<CardCont
             </button>
           </div>
           {card.content && (
-            <p className="text-xs text-(--text-soft) mt-2 line-clamp-2">
+            <p className="text-xs text-(--text-soft) mt-2 line-clamp-2 text-dynamic-body">
               {card.content.substring(0, 100)}...
             </p>
           )}
@@ -110,7 +110,7 @@ function CardContentPreview({ card, iconColor, onImageClick }: Readonly<CardCont
 
   // Default content preview (bookmark, snippet, command, note)
   return (
-    <div className="text-sm font-mono text-(--foreground-soft) surface-card surface-card--subtle border border-transparent rounded-xl p-3 mb-3 line-clamp-3 overflow-hidden">
+    <div className="text-sm font-mono text-(--foreground-soft) text-dynamic-code surface-card surface-card--subtle border border-transparent rounded-xl p-3 mb-3 line-clamp-3 overflow-hidden">
       {cardType === 'bookmark' ? (
         <a
           href={card.content}
@@ -180,7 +180,7 @@ export function Card({ card, onClick, onStarToggle, className }: Readonly<CardPr
       <div className="flex items-start justify-between gap-3 mb-2 relative z-10 pointer-events-none">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           <Icon className="w-5 h-5 shrink-0" style={{ color: iconColor }} />
-          <h3 className="font-semibold text-(--text-strong) truncate group-hover:text-accent transition-colors">
+          <h3 className="font-semibold text-(--text-strong) text-dynamic-card-title line-clamp-2 break-words group-hover:text-accent transition-colors">
             {card.title}
           </h3>
         </div>
@@ -222,7 +222,7 @@ export function Card({ card, onClick, onStarToggle, className }: Readonly<CardPr
 
       {/* Card Description */}
       {card.description && (
-        <p className="text-sm text-(--text-soft) mb-3 line-clamp-2 relative z-10 pointer-events-none">
+        <p className="text-sm text-(--text-soft) text-dynamic-body mb-3 line-clamp-2 relative z-10 pointer-events-none">
           {card.description}
         </p>
       )}

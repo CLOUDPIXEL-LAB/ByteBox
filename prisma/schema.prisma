@@ -72,7 +72,7 @@ model UserSettings {
   customIconColor     String   @default("#f472b6")
   glassIntensity      Int      @default(60)
   backgroundConfig    String   @default("{\"type\":\"default\"}") // JSON string
-  fontConfig          String   @default("{\"uiFont\":\"system\",\"monoFont\":\"geist-mono\"}") // JSON string
+  fontConfig          String   @default("{\"uiFont\":\"system\",\"monoFont\":\"geist-mono\",\"bodyFontSize\":14,\"categoryTitleSize\":16,\"cardTitleSize\":16,\"codeFontSize\":14,\"columnWidth\":320}") // JSON string
   customAccentThemes  String   @default("[]")         // JSON array of custom AccentTheme objects
   settingsPresets     String   @default("[]")         // JSON array of SettingsPreset objects
   createdAt           DateTime @default(now())

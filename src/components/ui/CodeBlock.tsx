@@ -104,10 +104,10 @@ export function CodeBlock({
 
       {/* Code */}
       <div
-        className="overflow-x-auto"
+        className="overflow-x-auto text-dynamic-code"
         dangerouslySetInnerHTML={{ __html: html }}
         style={{
-          fontSize: '14px',
+          fontSize: 'var(--font-size-code)',
           lineHeight: '1.6',
         }}
       />

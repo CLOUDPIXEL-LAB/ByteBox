@@ -7,17 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
-## [2.5.0] - 2026-03-03
+## [2.5.0] - 2026-03-04
 
-### 🎯 Category Ordering, Full Drag-and-Drop & Electron Packaging Fix
+### 🎯 Category Ordering, Drag-and-Drop, Neon Glow UI & Electron Packaging Fix
 
-This release fixes category creation ordering, extends drag-and-drop to cover full board layout, and resolves a critical bug where packaged Electron builds (AppImage, .deb) had no default categories and could not create any data.
+This release fixes category creation ordering, extends drag-and-drop to cover full board layout, replaces gradient styles with a unified glass + neon glow design system, and resolves a critical bug where packaged Electron builds (AppImage, .deb) had no default categories and could not create any data.
 
 #### Added
 
 - **Column drag-and-drop** — Category columns can be grabbed by the `⠿` handle in each column header and dragged horizontally to any position. The new order is persisted immediately to the database.
 - **`PATCH /api/categories`** — New bulk-reorder endpoint that accepts `{ updates: [{ id, order }] }` and writes all `order` values transactionally.
 - **`reorderCategories()`** — New DB helper in `src/lib/db/queries.ts` that transactionally updates `order` for a set of categories.
+- **`.accent-glow-active` CSS class** — New utility class for toggle/selection states (sort buttons, filter mode, search type pills) with neon glow border and shadow using the active accent theme color.
+
+#### Changed
+
+- **Gradient → Glass + Neon Glow** — Replaced all `accent-gradient` (multi-color gradient fill) button styles across the app with glass-morphic backgrounds and accent-colored neon glow borders/shadows. Elements now match the existing glass theme and glow in the user's selected accent color on hover/active states. Affected components:
+  - `AppLayout.tsx` — "+ Add Card" sidebar button
+  - `CreateCardModal.tsx` — "Create Card" submit button
+  - `CardModal.tsx` — "Save Changes" and "Visit Link" buttons
+  - `FilterPanel.tsx` — "Any/All" filter mode toggles and selected tag pills
+  - `search/page.tsx` — "Clear filters" button and search type pills (All/Title/Content/Tags)
+  - `categories/page.tsx` — "Save" button and sort toggles (Name/Cards)
+  - `tags/page.tsx` — Sort toggles (Name/Usage)
+  - `globals.css` — `.accent-gradient` class redefined from gradient fill to glass + neon glow with hover intensification
+- **Header button neon glow** — Filter toggle, Docs, Pink Pixel, and GitHub buttons in the header now glow with the accent color on hover instead of using basic shadow styles.
+- **ViewModeSelector theme-aware** — Replaced hardcoded `#f72585` color references with `var(--accent-primary)` CSS variables so the dropdown respects the user's selected accent theme. Active items now use neon glow borders instead of dark shadows.
+- **Sidebar width reduced** — Expanded sidebar narrowed from `w-80` (320px) to `w-72` (288px) with header padding reduced from `px-5` to `px-4`.
+- **Logo banner container** — Resized from `h-24 w-48` (2:1 ratio) to `h-12 w-44` (3.67:1 ratio) to closely match the `logo_banner.png` native aspect ratio (2600×700 = 3.71:1), eliminating whitespace around the image.
+- **Docs link** — Header documentation button now points to `https://bytebox.pro` (external link, opens in new tab) instead of the non-functional `/docs` route.
+- **Removed ThemeToggle** — Removed the light/dark mode toggle button from the header since the custom theming system supports any color/background and the toggle caused errors with the existing theme infrastructure.
 
 #### Fixed
 
@@ -25,17 +44,15 @@ This release fixes category creation ordering, extends drag-and-drop to cover fu
 - **Card drag-and-drop snap-back** — Cards were reverting to their original position after being dropped because the handler only updated the moved card's `order` value, leaving all other cards with stale/duplicate `order` values and causing an indeterminate sort on the next render. The handler now reorders the entire affected column(s) and sends a complete set of `{ id, order }` updates so the DB is always consistent.
 - **Column drag-and-drop snap-back** — Column drags were also reverting because there was no optimistic state update before the async API call. Both card and column moves now update `boardData` optimistically in the same tick, so dnd-kit never re-renders from an unchanged prop.
 - **Column drag resolution** — `closestCorners` collision detection sometimes resolved a column drag over a card _inside_ the target column rather than the column itself. The `onDragEnd` handler now walks from any card `over.id` up to its parent category, ensuring column reorder always fires correctly.
-
-#### Fixed
-
 - **Electron packaged builds broken** — AppImage and .deb builds had no default categories and could not create any data. Root cause: Turbopack (Next.js 16) generates hashed alias packages under `.next/node_modules/` (e.g. `better-sqlite3-<hash>/`) for external native modules. These are required at runtime via `require("better-sqlite3-<hash>")`, but `electron-builder`'s automatic `!**/node_modules/**` exclusion rule was silently stripping the entire directory from the packaged app, causing all Prisma database operations to fail with 500 errors. Web and Docker versions were unaffected because they run from the project root where `.next/node_modules/` is always present.
 - **Native binary ABI mismatch in alias packages** — Even after re-including `.next/node_modules/` in the build, the `better-sqlite3` binary inside the Turbopack alias directory was compiled for the system Node.js ABI, not Electron's. The afterPack hook now replaces the binary in the alias directory with the Electron-ABI version compiled in the same step.
 
 #### Technical Details
 
-- Modified: `electron-builder.yml`, `scripts/electron-rebuild-native.cjs`
+- Modified: `electron-builder.yml`, `scripts/electron-rebuild-native.cjs`, `src/app/globals.css`, `src/components/layout/AppLayout.tsx`, `src/components/cards/CardModal.tsx`, `src/components/cards/CreateCardModal.tsx`, `src/components/ui/FilterPanel.tsx`, `src/components/ui/ViewModeSelector.tsx`, `src/app/search/page.tsx`, `src/app/categories/page.tsx`, `src/app/tags/page.tsx`
 - `electron-builder.yml` now explicitly includes `.next/node_modules/**` to override the automatic exclusion.
 - `scripts/electron-rebuild-native.cjs` Step 5: scans `destApp/.next/node_modules/` for any `better-sqlite3-*` alias directories and patches their `build/Release/better_sqlite3.node` with the Electron-ABI binary compiled in Step 1.
+- `ThemeToggle` import and component removed from `AppLayout.tsx`.
 
 ---
 

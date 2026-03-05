@@ -48,6 +48,11 @@
   /* Font tokens - these get overwritten by ThemeContext */
   --font-ui-active: var(--font-geist-sans);
   --font-mono-active: var(--font-geist-mono);
+  --font-size-body: 14px;
+  --font-size-category-title: 16px;
+  --font-size-card-title: 16px;
+  --font-size-code: 14px;
+  --board-column-width: 320px;
   --user-background-image: none;
 }
 
@@ -115,8 +120,27 @@ body {
   background-attachment: fixed;
   background-position: center;
   color: var(--foreground);
+  font-size: var(--font-size-body);
   font-family: var(--font-ui-active, var(--font-geist-sans, system-ui)), -apple-system, sans-serif;
   transition: background-color 200ms ease, color 200ms ease;
+}
+
+.text-dynamic-body {
+  font-size: var(--font-size-body);
+}
+
+.text-dynamic-category-title {
+  font-size: var(--font-size-category-title);
+  line-height: 1.2;
+}
+
+.text-dynamic-card-title {
+  font-size: var(--font-size-card-title);
+  line-height: 1.25;
+}
+
+.text-dynamic-code {
+  font-size: var(--font-size-code);
 }
 
 /* Override background when custom gradient is set */

@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   DndContext,
   DragEndEvent,
@@ -27,6 +27,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/cards/Card';
 import { DraggableCard } from '@/components/cards/DraggableCard';
+import { useTheme } from '@/contexts/ThemeContext';
 import type { CategoryWithCards, Card as CardType } from '@/types';
 import {
   PlusIcon,
@@ -64,6 +65,8 @@ interface SortableCategoryColumnProps {
   setRenameName: (name: string) => void;
   deleteConfirmId: string | null;
   setDeleteConfirmId: (id: string | null) => void;
+  columnWidth: number;
+  onColumnResizeStart: (event: React.MouseEvent<HTMLButtonElement>) => void;
 }
 
 function SortableCategoryColumn({
@@ -79,6 +82,8 @@ function SortableCategoryColumn({
   setRenameName,
   deleteConfirmId,
   setDeleteConfirmId,
+  columnWidth,
+  onColumnResizeStart,
 }: SortableCategoryColumnProps) {
   const {
     attributes,
@@ -98,7 +103,19 @@ function SortableCategoryColumn({
   const cards = category.cards || [];
 
   return (
-    <div ref={setNodeRef} style={style} className="flex flex-col min-w-0 h-full">
+    <div
+      ref={setNodeRef}
+      style={{ ...style, width: `${columnWidth}px`, minWidth: `${columnWidth}px`, maxWidth: `${columnWidth}px` }}
+      className="relative flex flex-col min-w-0 h-full"
+    >
+      <button
+        type="button"
+        onMouseDown={onColumnResizeStart}
+        onClick={(event) => event.preventDefault()}
+        className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize z-30 rounded-r-3xl bg-transparent hover:bg-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)] transition-colors"
+        aria-label="Resize columns"
+        title="Drag to resize columns"
+      />
       <div className="glass glass--dense flex h-full flex-col rounded-3xl border border-transparent overflow-hidden">
         {/* Column Header */}
         <div
@@ -168,7 +185,7 @@ function SortableCategoryColumn({
                 <span className="text-sm font-medium text-red-400 truncate">Delete &ldquo;{category.name}&rdquo;?</span>
               </div>
             ) : (
-              <h2 className="font-semibold text-(--text-strong) truncate flex items-center gap-2">
+              <h2 className="font-semibold text-(--text-strong) text-dynamic-category-title line-clamp-2 break-words flex items-center gap-2">
                 <span
                   className="w-2.5 h-2.5 rounded-full shrink-0"
                   style={{ backgroundColor: category.color }}
@@ -177,7 +194,7 @@ function SortableCategoryColumn({
               </h2>
             )}
             {category.description && renamingId !== category.id && deleteConfirmId !== category.id && (
-              <p className="text-xs text-(--text-soft) truncate mt-0.5">
+              <p className="text-xs text-(--text-soft) text-dynamic-body truncate mt-0.5">
                 {category.description}
               </p>
             )}
@@ -269,11 +286,11 @@ function SortableCategoryColumn({
                 >
                   <PlusIcon className="w-8 h-8" style={{ color: category.color }} />
                 </div>
-                <p className="text-sm text-(--foreground-soft)">No cards yet</p>
+                <p className="text-sm text-(--foreground-soft) text-dynamic-body">No cards yet</p>
                 {onAddCard && (
                   <button
                     onClick={() => onAddCard(category.id)}
-                    className="text-xs text-accent-soft hover:text-accent transition-colors mt-2"
+                    className="text-xs text-accent-soft text-dynamic-body hover:text-accent transition-colors mt-2"
                   >
                     Add your first card
                   </button>
@@ -309,11 +326,52 @@ export function DraggableBoard({
   onCategoryReorder,
   className,
 }: Readonly<DraggableBoardProps>) {
+  const { fontConfig, setFontConfig } = useTheme();
   const [activeCard, setActiveCard] = useState<CardType | null>(null);
   const [activeCategory, setActiveCategory] = useState<CategoryWithCards | null>(null);
   const [renamingId, setRenamingId] = useState<string | null>(null);
   const [renameName, setRenameName] = useState('');
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  const [isColumnResizing, setIsColumnResizing] = useState(false);
+  const fontConfigRef = useRef(fontConfig);
+
+  useEffect(() => {
+    fontConfigRef.current = fontConfig;
+  }, [fontConfig]);
+
+  const columnWidth = useMemo(() => {
+    const width = fontConfig.columnWidth ?? 320;
+    return Math.max(260, Math.min(560, width));
+  }, [fontConfig.columnWidth]);
+
+  const updateColumnWidth = useCallback((width: number) => {
+    const clamped = Math.max(260, Math.min(560, Math.round(width)));
+    const currentConfig = fontConfigRef.current;
+    if (currentConfig.columnWidth === clamped) return;
+    setFontConfig({ ...currentConfig, columnWidth: clamped });
+  }, [setFontConfig]);
+
+  const handleColumnResizeStart = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+    const startX = event.clientX;
+    const startWidth = columnWidth;
+    setIsColumnResizing(true);
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const delta = moveEvent.clientX - startX;
+      updateColumnWidth(startWidth + delta);
+    };
+
+    const handleMouseUp = () => {
+      globalThis.removeEventListener('mousemove', handleMouseMove);
+      globalThis.removeEventListener('mouseup', handleMouseUp);
+      setIsColumnResizing(false);
+    };
+
+    globalThis.addEventListener('mousemove', handleMouseMove);
+    globalThis.addEventListener('mouseup', handleMouseUp);
+  }, [columnWidth, updateColumnWidth]);
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -390,14 +448,14 @@ export function DraggableBoard({
       onDragStart={handleDragStart}
       onDragEnd={handleDragEnd}
     >
-      <div className={cn('w-full h-full', className)}>
+      <div className={cn('w-full h-full overflow-x-auto pb-2', className, isColumnResizing && 'select-none')}>
         <SortableContext
           items={categories.map((c) => `cat-${c.id}`)}
           strategy={horizontalListSortingStrategy}
         >
           <div
-            className="grid gap-4 pb-4 h-full"
-            style={{ gridTemplateColumns: `repeat(${categories.length}, minmax(280px, 1fr))` }}
+            className="grid gap-4 pb-4 h-full w-max min-w-full"
+            style={{ gridTemplateColumns: `repeat(${categories.length}, ${columnWidth}px)` }}
           >
             {categories.map((category) => (
               <SortableCategoryColumn
@@ -414,6 +472,8 @@ export function DraggableBoard({
                 setRenameName={setRenameName}
                 deleteConfirmId={deleteConfirmId}
                 setDeleteConfirmId={setDeleteConfirmId}
+                columnWidth={columnWidth}
+                onColumnResizeStart={handleColumnResizeStart}
               />
             ))}
           </div>
@@ -438,7 +498,7 @@ export function DraggableBoard({
                 className="w-2.5 h-2.5 rounded-full shrink-0"
                 style={{ backgroundColor: activeCategory.color }}
               />
-              <span className="font-semibold text-(--text-strong) truncate">{activeCategory.name}</span>
+              <span className="font-semibold text-(--text-strong) text-dynamic-category-title truncate">{activeCategory.name}</span>
               <span className="ml-auto text-sm text-(--text-soft)">{(activeCategory.cards || []).length}</span>
             </div>
           </div>

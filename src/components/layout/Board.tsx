@@ -42,7 +42,7 @@ export function CategoryColumn({
         }}
       >
         <div className="flex-1 min-w-0">
-          <h2 className="font-semibold text-foreground truncate flex items-center gap-2">
+          <h2 className="font-semibold text-foreground text-dynamic-category-title line-clamp-2 break-words flex items-center gap-2">
             <span
               className="w-3 h-3 rounded-full shrink-0"
               style={{ backgroundColor: category.color }}
@@ -50,7 +50,7 @@ export function CategoryColumn({
             {category.name}
           </h2>
           {category.description && (
-            <p className="text-xs text-foreground/60 truncate mt-0.5">
+            <p className="text-xs text-foreground/60 text-dynamic-body truncate mt-0.5">
               {category.description}
             </p>
           )}
@@ -82,11 +82,11 @@ export function CategoryColumn({
             >
               <PlusIcon className="w-8 h-8" style={{ color: category.color }} />
             </div>
-            <p className="text-sm text-foreground/60">No cards yet</p>
+            <p className="text-sm text-foreground/60 text-dynamic-body">No cards yet</p>
             {onAddCard && (
               <button
                 onClick={() => onAddCard(category.id)}
-                className="text-xs text-accent hover:underline mt-2 transition-colors"
+                className="text-xs text-accent text-dynamic-body hover:underline mt-2 transition-colors"
               >
                 Add your first card
               </button>
@@ -116,8 +116,8 @@ export function Board({
   className,
 }: Readonly<BoardProps>) {
   return (
-    <div className={cn('w-full h-full', className)}>
-      <div className="grid gap-4 pb-4 h-full" style={{ gridTemplateColumns: `repeat(${categories.length}, minmax(280px, 1fr))` }}>
+    <div className={cn('w-full h-full overflow-x-auto pb-2', className)}>
+      <div className="grid gap-4 pb-4 h-full w-max min-w-full" style={{ gridTemplateColumns: `repeat(${categories.length}, var(--board-column-width, 320px))` }}>
         {categories.map((category) => (
           <CategoryColumn
             key={category.id}

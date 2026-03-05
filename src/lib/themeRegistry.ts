@@ -37,6 +37,11 @@ export type BackgroundConfig = {
 export type FontConfig = {
   uiFont: string;
   monoFont: string;
+  bodyFontSize: number;
+  categoryTitleSize: number;
+  cardTitleSize: number;
+  codeFontSize: number;
+  columnWidth: number;
 };
 
 export type SettingsPreset = {
@@ -222,6 +227,48 @@ export const availableMonoFonts = [
 export const defaultFontConfig: FontConfig = {
   uiFont: 'system',
   monoFont: 'geist-mono',
+  bodyFontSize: 14,
+  categoryTitleSize: 16,
+  cardTitleSize: 16,
+  codeFontSize: 14,
+  columnWidth: 320,
+};
+
+const clamp = (value: number, min: number, max: number) => {
+  return Math.min(max, Math.max(min, value));
+};
+
+const normalizeNumeric = (
+  value: unknown,
+  fallback: number,
+  min: number,
+  max: number
+) => {
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return clamp(Math.round(value), min, max);
+  }
+  if (typeof value === 'string') {
+    const parsed = Number.parseFloat(value);
+    if (Number.isFinite(parsed)) {
+      return clamp(Math.round(parsed), min, max);
+    }
+  }
+  return fallback;
+};
+
+export const normalizeFontConfig = (
+  config: Partial<FontConfig> | null | undefined
+): FontConfig => {
+  if (!config) return defaultFontConfig;
+  return {
+    uiFont: config.uiFont || defaultFontConfig.uiFont,
+    monoFont: config.monoFont || defaultFontConfig.monoFont,
+    bodyFontSize: normalizeNumeric(config.bodyFontSize, defaultFontConfig.bodyFontSize, 12, 20),
+    categoryTitleSize: normalizeNumeric(config.categoryTitleSize, defaultFontConfig.categoryTitleSize, 13, 28),
+    cardTitleSize: normalizeNumeric(config.cardTitleSize, defaultFontConfig.cardTitleSize, 13, 26),
+    codeFontSize: normalizeNumeric(config.codeFontSize, defaultFontConfig.codeFontSize, 11, 22),
+    columnWidth: normalizeNumeric(config.columnWidth, defaultFontConfig.columnWidth, 260, 560),
+  };
 };
 
 export const defaultBackgroundConfig: BackgroundConfig = {

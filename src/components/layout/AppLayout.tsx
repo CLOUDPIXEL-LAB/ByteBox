@@ -5,7 +5,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
@@ -58,9 +58,52 @@ export function AppLayout({
   hasActiveFilters = false,
   onClearFilters,
 }: Readonly<AppLayoutProps>) {
+  const SIDEBAR_MIN_WIDTH = 240;
+  const SIDEBAR_MAX_WIDTH = 460;
+  const SIDEBAR_DEFAULT_WIDTH = 288;
+  const SIDEBAR_COLLAPSED_WIDTH = 96;
+  const SIDEBAR_SESSION_KEY = 'bytebox-sidebar-width-session';
+
   const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarWidth, setSidebarWidth] = useState(SIDEBAR_DEFAULT_WIDTH);
+  const [isSidebarResizing, setIsSidebarResizing] = useState(false);
   const [isDataModalOpen, setIsDataModalOpen] = useState(false);
   const { getIconColor, accentTheme, mode } = useTheme();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const savedWidth = window.sessionStorage.getItem(SIDEBAR_SESSION_KEY);
+    if (!savedWidth) return;
+    const parsed = Number.parseInt(savedWidth, 10);
+    if (Number.isNaN(parsed)) return;
+    setSidebarWidth(Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, parsed)));
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    window.sessionStorage.setItem(SIDEBAR_SESSION_KEY, String(sidebarWidth));
+  }, [sidebarWidth]);
+
+  const handleSidebarResizeStart = useCallback((event: React.MouseEvent<HTMLButtonElement>) => {
+    event.preventDefault();
+    const startX = event.clientX;
+    const startWidth = sidebarWidth;
+    setIsSidebarResizing(true);
+
+    const handleMouseMove = (moveEvent: MouseEvent) => {
+      const nextWidth = startWidth + (moveEvent.clientX - startX);
+      setSidebarWidth(Math.max(SIDEBAR_MIN_WIDTH, Math.min(SIDEBAR_MAX_WIDTH, Math.round(nextWidth))));
+    };
+
+    const handleMouseUp = () => {
+      globalThis.removeEventListener('mousemove', handleMouseMove);
+      globalThis.removeEventListener('mouseup', handleMouseUp);
+      setIsSidebarResizing(false);
+    };
+
+    globalThis.addEventListener('mousemove', handleMouseMove);
+    globalThis.addEventListener('mouseup', handleMouseUp);
+  }, [sidebarWidth]);
 
   // Handle Add Card click - navigate to dashboard if not already there
   const handleAddCardClick = () => {
@@ -126,9 +169,15 @@ export function AppLayout({
       {/* Sidebar */}
       <aside
         className={cn(
-          'glass glass--dense flex flex-col transition-[width] duration-300 ease-out border border-transparent rounded-r-3xl',
-          sidebarOpen ? 'w-72' : 'w-24'
+          'glass glass--dense relative flex flex-col border border-transparent rounded-r-3xl',
+          isSidebarResizing ? 'select-none' : '',
+          sidebarOpen
+            ? isSidebarResizing
+              ? ''
+              : 'transition-[width] duration-300 ease-out'
+            : 'transition-[width] duration-300 ease-out'
         )}
+        style={{ width: sidebarOpen ? `${sidebarWidth}px` : `${SIDEBAR_COLLAPSED_WIDTH}px` }}
       >
         {/* Sidebar Header */}
         <div className={cn(
@@ -264,6 +313,17 @@ export function AppLayout({
             )}
           </button>
         </div>
+
+        {sidebarOpen && (
+          <button
+            type="button"
+            onMouseDown={handleSidebarResizeStart}
+            onClick={(event) => event.preventDefault()}
+            className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize rounded-r-3xl bg-transparent hover:bg-[color-mix(in_srgb,var(--accent-primary)_22%,transparent)] transition-colors"
+            aria-label="Resize sidebar"
+            title="Drag to resize sidebar for this session"
+          />
+        )}
       </aside>
 
       {/* Main Content */}

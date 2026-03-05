@@ -186,6 +186,10 @@ export default function SettingsPage() {
     setIsCreatingPreset(false);
   };
 
+  const updateFontConfig = (updates: Partial<typeof fontConfig>) => {
+    setFontConfig({ ...fontConfig, ...updates });
+  };
+
 
 
   const handleSetSolidBackground = (color: string) => {
@@ -789,7 +793,7 @@ export default function SettingsPage() {
                   </div>
                   <select
                     value={fontConfig.uiFont}
-                    onChange={(event) => setFontConfig({ ...fontConfig, uiFont: event.target.value })}
+                    onChange={(event) => updateFontConfig({ uiFont: event.target.value })}
                     className="w-full rounded-lg bg-transparent border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 text-sm focus:border-[color-mix(in_srgb,var(--accent-border)_60%,transparent)] outline-none"
                     aria-label="Select UI font"
                   >
@@ -801,7 +805,10 @@ export default function SettingsPage() {
                   </select>
                   <p
                     className="text-sm text-(--text-soft)"
-                    style={{ fontFamily: availableFonts.find((f) => f.id === fontConfig.uiFont)?.value }}
+                    style={{
+                      fontFamily: availableFonts.find((f) => f.id === fontConfig.uiFont)?.value,
+                      fontSize: `${fontConfig.bodyFontSize}px`,
+                    }}
                   >
                     The quick brown fox jumps over the lazy dog.
                   </p>
@@ -814,7 +821,7 @@ export default function SettingsPage() {
                   </div>
                   <select
                     value={fontConfig.monoFont}
-                    onChange={(event) => setFontConfig({ ...fontConfig, monoFont: event.target.value })}
+                    onChange={(event) => updateFontConfig({ monoFont: event.target.value })}
                     className="w-full rounded-lg bg-transparent border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] px-3 py-2 text-sm focus:border-[color-mix(in_srgb,var(--accent-border)_60%,transparent)] outline-none"
                     aria-label="Select monospace font for code blocks"
                   >
@@ -826,11 +833,118 @@ export default function SettingsPage() {
                   </select>
                   <p
                     className="text-sm text-(--text-soft)"
-                    style={{ fontFamily: availableMonoFonts.find((f) => f.id === fontConfig.monoFont)?.value }}
+                    style={{
+                      fontFamily: availableMonoFonts.find((f) => f.id === fontConfig.monoFont)?.value,
+                      fontSize: `${fontConfig.codeFontSize}px`,
+                    }}
                   >
                     const accent = [&apos;#f72585&apos;, &apos;#4361ee&apos;];
                   </p>
                 </div>
+              </div>
+
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-(--text-strong)">Regular text size</p>
+                    <span className="text-xs font-semibold text-(--text-strong)">{fontConfig.bodyFontSize}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={12}
+                    max={20}
+                    value={fontConfig.bodyFontSize}
+                    onChange={(event) => updateFontConfig({ bodyFontSize: Number(event.target.value) })}
+                    className="glass-range w-full"
+                    aria-label="Regular text size"
+                  />
+                  <p className="text-(--text-soft)" style={{ fontSize: `${fontConfig.bodyFontSize}px` }}>
+                    This controls regular body text in your board and cards.
+                  </p>
+                </div>
+
+                <div className="surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-(--text-strong)">Category header size</p>
+                    <span className="text-xs font-semibold text-(--text-strong)">{fontConfig.categoryTitleSize}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={13}
+                    max={28}
+                    value={fontConfig.categoryTitleSize}
+                    onChange={(event) => updateFontConfig({ categoryTitleSize: Number(event.target.value) })}
+                    className="glass-range w-full"
+                    aria-label="Category header font size"
+                  />
+                  <p className="text-(--text-soft) line-clamp-2" style={{ fontSize: `${fontConfig.categoryTitleSize}px` }}>
+                    Very Long Category Header Preview Text
+                  </p>
+                </div>
+
+                <div className="surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-(--text-strong)">Card title size</p>
+                    <span className="text-xs font-semibold text-(--text-strong)">{fontConfig.cardTitleSize}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={13}
+                    max={26}
+                    value={fontConfig.cardTitleSize}
+                    onChange={(event) => updateFontConfig({ cardTitleSize: Number(event.target.value) })}
+                    className="glass-range w-full"
+                    aria-label="Card title font size"
+                  />
+                  <p className="text-(--text-soft) line-clamp-2" style={{ fontSize: `${fontConfig.cardTitleSize}px`, fontWeight: 600 }}>
+                    This is a long card title preview that wraps nicely.
+                  </p>
+                </div>
+
+                <div className="surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-(--text-strong)">Code text size</p>
+                    <span className="text-xs font-semibold text-(--text-strong)">{fontConfig.codeFontSize}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={11}
+                    max={22}
+                    value={fontConfig.codeFontSize}
+                    onChange={(event) => updateFontConfig({ codeFontSize: Number(event.target.value) })}
+                    className="glass-range w-full"
+                    aria-label="Code text size"
+                  />
+                  <p
+                    className="text-(--text-soft)"
+                    style={{
+                      fontFamily: availableMonoFonts.find((f) => f.id === fontConfig.monoFont)?.value,
+                      fontSize: `${fontConfig.codeFontSize}px`,
+                    }}
+                  >
+                    function hello(name) {'{'} return `Hi ${'{'}name{'}'}`; {'}'}
+                  </p>
+                </div>
+              </div>
+
+              <div className="surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 space-y-3">
+                <div className="flex items-center justify-between">
+                  <p className="font-medium text-(--text-strong)">Column width</p>
+                  <span className="text-xs font-semibold text-(--text-strong)">{fontConfig.columnWidth}px</span>
+                </div>
+                <input
+                  type="range"
+                  min={260}
+                  max={560}
+                  step={10}
+                  value={fontConfig.columnWidth}
+                  onChange={(event) => updateFontConfig({ columnWidth: Number(event.target.value) })}
+                  className="glass-range w-full"
+                  aria-label="Column width"
+                />
+                <p className="text-xs text-(--text-soft)">
+                  Applies to all board columns. You can also drag the right edge of any category column to resize directly.
+                </p>
               </div>
             </div>
 
@@ -883,7 +997,7 @@ export default function SettingsPage() {
               )}
 
               {settingsPresets.length === 0 ? (
-                <p className="text-xs text-(--text-soft)">No presets yet. Save your current layout, colors, fonts, and wallpaper to reuse later.</p>
+                <p className="text-xs text-(--text-soft)">No presets yet. Save your current layout, colors, fonts, typography sizes, column width, and wallpaper to reuse later.</p>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
                   {settingsPresets.map((preset) => (
@@ -915,6 +1029,7 @@ export default function SettingsPage() {
                         <span className="px-2 py-1 rounded-full border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)]">Mode: {preset.mode}</span>
                         <span className="px-2 py-1 rounded-full border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)]">Accent: {preset.accentThemeId}</span>
                         <span className="px-2 py-1 rounded-full border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)]">Font: {preset.fonts.uiFont}</span>
+                        <span className="px-2 py-1 rounded-full border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)]">Columns: {preset.fonts.columnWidth ?? 320}px</span>
                       </div>
                     </div>
                   ))}

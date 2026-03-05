@@ -11,6 +11,8 @@ ByteBox data is centered on four entities: `Category`, `Card`, `Tag`, and `UserS
 - `Card`: content unit with type-specific fields (snippet, bookmark, image, note, etc.).
 - `Tag`: reusable labels connected to cards through a many-to-many relation.
 - `UserSettings`: singleton app appearance/preferences record (`id = "default"`).
+  - `backgroundConfig` stores active background + saved solid color / saved gradient libraries.
+  - `fontConfig` stores font families, typography sizes, and persisted sidebar/column widths.
 
 ## Card Types
 

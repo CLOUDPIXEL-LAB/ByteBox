@@ -23,6 +23,19 @@ export type GradientPreset = {
   angle: number;
 };
 
+export type SolidColorPreset = {
+  id: string;
+  name: string;
+  color: string;
+};
+
+export type SavedGradientPreset = {
+  id: string;
+  name: string;
+  colors: string[];
+  angle: number;
+};
+
 export type BackgroundType = 'solid' | 'gradient' | 'image' | 'default';
 
 export type BackgroundConfig = {
@@ -32,6 +45,8 @@ export type BackgroundConfig = {
   gradientAngle?: number;
   imageUrl?: string;
   presetWallpaper?: string;
+  savedSolidColors?: string[];
+  savedGradientPresets?: SavedGradientPreset[];
 };
 
 export type FontConfig = {
@@ -110,6 +125,19 @@ export const gradientPresets: GradientPreset[] = [
     colors: ['#0d0d0d', '#1a0a1a', '#2d0a2d', '#ff0080'],
     angle: 150,
   },
+];
+
+export const solidColorPresets: SolidColorPreset[] = [
+  { id: 'slate-night', name: 'Slate Night', color: '#0f1115' },
+  { id: 'cobalt', name: 'Cobalt', color: '#063aa2' },
+  { id: 'deep-ocean', name: 'Deep Ocean', color: '#0a2540' },
+  { id: 'forest', name: 'Forest', color: '#0f3d2e' },
+  { id: 'aubergine', name: 'Aubergine', color: '#2d1b4e' },
+  { id: 'charcoal', name: 'Charcoal', color: '#1f2937' },
+  { id: 'warm-espresso', name: 'Warm Espresso', color: '#3a241b' },
+  { id: 'soft-graphite', name: 'Soft Graphite', color: '#2f3545' },
+  { id: 'rose-flare', name: 'Rose Flare', color: '#c84f78' },
+  { id: 'golden-pop', name: 'Golden Pop', color: '#f1ad2c' },
 ];
 
 // Built-in wallpaper options (actual images from /public/wallpapers)
@@ -279,6 +307,8 @@ export const normalizeFontConfig = (
 
 export const defaultBackgroundConfig: BackgroundConfig = {
   type: 'default',
+  savedSolidColors: [],
+  savedGradientPresets: [],
 };
 
 export const accentThemes: AccentTheme[] = [

@@ -1,6 +1,6 @@
 # 📚 ByteBox – Project Overview
 
-**Last Updated**: March 2, 2026
+**Last Updated**: March 5, 2026
 **Version**: 2.5.0
 **Author**: [Pink Pixel](https://pinkpixel.dev)
 **License**: Apache 2.0
@@ -22,7 +22,7 @@
 - 💻 **Code-Friendly** — Syntax highlighting for 100+ languages (Shiki)
 - 🖼️ **Image Storage** — Save screenshots and images with full-screen lightbox preview, download, and clipboard support
 - 📋 **Copy & Delete** — One-click content copying and safe two-step card deletion
-- 🌌 **Customize** — Glassmorphic UI with accent/icon themes, custom gradients/solids, wallpaper library or uploads, font picks, and saveable presets
+- 🌌 **Customize** — Glassmorphic UI with accent/icon themes, saveable custom solids/gradients, wallpaper library or uploads, font/size controls, resizable sidebar/columns, and saveable presets
 - 🌫️ **Tune the Glow** — Real-time glass transparency slider that adapts blur, opacity, and shadows to your wallpaper
 
 ---
@@ -84,10 +84,10 @@
 
 A cohesive customization stack that keeps the UI consistent while giving users deep control over color, texture, and type.
 
-- **Theme Registry (`src/lib/themeRegistry.ts`)** – Curated accent palettes (Byte Classic, Neon Night, Rainbow Sprint, Midnight Carbon, Sunset Espresso, Pastel Haze) and icon palettes (Neon Grid, Carbon Tech, Espresso Circuit, Rainbow Loop, Pink Pulse, Custom Single) plus gradient presets and built-in wallpaper data URIs.
-- **Theme Context (`src/contexts/ThemeContext.tsx`)** – Loads settings from the database API on mount (with localStorage for instant hydration fallback), applies CSS variables (`--accent-*`, `--icon-*`, `--glass-*`, `--font-*`, background tokens), and keeps uploads/gradients/solids/presets in sync. Saves changes to both localStorage and API with 500ms debouncing. Supports 17 UI fonts and 13 mono fonts including stylized options.
-- **Global Tokens (`src/app/globals.css`)** – Glass utilities (`.glass`, `.glass--dense`), surface helpers, accent gradients, and configurable background stack (custom gradient, preset wallpaper, or user upload).
-- **Settings UI (`src/app/settings/page.tsx`)** – Light/dark toggle, glass slider, accent/icon pickers, custom accent builder (2–6 colors), solid + gradient background editors with angle control, wallpaper library (12 built-in wallpapers) plus upload support, UI + mono font selectors, and named presets for saving/loading the whole appearance. All settings database-backed with localStorage as hydration fallback.
+- **Theme Registry (`src/lib/themeRegistry.ts`)** – Curated accent palettes (Byte Classic, Neon Night, Rainbow Sprint, Midnight Carbon, Sunset Espresso, Pastel Haze) and icon palettes (Neon Grid, Carbon Tech, Espresso Circuit, Rainbow Loop, Pink Pulse, Custom Single) plus gradient presets, solid-color presets, and wallpaper metadata.
+- **Theme Context (`src/contexts/ThemeContext.tsx`)** – Loads settings from the database API on mount (with localStorage for instant hydration fallback), applies CSS variables (`--accent-*`, `--icon-*`, `--glass-*`, `--font-*`, sizing/width tokens, background tokens), and keeps uploads/gradients/solids/presets in sync. Saves changes to both localStorage and API with 500ms debouncing. Supports 17 UI fonts and 13 mono fonts including stylized options.
+- **Global Tokens (`src/app/globals.css`)** – Glass utilities (`.glass`, `.glass--dense`), surface helpers, dynamic typography classes, and configurable background stack (custom gradient, preset wallpaper, or user upload).
+- **Settings UI (`src/app/settings/page.tsx`)** – Glass slider, accent/icon pickers, custom accent builder (2–6 colors), solid + gradient editors with saveable custom color/gradient libraries, wallpaper library (12 built-in wallpapers) plus upload support, UI + mono font selectors, UI/body/category/card/code size controls, sidebar/column width controls, and named presets for saving/loading the whole appearance.
 - **Component Integration** – Layout, cards, filters, search, and stats all subscribe to the theme hooks so changes propagate instantly across the app.
 
 All customizations are database-backed with localStorage as a fast hydration layer, ensuring consistent rendering on first paint and persistence across browser sessions.
@@ -144,7 +144,6 @@ bytebox/
 │   │       ├── Lightbox.tsx           # Full-screen image preview modal
 │   │       ├── SearchBar.tsx          # Global search input (Cmd+K)
 │   │       ├── Tag.tsx                # Tag badge component
-│   │       ├── ThemeToggle.tsx        # Light/dark toggle with accent-aware styles
 │   │       └── ViewModeSelector.tsx   # View mode dropdown (All/Recent/Starred/By Tag)
 │   │
 │   ├── contexts/
@@ -262,13 +261,13 @@ bytebox/
 **UserSettings** (Singleton)
 
 - `id`: Fixed value "default" (singleton pattern)
-- `mode`: Theme mode (dark/light)
+- `mode`: Base appearance mode value used by the theme engine
 - `accentThemeId`: Selected accent theme ID
 - `iconThemeId`: Selected icon theme ID
 - `customIconColor`: Custom icon hex color
 - `glassIntensity`: Glass transparency level (0-100)
-- `backgroundConfig`: JSON object with background settings
-- `fontConfig`: JSON object with UI and mono font selections
+- `backgroundConfig`: JSON object with active background plus saved solid-color and gradient libraries
+- `fontConfig`: JSON object with UI/mono font selections, UI/body/category/card/code sizes, and persisted sidebar/column widths
 - `customAccentThemes`: JSON array of user-created accent themes
 - `settingsPresets`: JSON array of saved settings presets
 - `createdAt`: Timestamp when created
@@ -306,10 +305,10 @@ bytebox/
 **Implementation**:
 
 - `Board.tsx` wraps the entire dashboard with `DndContext`
-- `DraggableBoard.tsx` uses CSS Grid with `repeat(n, minmax(280px, 1fr))` for responsive columns
-- Columns stretch evenly to fill the viewport width
-- Minimum column width of 280px ensures cards remain readable
-- Horizontal scrolling only activates when minimum widths can't be maintained
+- `DraggableBoard.tsx` uses CSS Grid with user-configurable fixed column width (`repeat(n, {width}px)`)
+- Columns are drag-reorderable and resizeable via column-edge drag handles
+- Default column width is 320px and user-adjustable in Settings or by direct drag
+- Horizontal scrolling activates naturally as column count or width grows
 - `DraggableCard.tsx` wraps each card with `useDraggable` and `useSortable`
 - Drag events (`onDragStart`, `onDragEnd`) handle reordering and category changes
 - On drop, PATCH `/api/cards` with updated order/categoryId
@@ -317,7 +316,7 @@ bytebox/
 
 **User Experience**:
 
-- Columns automatically resize based on screen/viewport size
+- Column width is user-controlled and persisted as part of appearance settings/presets
 - Drag cards within a category to reorder
 - Drag cards between categories to move them
 - Visual feedback with hover states and active indicators
@@ -381,14 +380,14 @@ bytebox/
 - `syntax.ts` initializes Shiki with multiple languages
 - `CodeBlock.tsx` renders highlighted code blocks
 - Supports 100+ languages via validated dropdown (JavaScript, Python, Go, Rust, etc.)
-- Light and dark themes match app theme
+- Syntax theme tokens follow the active appearance profile
 - Copy-to-clipboard button for easy code copying
 
 **User Experience**:
 
 - Code snippets are beautifully highlighted
 - One-click copy to clipboard
-- Theme-aware (dark/light mode)
+- Theme-aware color tokens from the current appearance profile
 
 ---
 
@@ -501,43 +500,39 @@ bytebox/
 
 ---
 
-### 8️⃣ Dark Mode & Theme System
+### 8️⃣ Appearance & Theme System
 
 **Technology**: React Context API + localStorage
 
 **Implementation**:
 
-- `ThemeContext.tsx` manages base mode, accent theme, icon palette, custom icon color, wallpaper, and the new glass intensity state (0–100).
+- `ThemeContext.tsx` manages the appearance profile, accent theme, icon palette, custom icon color, wallpaper, and glass intensity state (0–100).
 - Preferences persist to localStorage (`bytebox-*`) and hydrate once the app mounts.
-- System preference detection (respects OS theme)
-- `ThemeToggle.tsx` renders the sole sun/moon icon button for mode switching
-- Tailwind CSS `dark:` classes style components
-- Logo shadow effects are mode-aware (dark mode uses drop-shadow, light mode uses none to prevent visual artifacts)
+- Tailwind + CSS variable tokens style components consistently across customized appearances
+- Logo shadow effects are appearance-aware (drop-shadow is only applied where it improves clarity)
 
 **User Experience**:
 
-- Dark mode is the default
-- Click the icon toggle to switch bases—no duplicate buttons in Settings
 - Drag the Glass Transparency slider to move from airy to frosted instantly
 - All theme settings persist across sessions with smooth transitions
 
 ---
 
-### 9️⃣ Collapsible Sidebar
+### 9️⃣ Collapsible + Resizable Sidebar
 
 **Technology**: React state + Tailwind CSS transitions + Next.js Link
 
 **Implementation**:
 
-- `AppLayout.tsx` manages `sidebarOpen` state for expand/collapse behavior
+- `AppLayout.tsx` manages both `sidebarOpen` (expand/collapse) and persisted `sidebarWidth`
 - Uses Next.js `Link` component for all sidebar navigation (Dashboard, Search, Tags, Settings)
 - Client-side navigation preserves React state and theme settings across page transitions
-- Sidebar transitions smoothly between 320px (expanded) and 96px (collapsed) widths
+- Sidebar transitions between a user-configurable expanded width (240–460px, default 240px) and 96px collapsed width
 - **Logo Switching**:
   - Expanded: Shows full `logo_banner.png` (240×120)
   - Collapsed: Shows square `icon.png` (48×48)
-  - Both logos use React `key` prop with current mode to prevent rendering issues on theme switch
-- **Toggle Button**:
+  - Both logos use a stable React `key` strategy to avoid visual rendering artifacts during appearance updates
+- **Sidebar Button**:
   - Uses `ChevronLeftIcon` when expanded (indicates collapse)
   - Uses `ChevronRightIcon` when collapsed (indicates expand)
   - Dynamic `aria-label` for accessibility
@@ -545,10 +540,12 @@ bytebox/
   - Collapsed state uses vertical flex layout (`flex-col`) to center icon and button
   - Navigation items hide text labels when collapsed, showing only icons
   - Export/Import section and Quick Add text hidden when collapsed
+  - Expanded width can be changed by dragging the sidebar edge and is saved in settings/presets
 
 **User Experience**:
 
 - Click chevron arrow to collapse/expand sidebar
+- Drag the right edge of the sidebar to resize it
 - Icons-only view when collapsed saves screen space
 - Square logo icon maintains branding in collapsed state
 - Smooth 300ms transition animation
@@ -602,10 +599,10 @@ bytebox/
 | -------------------- | --------- | --------------------------------------- |
 | **Pink**             | `#ec4899` | Primary accent, gradients, focus states |
 | **Purple**           | `#8b5cf6` | Secondary accent, gradients             |
-| **Dark Background**  | `#0a0a0a` | Main background (dark mode)             |
-| **Light Background** | `#ffffff` | Main background (light mode)            |
-| **Text Dark**        | `#1f2937` | Primary text (light mode)               |
-| **Text Light**       | `#f9fafb` | Primary text (dark mode)                |
+| **Surface Base**     | `#0a0a0a` | Primary app background surface          |
+| **Surface Contrast** | `#ffffff` | High-contrast background/surface option |
+| **Text Primary Dark**| `#1f2937` | Dark text token for bright surfaces     |
+| **Text Primary Light** | `#f9fafb` | Light text token for deep surfaces      |
 
 ### Typography
 
@@ -738,7 +735,7 @@ npm run dev  # → http://localhost:3000
 - [ ] Build succeeds (`npm run build`)
 - [ ] Manual testing (drag & drop, search, filters, etc.)
 - [ ] Export/import works
-- [ ] Theme toggle works
+- [ ] Appearance settings apply and persist
 - [ ] Keyboard shortcuts work (`Cmd+K`, `ESC`)
 
 ---

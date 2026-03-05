@@ -7,12 +7,14 @@ ByteBox ships with a rich appearance system driven by CSS variables and persiste
 
 ## What Is Configurable
 
-- Theme mode: dark/light
 - Accent palette
 - Icon palette and custom icon color
 - Glass intensity
 - Background type and values
+- Saved solid colors and saved custom gradients
 - UI font and monospace font
+- UI/body/category/card/code font sizes
+- Sidebar width and board column width
 - Saved settings presets
 
 ## Implementation Layers
@@ -45,19 +47,33 @@ The transparency slider updates these live to shift from clear to frosted styles
 ## Font System
 
 - UI and mono fonts are configured independently.
+- UI/body/category/card/code text sizes are configurable independently.
 - Body `data-*` attributes switch active font tokens.
 - Code blocks follow the active mono selection.
 
 ## Background System
 
-Supported modes:
+Supported background types:
 
 - default
 - solid
 - gradient
 - image
 
+Background helpers:
+
+- Built-in solid color swatches
+- Saveable custom solid colors (with delete)
+- Saveable custom gradient presets (with delete)
+- Curated built-in gradient presets
+
 Background overlays and blend effects keep text readable across wallpapers.
+
+## Layout Sizing
+
+- Sidebar width is adjustable (240–460px), drag-resizable, and persisted in settings.
+- Category column width is adjustable (260–560px), drag-resizable from the board, and persisted in settings.
+- Width values can be captured in settings presets for quick profile switching.
 
 ## Settings API
 

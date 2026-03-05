@@ -14,6 +14,11 @@ For complete historical detail, see root `CHANGELOG.md`. This page captures majo
 - New `PATCH /api/categories` bulk-reorder endpoint
 - Optimistic UI updates for both card and column moves — instant visual feedback with background persistence
 - **Electron packaging fixed** — AppImage and .deb builds now correctly include Turbopack alias packages; default categories and card creation work in all packaged builds
+- Sidebar is now drag-resizable with persisted width (saved in settings/presets)
+- Board columns are now drag-resizable with persisted width (saved in settings/presets)
+- Added typography size controls: UI labels, body text, category headers, card titles, and code text
+- Added built-in solid background swatches plus save/delete for custom solid colors
+- Added save/delete support for custom gradient presets in Settings
 
 ## `2.4.0` (March 1, 2026)
 

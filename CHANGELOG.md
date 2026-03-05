@@ -54,6 +54,29 @@ This release fixes category creation ordering, extends drag-and-drop to cover fu
 - `scripts/electron-rebuild-native.cjs` Step 5: scans `destApp/.next/node_modules/` for any `better-sqlite3-*` alias directories and patches their `build/Release/better_sqlite3.node` with the Electron-ABI binary compiled in Step 1.
 - `ThemeToggle` import and component removed from `AppLayout.tsx`.
 
+### 🎛️ Settings Personalization Expansion (March 5, 2026)
+
+#### Added
+
+- **Resizable sidebar with persisted width** — Sidebar can now be drag-resized from its right edge, with width saved in `fontConfig.sidebarWidth` (and included in settings presets).
+- **Resizable board columns with persisted width** — Category columns can now be resized from the board itself, with width saved in `fontConfig.columnWidth`.
+- **Advanced typography sizing controls** — Added independent controls for:
+  - UI label size
+  - Body text size
+  - Category header size
+  - Card title size
+  - Code text size
+- **Solid background preset system** — Added built-in solid color swatches plus save/delete support for custom solid colors.
+- **Custom gradient preset library** — Added save/delete support for user-created gradients in Settings.
+
+#### Changed
+
+- **Sidebar default width tightened** — Expanded sidebar default is now the minimum width (`240px`) for a cleaner starting layout.
+- **Sidebar width persistence model** — Sidebar width moved from session-only state to durable settings persistence so it no longer resets when navigating between pages.
+- **Card/category title handling** — Category headers and card titles now support multi-line clamping to reduce clipping with larger fonts.
+- **Theme tokens expanded** — Added runtime CSS tokens for `--font-size-ui`, `--font-size-body`, `--font-size-category-title`, `--font-size-card-title`, `--font-size-code`, `--sidebar-width`, and `--board-column-width`.
+- **Background config model expanded** — `backgroundConfig` now carries saved solid color and saved gradient libraries so they travel with settings/preset data.
+
 ---
 
 ## [2.4.0] - 2026-03-01

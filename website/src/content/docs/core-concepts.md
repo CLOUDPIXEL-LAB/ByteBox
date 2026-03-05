@@ -28,6 +28,7 @@ All card types share one table and differ by field usage:
 - Drag/drop uses `@dnd-kit` (both cards and category columns)
 - **Card reorder / cross-column move** — `PATCH /api/cards` bulk update; the entire affected column(s) are rewritten so `order` values stay unique and contiguous
 - **Column reorder** — `PATCH /api/categories` bulk update (`{ updates: [{ id, order }] }`); persisted transactionally
+- **Column resize** — Board columns share a persisted width value and can be resized by dragging any column edge
 - Both operations apply an optimistic state update first so the UI never snaps back while the API call is in-flight
 - Card items carry their raw `id`; category columns carry `cat-{id}` inside the shared `DndContext` to avoid ID collisions
 - Category rename/delete is inline on dashboard and on Categories page
@@ -48,12 +49,14 @@ View mode is persisted in localStorage under `bytebox-view-mode`.
 
 The theme engine uses CSS custom properties and persists to DB + localStorage:
 
-- light/dark mode
 - glass intensity
 - accent palette
 - icon palette + custom icon color
 - background config (solid/gradient/image/default)
+- background libraries (saved solid colors and saved custom gradients)
 - UI and mono font choices
+- UI/body/category/card/code font size controls
+- sidebar and board column widths
 - saved settings presets
 
 Core implementation lives in `ThemeContext` + `themeRegistry` + `globals.css` tokens.

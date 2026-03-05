@@ -267,6 +267,17 @@ const applyBackgroundConfig = (config: BackgroundConfig, mode: ThemeMode) => {
   }
 };
 
+const normalizeBackgroundConfig = (
+  config: BackgroundConfig | null | undefined
+): BackgroundConfig => {
+  const base = config ?? defaultBackgroundConfig;
+  return {
+    ...base,
+    savedSolidColors: Array.isArray(base.savedSolidColors) ? base.savedSolidColors : [],
+    savedGradientPresets: Array.isArray(base.savedGradientPresets) ? base.savedGradientPresets : [],
+  };
+};
+
 const applyFontConfig = (config: FontConfig) => {
   if (!isBrowser()) return;
   const body = document.body;
@@ -442,7 +453,7 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
     setCustomIconColorInternal(storedIconColor);
     setBackgroundImage(storedBackground);
     setGlassIntensityInternal(storedGlass);
-    setBackgroundConfigInternal(storedBackgroundConfig);
+    setBackgroundConfigInternal(normalizeBackgroundConfig(storedBackgroundConfig));
     setFontConfigInternal(normalizeFontConfig(storedFontConfig));
     setCustomAccentThemes(storedCustomAccentThemes);
     setSettingsPresets(storedPresets);
@@ -461,7 +472,7 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
         setIconThemeId(apiSettings.iconThemeId || DEFAULT_ICON_THEME_ID);
         setCustomIconColorInternal(apiSettings.customIconColor || '#f472b6');
         setGlassIntensityInternal(apiSettings.glassIntensity ?? DEFAULT_GLASS_INTENSITY);
-        setBackgroundConfigInternal(apiSettings.backgroundConfig || defaultBackgroundConfig);
+        setBackgroundConfigInternal(normalizeBackgroundConfig(apiSettings.backgroundConfig || defaultBackgroundConfig));
         setFontConfigInternal(normalizeFontConfig(apiSettings.fontConfig || defaultFontConfig));
         setCustomAccentThemes(apiSettings.customAccentThemes || []);
         setSettingsPresets(apiSettings.settingsPresets || []);
@@ -472,7 +483,10 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
         localStorage.setItem(STORAGE_KEYS.ICON, apiSettings.iconThemeId || DEFAULT_ICON_THEME_ID);
         localStorage.setItem(STORAGE_KEYS.ICON_CUSTOM, apiSettings.customIconColor || '#f472b6');
         localStorage.setItem(STORAGE_KEYS.GLASS, String(apiSettings.glassIntensity ?? DEFAULT_GLASS_INTENSITY));
-        localStorage.setItem(STORAGE_KEYS.BACKGROUND_CONFIG, JSON.stringify(apiSettings.backgroundConfig || defaultBackgroundConfig));
+        localStorage.setItem(
+          STORAGE_KEYS.BACKGROUND_CONFIG,
+          JSON.stringify(normalizeBackgroundConfig(apiSettings.backgroundConfig || defaultBackgroundConfig))
+        );
         localStorage.setItem(
           STORAGE_KEYS.FONT_CONFIG,
           JSON.stringify(normalizeFontConfig(apiSettings.fontConfig || defaultFontConfig))
@@ -661,23 +675,35 @@ export function ThemeProvider({ children }: Readonly<{ children: ReactNode }>) {
     });
     setBackgroundImage(dataUrl);
     // Also update background config to image type
-    setBackgroundConfigInternal({
-      type: 'image',
-      imageUrl: dataUrl,
+    setBackgroundConfigInternal((prev) => {
+      const normalized = normalizeBackgroundConfig(prev);
+      return {
+        ...normalized,
+        type: 'image',
+        imageUrl: dataUrl,
+        presetWallpaper: undefined,
+      };
     });
   }, []);
 
   const clearBackgroundImage = useCallback(() => {
     setBackgroundImage(null);
-    setBackgroundConfigInternal({ type: 'default' });
+    setBackgroundConfigInternal((prev) => {
+      const normalized = normalizeBackgroundConfig(prev);
+      return {
+        ...normalized,
+        type: 'default',
+      };
+    });
   }, []);
 
   const setBackgroundConfig = useCallback((config: BackgroundConfig) => {
-    setBackgroundConfigInternal(config);
+    const normalized = normalizeBackgroundConfig(config);
+    setBackgroundConfigInternal(normalized);
     // Keep legacy backgroundImage in sync only when a custom upload is present.
     // Preset wallpapers and gradients shouldn't retain the previous data URL.
-    if (config.type === 'image') {
-      setBackgroundImage(config.imageUrl ?? null);
+    if (normalized.type === 'image') {
+      setBackgroundImage(normalized.imageUrl ?? null);
     } else {
       setBackgroundImage(null);
     }

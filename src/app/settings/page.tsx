@@ -13,12 +13,15 @@ import { ExportImport } from '@/components/ui/ExportImport';
 import { useTheme } from '@/contexts/ThemeContext';
 import {
   gradientPresets,
+  solidColorPresets,
   defaultWallpapers,
   availableFonts,
   availableMonoFonts,
   iconThemes,
+  type BackgroundConfig,
   type AccentTheme,
   type IconTheme,
+  type SavedGradientPreset,
 } from '@/lib/themeRegistry';
 import {
   ArrowDownTrayIcon,
@@ -70,6 +73,7 @@ export default function SettingsPage() {
   // Gradient customization state
   const [customGradientColors, setCustomGradientColors] = useState<string[]>(['#1a1a2e', '#16213e']);
   const [customGradientAngle, setCustomGradientAngle] = useState(135);
+  const [newGradientPresetName, setNewGradientPresetName] = useState('');
 
   // Solid background state
   const [solidBackground, setSolidBackground] = useState('#0f1115');
@@ -77,6 +81,25 @@ export default function SettingsPage() {
   // Preset creation state
   const [isCreatingPreset, setIsCreatingPreset] = useState(false);
   const [newPresetName, setNewPresetName] = useState('');
+
+  const savedSolidColors = useMemo(() => backgroundConfig.savedSolidColors ?? [], [backgroundConfig.savedSolidColors]);
+  const savedGradientPresets = useMemo(
+    () => backgroundConfig.savedGradientPresets ?? [],
+    [backgroundConfig.savedGradientPresets]
+  );
+
+  const withBackgroundLibraries = (
+    next: Omit<BackgroundConfig, 'savedSolidColors' | 'savedGradientPresets'>
+  ): BackgroundConfig => ({
+    ...next,
+    savedSolidColors,
+    savedGradientPresets,
+  });
+
+  const normalizeHexColor = (value: string) => {
+    const color = value.trim();
+    return /^#[0-9a-fA-F]{6}$/.test(color) ? color.toLowerCase() : null;
+  };
 
   const handleClearAllData = async () => {
     if (!showDeleteConfirm) {
@@ -145,19 +168,19 @@ export default function SettingsPage() {
   };
 
   const handleApplyGradient = (preset: typeof gradientPresets[0]) => {
-    setBackgroundConfig({
+    setBackgroundConfig(withBackgroundLibraries({
       type: 'gradient',
       gradientColors: preset.colors,
       gradientAngle: preset.angle,
-    });
+    }));
   };
 
   const handleApplyCustomGradient = () => {
-    setBackgroundConfig({
+    setBackgroundConfig(withBackgroundLibraries({
       type: 'gradient',
       gradientColors: customGradientColors,
       gradientAngle: customGradientAngle,
-    });
+    }));
   };
 
   const handleAddGradientColor = () => {
@@ -172,11 +195,72 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSelectPresetWallpaper = (wallpaper: typeof defaultWallpapers[0]) => {
+  const handleSaveSolidColor = () => {
+    const normalized = normalizeHexColor(solidBackground);
+    if (!normalized) return;
+    if (savedSolidColors.includes(normalized)) return;
     setBackgroundConfig({
+      ...backgroundConfig,
+      savedSolidColors: [...savedSolidColors, normalized],
+    });
+  };
+
+  const handleRemoveSavedSolidColor = (color: string) => {
+    setBackgroundConfig({
+      ...backgroundConfig,
+      savedSolidColors: savedSolidColors.filter((savedColor) => savedColor !== color),
+    });
+  };
+
+  const handleApplySavedSolidColor = (color: string) => {
+    handleSetSolidBackground(color);
+  };
+
+  const handleSaveCustomGradientPreset = () => {
+    if (customGradientColors.length < 2) return;
+    const signature = `${customGradientColors.join(',')}|${customGradientAngle}`;
+    const exists = savedGradientPresets.some(
+      (preset) => `${preset.colors.join(',')}|${preset.angle}` === signature
+    );
+    if (exists) return;
+    const customName = newGradientPresetName.trim();
+
+    const nextPreset: SavedGradientPreset = {
+      id: `saved-grad-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+      name: customName.length > 0 ? customName : `Custom ${savedGradientPresets.length + 1}`,
+      colors: [...customGradientColors],
+      angle: customGradientAngle,
+    };
+
+    setBackgroundConfig({
+      ...backgroundConfig,
+      savedGradientPresets: [...savedGradientPresets, nextPreset],
+    });
+    setNewGradientPresetName('');
+  };
+
+  const handleApplySavedGradientPreset = (preset: SavedGradientPreset) => {
+    setCustomGradientColors([...preset.colors]);
+    setCustomGradientAngle(preset.angle);
+    setBackgroundConfig(withBackgroundLibraries({
+      type: 'gradient',
+      gradientColors: preset.colors,
+      gradientAngle: preset.angle,
+    }));
+  };
+
+  const handleRemoveSavedGradientPreset = (id: string) => {
+    setBackgroundConfig({
+      ...backgroundConfig,
+      savedGradientPresets: savedGradientPresets.filter((preset) => preset.id !== id),
+    });
+  };
+
+  const handleSelectPresetWallpaper = (wallpaper: typeof defaultWallpapers[0]) => {
+    setBackgroundConfig(withBackgroundLibraries({
       type: 'image',
       presetWallpaper: wallpaper.url,
-    });
+    }));
   };
 
   const handleSavePreset = () => {
@@ -194,14 +278,14 @@ export default function SettingsPage() {
 
   const handleSetSolidBackground = (color: string) => {
     setSolidBackground(color);
-    setBackgroundConfig({
+    setBackgroundConfig(withBackgroundLibraries({
       type: 'solid',
       solidColor: color,
-    });
+    }));
   };
 
   const handleResetBackground = () => {
-    setBackgroundConfig({ type: 'default' });
+    setBackgroundConfig(withBackgroundLibraries({ type: 'default' }));
     setSolidBackground('#0f1115');
   };
 
@@ -569,6 +653,19 @@ export default function SettingsPage() {
                       Apply solid
                     </button>
                     <button
+                      onClick={handleSaveSolidColor}
+                      disabled={!normalizeHexColor(solidBackground) || savedSolidColors.includes((normalizeHexColor(solidBackground) || '').toLowerCase())}
+                      className={cn(
+                        'px-3 py-2 rounded-lg surface-card surface-card--subtle border text-sm transition-all',
+                        'border-[color-mix(in_srgb,var(--card-border)_80%,transparent)]',
+                        normalizeHexColor(solidBackground) && !savedSolidColors.includes((normalizeHexColor(solidBackground) || '').toLowerCase())
+                          ? 'hover:border-[color-mix(in_srgb,var(--accent-border)_45%,transparent)]'
+                          : 'opacity-60 cursor-not-allowed'
+                      )}
+                    >
+                      Save color
+                    </button>
+                    <button
                       onClick={handleResetBackground}
                       disabled={!hasCustomBackground}
                       className={cn(
@@ -580,6 +677,63 @@ export default function SettingsPage() {
                     >
                       Reset to default
                     </button>
+                  </div>
+
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold text-(--text-soft) uppercase tracking-widest">Color presets</p>
+                    <div className="grid grid-cols-4 sm:grid-cols-5 gap-2">
+                      {solidColorPresets.map((preset) => {
+                        const isActive =
+                          backgroundConfig.type === 'solid' &&
+                          (backgroundConfig.solidColor ?? '').toLowerCase() === preset.color.toLowerCase();
+                        return (
+                          <button
+                            key={preset.id}
+                            onClick={() => handleApplySavedSolidColor(preset.color)}
+                            className={cn(
+                              'group relative rounded-lg border p-1.5 transition-all text-left',
+                              'surface-card surface-card--subtle hover:border-[color-mix(in_srgb,var(--accent-border)_45%,transparent)]',
+                              isActive && 'border-[color-mix(in_srgb,var(--accent-border)_80%,transparent)] shadow-[0_10px_25px_color-mix(in_srgb,var(--accent-primary)_25%,transparent)]'
+                            )}
+                            title={preset.name}
+                          >
+                            <span className="block h-8 rounded-md border border-white/10" style={{ backgroundColor: preset.color }} />
+                          </button>
+                        );
+                      })}
+                      {savedSolidColors.map((color) => {
+                        const isActive =
+                          backgroundConfig.type === 'solid' &&
+                          (backgroundConfig.solidColor ?? '').toLowerCase() === color.toLowerCase();
+                        return (
+                          <div key={color} className="group relative">
+                            <button
+                              onClick={() => handleApplySavedSolidColor(color)}
+                              className={cn(
+                                'w-full rounded-lg border p-1.5 transition-all',
+                                'surface-card surface-card--subtle hover:border-[color-mix(in_srgb,var(--accent-border)_45%,transparent)]',
+                                isActive && 'border-[color-mix(in_srgb,var(--accent-border)_80%,transparent)] shadow-[0_10px_25px_color-mix(in_srgb,var(--accent-primary)_25%,transparent)]'
+                              )}
+                              title={`${color} (saved)`}
+                            >
+                              <span className="block h-8 rounded-md border border-white/10" style={{ backgroundColor: color }} />
+                            </button>
+                            <button
+                              onClick={(event) => {
+                                event.preventDefault();
+                                event.stopPropagation();
+                                handleRemoveSavedSolidColor(color);
+                              }}
+                              className="absolute -top-1.5 -right-1.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-full p-1 bg-[color-mix(in_srgb,var(--background)_82%,transparent)] border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] text-(--text-soft) hover:text-red-400"
+                              aria-label={`Delete saved color ${color}`}
+                              title="Delete saved color"
+                            >
+                              <XMarkIcon className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
 
@@ -658,6 +812,70 @@ export default function SettingsPage() {
                       Reset gradient editor
                     </button>
                   </div>
+
+                  <div className="flex gap-2 flex-wrap items-center">
+                    <input
+                      type="text"
+                      value={newGradientPresetName}
+                      onChange={(event) => setNewGradientPresetName(event.target.value)}
+                      placeholder="Name this saved gradient (optional)"
+                      className="h-10 min-w-[220px] flex-1 rounded-lg border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] bg-[color-mix(in_srgb,var(--surface-1)_92%,transparent)] px-3 text-sm text-(--text-strong) placeholder:text-(--text-soft)"
+                      maxLength={48}
+                    />
+                    <button
+                      onClick={handleSaveCustomGradientPreset}
+                      className="px-4 py-2 rounded-lg surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_45%,transparent)] text-sm transition-all"
+                    >
+                      Save gradient
+                    </button>
+                  </div>
+
+                  {savedGradientPresets.length > 0 && (
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-(--text-soft) uppercase tracking-widest">Saved gradients</p>
+                      <div className="grid gap-2 sm:grid-cols-2">
+                        {savedGradientPresets.map((preset) => {
+                          const isActive =
+                            backgroundConfig.type === 'gradient' &&
+                            backgroundConfig.gradientColors?.join(',') === preset.colors.join(',') &&
+                            (backgroundConfig.gradientAngle ?? 135) === preset.angle;
+                          return (
+                            <div key={preset.id} className="group relative">
+                              <button
+                                onClick={() => handleApplySavedGradientPreset(preset)}
+                                className={cn(
+                                  'w-full rounded-xl p-3 border text-left transition-all',
+                                  'surface-card surface-card--subtle hover:border-[color-mix(in_srgb,var(--accent-border)_45%,transparent)]',
+                                  isActive && 'border-[color-mix(in_srgb,var(--accent-border)_80%,transparent)] shadow-[0_12px_40px_color-mix(in_srgb,var(--accent-primary)_22%,transparent)]'
+                                )}
+                                style={{ backgroundImage: `linear-gradient(${preset.angle}deg, ${preset.colors.join(', ')})` }}
+                              >
+                                <div className="flex items-center justify-between gap-2">
+                                  <div>
+                                    <p className="font-medium text-(--text-strong)">{preset.name}</p>
+                                    <p className="text-[11px] text-(--text-soft)">{preset.colors.length}-color blend</p>
+                                  </div>
+                                  {isActive && <CheckIcon className="w-5 h-5 text-accent" />}
+                                </div>
+                              </button>
+                              <button
+                                onClick={(event) => {
+                                  event.preventDefault();
+                                  event.stopPropagation();
+                                  handleRemoveSavedGradientPreset(preset.id);
+                                }}
+                                className="absolute top-1.5 right-1.5 opacity-0 group-hover:opacity-100 transition-opacity rounded-full p-1 bg-[color-mix(in_srgb,var(--background)_82%,transparent)] border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] text-(--text-soft) hover:text-red-400"
+                                aria-label={`Delete saved gradient ${preset.name}`}
+                                title="Delete saved gradient"
+                              >
+                                <XMarkIcon className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-2">
                     <p className="text-xs font-semibold text-(--text-soft) uppercase tracking-widest">Presets</p>

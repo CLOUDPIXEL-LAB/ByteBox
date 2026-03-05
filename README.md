@@ -18,7 +18,7 @@
 
 ### 🎯 **Core Functionality**
 
-- **📦 Kanban-Style Boards** — Organize resources into customizable categories with responsive columns that stretch to fill your viewport
+- **📦 Kanban-Style Boards** — Organize resources into customizable categories with drag-sortable columns and adjustable column widths
 - **🧭 View Mode Selector** — Switch between All Cards, Most Recent, Starred Only, and By Tag views with keyboard shortcuts (`⌘1-4`)
 - **🏷️ Smart Tagging** — Add multiple tags with color-coded filtering (AND/OR logic)
 - **⭐ Star Favorites** — Mark important cards as starred for quick access with dashboard filtering
@@ -35,11 +35,11 @@
 - **Adjustable Glass Intensity** — A transparency slider (Clear → Frosted) instantly recalibrates blur, opacity, and shadows to match your wallpaper.
 - **Accent Theme Library** — Swap between 6 built-in palettes (Byte Classic, Neon Night, Rainbow Sprint, Midnight Carbon, Sunset Espresso, Pastel Haze) or build your own 2–6 color palette.
 - **Icon Palettes** — Choose from 6 curated icon stacks (Neon Grid, Carbon Tech, Espresso Circuit, Rainbow Loop, Pink Pulse) or set a custom hex color.
-- **Background Playground** — Solid color picker, custom 2–4 color gradients with angle control, 8 curated gradient presets, and 12 built-in wallpapers (plus custom uploads).
-- **Typography Controls** — Choose from 17 UI fonts and 13 mono fonts independently (Inter, Geist, Poppins, Indie Flower, JetBrains Mono, Fira Code, and more).
-- **Settings Presets** — Save the entire appearance (mode, accent/icon, background, fonts, glass) as named profiles; apply or delete anytime.
+- **Background Playground** — Solid color picker with built-in swatches, saveable custom solid colors, custom 2–4 color gradients with angle control, saveable custom gradients, curated gradient presets, and 12 built-in wallpapers (plus custom uploads).
+- **Typography Controls** — Choose from 17 UI fonts and 13 mono fonts independently, plus dedicated size controls for UI labels, body text, category headers, card titles, and code blocks.
+- **Resizable Layout Controls** — Drag-resize sidebar width and board column width, then save those dimensions as part of your settings/presets.
+- **Settings Presets** — Save the entire appearance (accent/icon, background libraries, fonts/sizes, layout widths, glass) as named profiles; apply or delete anytime.
 - **Database-Backed Persistence** — All theme settings persist to SQLite database, surviving browser clears and syncing across sessions.
-- **System Detection** — Defaults to your OS preference on first load.
 
 ### 💾 **Data Management**
 
@@ -267,16 +267,11 @@ Open [http://localhost:1334](http://localhost:1334) in your browser. 🎉
 1. Head to **Settings → Appearance**.
 2. Use the **Glass Transparency** slider to shift the interface from airy to frosted depending on your wallpaper.
 3. Pick an **Accent Theme** (or build a custom 2–6 color palette) and an **Icon Palette** (or custom hex).
-4. Choose **Background**: solid color, custom 2–4 color gradient with angle, one of 8 gradient presets, or one of 12 built-in wallpapers — upload your own if you prefer.
-5. Set **Typography**: pick from 17 UI fonts and 13 mono fonts separately.
-6. Toggle **Light/Dark Mode** with the sun/moon button in the header.
-7. Click **Save preset** to store the whole setup (mode, colors, background, fonts, glass) and reapply it later.
+4. Choose **Background**: solid color (with built-in swatches and saveable custom colors), custom 2–4 color gradient with angle (saveable custom gradients), one of 8 built-in gradient presets, or one of 12 built-in wallpapers — upload your own if you prefer.
+5. Set **Typography**: pick from 17 UI fonts and 13 mono fonts, then tune UI/body/category/card/code text sizes.
+6. Adjust **Layout Widths**: set sidebar width and board column width (or drag-resize directly in the UI).
+7. Click **Save preset** to store the whole setup (colors, background libraries, fonts/sizes, sidebar/column widths, glass) and reapply it later.
 8. All settings persist to the database and the entire UI updates in real time.
-
-### 🌙 **Theme Toggle**
-
-- Click the **sun/moon icon** (top-right) to switch between dark and light base themes.
-- Accent/icon palettes remain in sync as you switch modes.
 
 ---
 
@@ -297,7 +292,7 @@ bytebox/
 │   ├── components/
 │   │   ├── cards/            # Card, DraggableCard, CardModal, CreateCardModal
 │   │   ├── layout/           # AppLayout, Board, DraggableBoard
-│   │   └── ui/               # Tag, SearchBar, FilterPanel, CodeBlock, ThemeToggle, ExportImport, ViewModeSelector, Lightbox
+│   │   └── ui/               # Tag, SearchBar, FilterPanel, CodeBlock, ExportImport, ViewModeSelector, Lightbox
 │   ├── contexts/
 │   │   └── ThemeContext.tsx  # Theme, accent, icon, background, font controller
 │   ├── hooks/

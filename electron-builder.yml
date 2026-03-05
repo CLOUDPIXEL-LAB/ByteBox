@@ -30,6 +30,7 @@ directories:
 # electron-builder starts from the project root.
 files:
   - dist-electron/** # compiled main + preload
+  - electron/assets/** # app icons
   - .next/** # built Next.js output
   - public/** # static assets
   - package.json
@@ -69,7 +70,7 @@ linux:
     # snap is excluded from local builds — requires snapcraft to be installed.
     # It is built automatically in the GitHub Actions release workflow.
   category: Development
-  icon: public/icon.png # 256×256+ PNG
+  icon: electron/assets/icons # directory containing 16x16.png … 512x512.png
   synopsis: Developer reference cards & bookmarks dashboard
   description: >
     ByteBox is a local-first dashboard for developers. Store bookmarks,
@@ -106,9 +107,7 @@ win:
     - target: nsis
       arch:
         - x64
-  # electron-builder can convert a PNG to .ico if @electron/windows-sign
-  # or nsis-resources are available; otherwise supply a real .ico here.
-  icon: public/icon.png
+  icon: electron/assets/icons/icon.ico # 256×256 multi-resolution .ico
 
 nsis:
   oneClick: false
@@ -116,8 +115,8 @@ nsis:
   createDesktopShortcut: true
   createStartMenuShortcut: true
   shortcutName: ByteBox
-  installerIcon: public/icon.png
-  uninstallerIcon: public/icon.png
+  installerIcon: electron/assets/icons/icon.ico
+  uninstallerIcon: electron/assets/icons/icon.ico
 
 # ── macOS (cross-compile not supported — must build on macOS) ─────────────────
 
@@ -125,7 +124,7 @@ mac:
   target:
     - dmg
   category: public.app-category.developer-tools
-  icon: public/icon.png # ideally a 1024×1024 PNG or .icns
+  icon: electron/assets/icons/icon.icns # 1024×1024 .icns (or .png fallback)
 
 # ── Do not publish automatically ──────────────────────────────────────────────
 publish: null

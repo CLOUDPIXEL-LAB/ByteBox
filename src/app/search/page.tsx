@@ -33,12 +33,12 @@ export default function SearchPage() {
     try {
       const response = await fetch('/api/cards');
       const data = await response.json();
-      
+
       const allCards: CardWithRelations[] = [];
       for (const cat of data.boardData.categories as { cards: CardWithRelations[] }[]) {
         allCards.push(...cat.cards);
       }
-      
+
       setCards(allCards);
       setAllTags(data.tags);
       setFilteredCards(allCards);
@@ -64,7 +64,7 @@ export default function SearchPage() {
           case 'title':
             return card.title.toLowerCase().includes(query);
           case 'content':
-            return card.content?.toLowerCase().includes(query) || 
+            return card.content?.toLowerCase().includes(query) ||
                    card.description?.toLowerCase().includes(query);
           case 'tags':
             return card.tags.some(tag => tag.name.toLowerCase().includes(query));
@@ -143,7 +143,7 @@ export default function SearchPage() {
           {(searchQuery || selectedTags.length > 0) && (
             <button
               onClick={clearFilters}
-              className="px-4 py-2 rounded-lg accent-gradient font-medium shadow-[0_16px_40px_color-mix(in_srgb,var(--accent-primary)_30%,transparent)] hover:shadow-[0_20px_55px_color-mix(in_srgb,var(--accent-primary)_40%,transparent)] transition-all"
+              className="px-4 py-2 rounded-lg accent-gradient font-medium transition-all"
             >
               Clear filters
             </button>
@@ -209,7 +209,7 @@ export default function SearchPage() {
                 className={cn(
                   'px-3 py-1.5 rounded-lg text-sm font-medium transition-all border',
                   searchType === type
-                    ? 'accent-gradient border-transparent shadow-[0_12px_32px_color-mix(in_srgb,var(--accent-primary)_25%,transparent)]'
+                    ? 'accent-glow-active'
                     : 'surface-card surface-card--subtle border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_45%,transparent)]'
                 )}
               >

@@ -25,7 +25,6 @@ import {
 } from '@heroicons/react/24/outline';
 import { StarIcon as StarIconSolid } from '@heroicons/react/24/solid';
 import { SearchBar } from '@/components/ui/SearchBar';
-import { ThemeToggle } from '@/components/ui/ThemeToggle';
 import { DataModal } from '@/components/ui/DataModal';
 import { ViewModeSelector, type ViewMode } from '@/components/ui/ViewModeSelector';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -45,10 +44,10 @@ interface AppLayoutProps {
   onClearFilters?: () => void;
 }
 
-export function AppLayout({ 
-  children, 
-  onSearch, 
-  onToggleFilters, 
+export function AppLayout({
+  children,
+  onSearch,
+  onToggleFilters,
   showFiltersToggle = false,
   onQuickAdd,
   showStarredOnly = false,
@@ -80,7 +79,7 @@ export function AppLayout({
       // Only handle if Cmd/Ctrl is pressed and no input is focused
       if (!(e.metaKey || e.ctrlKey)) return;
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      
+
       // Cmd/Ctrl+1-4 for view modes
       if (onViewModeChange) {
         switch (e.key) {
@@ -128,19 +127,19 @@ export function AppLayout({
       <aside
         className={cn(
           'glass glass--dense flex flex-col transition-[width] duration-300 ease-out border border-transparent rounded-r-3xl',
-          sidebarOpen ? 'w-80' : 'w-24'
+          sidebarOpen ? 'w-72' : 'w-24'
         )}
       >
         {/* Sidebar Header */}
         <div className={cn(
           "flex items-center py-4 glass-bar",
-          sidebarOpen ? "justify-between px-5" : "flex-col gap-2 px-2"
+          sidebarOpen ? "justify-between px-4" : "flex-col gap-2 px-2"
         )}>
           {/* Logo: Show banner when expanded, icon when collapsed - Clickable to collapse/expand */}
           {sidebarOpen ? (
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="relative h-24 w-48 shrink-0 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]"
+              className="relative h-12 w-44 shrink-0 cursor-pointer transition-all duration-300 hover:scale-[1.02] hover:brightness-110 active:scale-[0.98]"
               aria-label="Collapse sidebar"
             >
               <Image
@@ -172,7 +171,7 @@ export function AppLayout({
               />
             </button>
           )}
-          
+
           <button
             onClick={() => setSidebarOpen(!sidebarOpen)}
             className="p-2 rounded-xl transition-all duration-300 hover:bg-(--hover-bg) hover:scale-110 active:scale-95 hover:shadow-lg hover:shadow-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)]"
@@ -192,10 +191,9 @@ export function AppLayout({
             onClick={handleAddCardClick}
             className={cn(
               'w-full flex items-center justify-center gap-2 px-4 py-3 rounded-xl',
-              'accent-gradient shadow-lg shadow-[color-mix(in_srgb,var(--accent-primary)_30%,transparent)]',
-              'hover:shadow-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] hover:scale-[1.02]',
-              'active:scale-[0.98] font-semibold text-sm transition-all duration-300',
-              'hover:brightness-110'
+              'accent-gradient',
+              'hover:scale-[1.02] active:scale-[0.98]',
+              'font-semibold text-sm transition-all duration-300'
             )}
           >
             <PlusIcon className="w-5 h-5 transition-transform duration-300 group-hover:rotate-90" />
@@ -298,7 +296,7 @@ export function AppLayout({
           <div className="flex items-center gap-3">
             {/* Search Bar */}
             {onSearch && (
-              <SearchBar 
+              <SearchBar
                 onSearch={onSearch}
                 className="w-80"
               />
@@ -341,7 +339,7 @@ export function AppLayout({
             {showFiltersToggle && onToggleFilters && (
               <button
                 onClick={onToggleFilters}
-                className="p-2 rounded-xl surface-card surface-card--subtle transition-all duration-300 hover:border-accent hover:scale-110 active:scale-95 hover:shadow-lg hover:shadow-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)]"
+                className="p-2 rounded-xl surface-card surface-card--subtle transition-all duration-300 hover:border-[color-mix(in_srgb,var(--accent-primary)_40%,transparent)] hover:scale-110 active:scale-95 hover:shadow-[0_0_16px_3px_color-mix(in_srgb,var(--accent-primary)_25%,transparent)]"
                 aria-label="Toggle filters"
               >
                 <FunnelIcon className="w-5 h-5" />
@@ -350,8 +348,10 @@ export function AppLayout({
 
             {/* Docs Button */}
             <a
-              href="/docs"
-              className="p-2 rounded-xl surface-card surface-card--subtle transition-all duration-300 hover:border-accent hover:scale-110 active:scale-95 hover:shadow-lg hover:shadow-[color-mix(in_srgb,var(--accent-primary)_15%,transparent)]"
+              href="https://bytebox.pro"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="p-2 rounded-xl surface-card surface-card--subtle transition-all duration-300 hover:border-[color-mix(in_srgb,var(--accent-primary)_40%,transparent)] hover:scale-110 active:scale-95 hover:shadow-[0_0_16px_3px_color-mix(in_srgb,var(--accent-primary)_25%,transparent)]"
               aria-label="Documentation"
               title="Documentation & Help"
             >
@@ -363,7 +363,7 @@ export function AppLayout({
               href="https://pinkpixel.dev"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-xl surface-card surface-card--subtle transition-all duration-300 hover:border-pink-500/50 hover:scale-110 active:scale-95 hover:shadow-lg hover:shadow-pink-500/20"
+              className="p-2 rounded-xl surface-card surface-card--subtle transition-all duration-300 hover:border-pink-500/40 hover:scale-110 active:scale-95 hover:shadow-[0_0_16px_3px_rgba(236,72,153,0.25)]"
               aria-label="Pink Pixel"
               title="Visit Pink Pixel"
             >
@@ -383,7 +383,7 @@ export function AppLayout({
               href="https://github.com/pinkpixel-dev/ByteBox"
               target="_blank"
               rel="noopener noreferrer"
-              className="p-2 rounded-xl surface-card surface-card--subtle transition-all duration-300 hover:border-[#333]/50 dark:hover:border-white/30 hover:scale-110 active:scale-95 hover:shadow-lg hover:shadow-[color-mix(in_srgb,var(--foreground)_10%,transparent)]"
+              className="p-2 rounded-xl surface-card surface-card--subtle transition-all duration-300 hover:border-[color-mix(in_srgb,var(--accent-primary)_40%,transparent)] hover:scale-110 active:scale-95 hover:shadow-[0_0_16px_3px_color-mix(in_srgb,var(--accent-primary)_25%,transparent)]"
               aria-label="GitHub Repository"
               title="View on GitHub"
             >
@@ -391,9 +391,6 @@ export function AppLayout({
                 <path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0024 12c0-6.63-5.37-12-12-12z"/>
               </svg>
             </a>
-
-            {/* Theme Toggle */}
-            <ThemeToggle />
           </div>
         </header>
 

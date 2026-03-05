@@ -453,7 +453,7 @@ export default function CreateCardModal({
                     <button type="button" onClick={onClose} className="px-4 py-2 rounded-lg border">
                       Cancel
                     </button>
-                    <button type="submit" disabled={isSubmitting} className="px-4 py-2 rounded-lg accent-gradient disabled:opacity-60">
+                    <button type="submit" disabled={isSubmitting} className="px-4 py-2 rounded-lg accent-gradient font-medium disabled:opacity-60">
                       {isSubmitting ? 'Creating...' : 'Create Card'}
                     </button>
                   </div>

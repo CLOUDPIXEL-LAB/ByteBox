@@ -86,8 +86,8 @@ export function FilterPanel({
               </span>
             </div>
             <span className={`text-xs px-2 py-0.5 rounded-full ${
-              showStarredOnly 
-                ? 'bg-amber-400/20 text-amber-400' 
+              showStarredOnly
+                ? 'bg-amber-400/20 text-amber-400'
                 : 'bg-(--hover-bg) text-(--foreground-soft)'
             }`}>
               {starredCount}
@@ -173,7 +173,7 @@ export function FilterPanel({
               onClick={() => onFilterModeChange('OR')}
               className={`px-3 py-1 text-xs font-medium transition-colors ${
                 filterMode === 'OR'
-                  ? 'accent-gradient'
+                  ? 'accent-glow-active'
                   : 'bg-(--hover-bg) text-(--foreground-soft) hover:text-(--foreground)'
               }`}
             >
@@ -183,7 +183,7 @@ export function FilterPanel({
               onClick={() => onFilterModeChange('AND')}
               className={`px-3 py-1 text-xs font-medium transition-colors ${
                 filterMode === 'AND'
-                  ? 'accent-gradient'
+                  ? 'accent-glow-active'
                   : 'bg-(--hover-bg) text-(--foreground-soft) hover:text-(--foreground)'
               }`}
             >
@@ -209,7 +209,7 @@ export function FilterPanel({
                 transition-all duration-200
                 ${
                   isSelected
-                    ? 'accent-gradient shadow-lg shadow-[color-mix(in_srgb,var(--accent-primary)_30%,transparent)]'
+                    ? 'accent-glow-active shadow-lg shadow-[color-mix(in_srgb,var(--accent-primary)_20%,transparent)]'
                     : 'surface-card surface-card--subtle text-(--foreground-soft) hover:text-(--foreground) border border-[color-mix(in_srgb,var(--card-border)_90%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_40%,transparent)]'
                 }
               `}

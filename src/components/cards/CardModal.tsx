@@ -37,7 +37,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  
+
   // Edit form state
   const [editTitle, setEditTitle] = useState('');
   const [editDescription, setEditDescription] = useState('');
@@ -48,7 +48,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
   const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   const cardId = card?.id ?? null;
-  
+
   // Initialize edit form when card changes or edit mode is entered
   const initializeEditForm = useCallback(() => {
     if (card) {
@@ -61,13 +61,13 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
       setSelectedTagIds(card.tags?.map(t => t.id) || []);
     }
   }, [card]);
-  
+
   useEffect(() => {
     if (isOpen && card) {
       initializeEditForm();
     }
   }, [isOpen, card, initializeEditForm]);
-  
+
   useEffect(() => {
     if (!isOpen || !cardId) {
       queueMicrotask(() => {
@@ -86,36 +86,36 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
       document.body.style.removeProperty('padding-right');
     };
   }, []);
-  
+
   if (!card) return null;
 
   const Icon = cardTypeIcons[card.type as keyof typeof cardTypeIcons];
   const shouldHighlight = card.type === 'snippet' || card.type === 'command';
   const iconColor = getIconColor(card.type);
-  
+
   const toggleTag = (tagId: string) => {
-    setSelectedTagIds((prev) => 
+    setSelectedTagIds((prev) =>
       prev.includes(tagId) ? prev.filter((id) => id !== tagId) : [...prev, tagId]
     );
   };
-  
+
   const handleSave = async () => {
     if (!card || !onUpdate) return;
-    
+
     setIsSaving(true);
     try {
       // Get tag names for the selected tags
       const tagNames = selectedTagIds
         .map((id) => allTags.find((t) => t.id === id)?.name)
         .filter((n): n is string => !!n);
-      
+
       // Also include any new tags that were on the card but not in allTags
       const existingTagNames = card.tags
         ?.filter(t => selectedTagIds.includes(t.id))
         .map(t => t.name) || [];
-      
+
       const allTagNames = [...new Set([...tagNames, ...existingTagNames])];
-      
+
       const response = await fetch(`/api/cards/${card.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -129,9 +129,9 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
           tagNames: allTagNames,
         }),
       });
-      
+
       if (!response.ok) throw new Error('Failed to update card');
-      
+
       const updatedCard = await response.json();
       onUpdate(updatedCard);
       setIsEditing(false);
@@ -141,7 +141,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
       setIsSaving(false);
     }
   };
-  
+
   const handleCancelEdit = () => {
     initializeEditForm();
     setIsEditing(false);
@@ -149,16 +149,16 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
 
   const handleToggleStar = async () => {
     if (!card || !onUpdate) return;
-    
+
     try {
       const response = await fetch(`/api/cards/${card.id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'toggleStar' }),
       });
-      
+
       if (!response.ok) throw new Error('Failed to toggle star');
-      
+
       const updatedCard = await response.json();
       onUpdate(updatedCard);
       setEditStarred(updatedCard.starred);
@@ -179,7 +179,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
 
   const handleDelete = async () => {
     if (!onDelete) return;
-    
+
     try {
       await fetch(`/api/cards/${card.id}`, {
         method: 'DELETE',
@@ -269,7 +269,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
       </div>
     );
   };
-  
+
   // Render edit form
   const renderEditForm = () => {
     // Combine allTags with any tags already on the card that might not be in allTags
@@ -281,7 +281,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
         }
       }
     }
-    
+
     return (
       <div className="space-y-4">
         {/* Category */}
@@ -312,7 +312,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
             className="w-full px-3 py-2 rounded-lg bg-[color-mix(in_srgb,var(--surface-card)_80%,transparent)] border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] text-(--text-strong)"
           />
         </div>
-        
+
         {/* Description */}
         <div>
           <label htmlFor="edit-description" className="block text-xs font-medium text-(--text-soft) mb-1">Description</label>
@@ -325,7 +325,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
             className="w-full px-3 py-2 rounded-lg bg-[color-mix(in_srgb,var(--surface-card)_80%,transparent)] border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] focus:outline-none focus:ring-2 focus:ring-[color-mix(in_srgb,var(--accent-primary)_50%,transparent)] text-(--text-strong)"
           />
         </div>
-        
+
         {/* Content (not for images) */}
         {card.type !== 'image' && (
           <div>
@@ -341,7 +341,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
             />
           </div>
         )}
-        
+
         {/* Language (for snippets/commands) */}
         {(card.type === 'snippet' || card.type === 'command') && (
           <div>
@@ -358,7 +358,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
             </select>
           </div>
         )}
-        
+
         {/* Tags */}
         <fieldset>
           <legend className="block text-xs font-medium text-(--text-soft) mb-2">Tags</legend>
@@ -396,7 +396,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
             </div>
           )}
         </fieldset>
-        
+
         {/* Starred toggle */}
         <div className="flex items-center gap-3">
           <button
@@ -404,8 +404,8 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
             onClick={() => setEditStarred(!editStarred)}
             className={cn(
               'flex items-center gap-2 px-3 py-2 rounded-lg transition-all',
-              editStarred 
-                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40' 
+              editStarred
+                ? 'bg-amber-500/20 text-amber-400 border border-amber-500/40'
                 : 'border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] hover:bg-[color-mix(in_srgb,var(--hover-bg)_80%,transparent)]'
             )}
           >
@@ -478,8 +478,8 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
                         onClick={handleToggleStar}
                         className={cn(
                           'p-2 rounded-xl transition-colors',
-                          card.starred 
-                            ? 'text-amber-400 hover:bg-amber-500/10' 
+                          card.starred
+                            ? 'text-amber-400 hover:bg-amber-500/10'
                             : 'hover:bg-[color-mix(in_srgb,var(--hover-bg)_90%,transparent)]'
                         )}
                         title={card.starred ? 'Unstar card' : 'Star card'}
@@ -594,7 +594,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
                         <button
                           onClick={handleSave}
                           disabled={isSaving || !editTitle.trim()}
-                          className="px-4 py-2 rounded-lg accent-gradient font-medium hover:shadow-lg hover:shadow-[color-mix(in_srgb,var(--accent-primary)_35%,transparent)] transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                          className="px-4 py-2 rounded-lg accent-gradient font-medium transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                           {isSaving ? 'Saving...' : 'Save Changes'}
                         </button>
@@ -612,7 +612,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
                             <span className="text-sm">Edit</span>
                           </button>
                         )}
-                        
+
                         {/* Copy button (for non-image cards) */}
                         {card.type !== 'image' && card.content && (
                           <button
@@ -624,19 +624,19 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
                             <span className="text-sm">{copySuccess ? 'Copied!' : 'Copy'}</span>
                           </button>
                         )}
-                        
+
                         {/* Visit Link button (for bookmarks) */}
                         {card.type === 'bookmark' && card.content && (
                           <a
                             href={card.content}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="px-4 py-2 rounded-lg accent-gradient font-medium hover:shadow-lg hover:shadow-[color-mix(in_srgb,var(--accent-primary)_35%,transparent)] transition-all"
+                            className="px-4 py-2 rounded-lg accent-gradient font-medium transition-all"
                           >
                             Visit Link
                           </a>
                         )}
-                        
+
                         {/* Close button */}
                         <button
                           onClick={onClose}
@@ -654,7 +654,7 @@ export function CardModal({ card, isOpen, onClose, onDelete, onUpdate, allTags =
         </div>
       </Dialog>
     </Transition>
-    
+
     {/* Lightbox for full-screen image viewing */}
     {card.type === 'image' && card.imageData && (
       <Lightbox

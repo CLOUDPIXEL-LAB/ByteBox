@@ -70,9 +70,9 @@ interface MenuItemButtonProps {
 
 function MenuItemButton({ option, isActive, isFocused, onSelect }: Readonly<MenuItemButtonProps>) {
   const Icon = option.icon;
-  
+
   const getBackgroundColor = () => {
-    if (isActive) return 'rgba(247, 37, 133, 0.12)';
+    if (isActive) return 'color-mix(in srgb, var(--accent-primary) 12%, transparent)';
     if (isFocused) return 'rgba(148, 163, 184, 0.12)';
     return 'transparent';
   };
@@ -82,29 +82,30 @@ function MenuItemButton({ option, isActive, isFocused, onSelect }: Readonly<Menu
       onClick={() => onSelect(option.id)}
       className={cn(
         "w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition-all duration-150",
-        isActive && "border shadow-[0_8px_30px_rgba(0,0,0,0.25)]",
+        isActive && "border",
       )}
       style={{
         backgroundColor: getBackgroundColor(),
-        borderColor: isActive ? 'rgba(247, 37, 133, 0.33)' : 'transparent',
+        borderColor: isActive ? 'color-mix(in srgb, var(--accent-primary) 40%, transparent)' : 'transparent',
+        boxShadow: isActive ? '0 0 12px 2px color-mix(in srgb, var(--accent-primary) 18%, transparent)' : 'none',
       }}
     >
       <div
         className="p-1.5 rounded-lg transition-colors"
         style={{
           backgroundColor: isActive
-            ? 'rgba(247, 37, 133, 0.12)'
+            ? 'color-mix(in srgb, var(--accent-primary) 12%, transparent)'
             : 'rgba(148, 163, 184, 0.12)',
         }}
       >
         {option.id === "starred" && isActive ? (
           <StarIconSolid className="w-4 h-4 text-amber-400" />
         ) : (
-          <Icon 
+          <Icon
             className={cn(
               "w-4 h-4",
               isActive
-                ? "text-[#f72585]"
+                ? "text-[var(--accent-primary)]"
                 : "text-[rgba(248,250,252,0.7)]"
             )}
           />
@@ -115,7 +116,7 @@ function MenuItemButton({ option, isActive, isFocused, onSelect }: Readonly<Menu
         <p
           className="text-sm font-medium"
           style={{
-            color: isActive ? '#f72585' : '#f8fafc',
+            color: isActive ? 'var(--accent-primary)' : '#f8fafc',
           }}
         >
           {option.name}
@@ -239,7 +240,7 @@ export function ViewModeSelector({
                   {/* Keyboard shortcuts hint */}
                   <div
                     className="border-t px-4 py-2"
-                    style={{ 
+                    style={{
                       backgroundColor: 'rgba(15, 23, 42, 0.98)',
                       borderTopColor: 'rgba(148, 163, 184, 0.32)',
                     }}

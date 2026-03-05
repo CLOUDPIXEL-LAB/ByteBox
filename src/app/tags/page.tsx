@@ -464,7 +464,7 @@ export default function TagsPage() {
                   className={cn(
                     'px-3 py-1.5 rounded-lg text-sm font-medium transition-all border',
                     sortBy === 'name'
-                      ? 'accent-gradient border-transparent shadow-[0_12px_32px_color-mix(in_srgb,var(--accent-primary)_25%,transparent)]'
+                      ? 'accent-glow-active'
                       : 'surface-card surface-card--subtle border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_45%,transparent)]'
                   )}
                 >
@@ -475,7 +475,7 @@ export default function TagsPage() {
                   className={cn(
                     'px-3 py-1.5 rounded-lg text-sm font-medium transition-all border',
                     sortBy === 'count'
-                      ? 'accent-gradient border-transparent shadow-[0_12px_32px_color-mix(in_srgb,var(--accent-primary)_25%,transparent)]'
+                      ? 'accent-glow-active'
                       : 'surface-card surface-card--subtle border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] hover:border-[color-mix(in_srgb,var(--accent-border)_45%,transparent)]'
                   )}
                 >

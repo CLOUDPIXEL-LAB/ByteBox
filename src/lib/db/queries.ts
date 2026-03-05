@@ -392,7 +392,7 @@ export async function getUserSettings(): Promise<UserSettingsData> {
         customAccentThemes: '[]',
         settingsPresets: '[]',
         backgroundConfig: '{"type":"default"}',
-        fontConfig: '{"uiFont":"system","monoFont":"geist-mono","bodyFontSize":14,"categoryTitleSize":16,"cardTitleSize":16,"codeFontSize":14,"columnWidth":320}',
+        fontConfig: '{"uiFont":"system","monoFont":"geist-mono","uiFontSize":14,"bodyFontSize":14,"categoryTitleSize":16,"cardTitleSize":16,"codeFontSize":14,"sidebarWidth":240,"columnWidth":320}',
         customIconColor: '#f472b6',
         glassIntensity: 60,
       },

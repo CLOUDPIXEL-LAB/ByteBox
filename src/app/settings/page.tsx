@@ -846,6 +846,25 @@ export default function SettingsPage() {
               <div className="grid gap-3 md:grid-cols-2">
                 <div className="surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 space-y-3">
                   <div className="flex items-center justify-between">
+                    <p className="font-medium text-(--text-strong)">UI font size</p>
+                    <span className="text-xs font-semibold text-(--text-strong)">{fontConfig.uiFontSize}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={12}
+                    max={20}
+                    value={fontConfig.uiFontSize}
+                    onChange={(event) => updateFontConfig({ uiFontSize: Number(event.target.value) })}
+                    className="glass-range w-full"
+                    aria-label="UI font size"
+                  />
+                  <p className="text-(--text-soft)" style={{ fontSize: `${fontConfig.uiFontSize}px`, fontWeight: 600 }}>
+                    Sidebar and top-bar interface labels preview.
+                  </p>
+                </div>
+
+                <div className="surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
                     <p className="font-medium text-(--text-strong)">Regular text size</p>
                     <span className="text-xs font-semibold text-(--text-strong)">{fontConfig.bodyFontSize}px</span>
                   </div>
@@ -927,24 +946,46 @@ export default function SettingsPage() {
                 </div>
               </div>
 
-              <div className="surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 space-y-3">
-                <div className="flex items-center justify-between">
-                  <p className="font-medium text-(--text-strong)">Column width</p>
-                  <span className="text-xs font-semibold text-(--text-strong)">{fontConfig.columnWidth}px</span>
+              <div className="grid gap-3 md:grid-cols-2">
+                <div className="surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-(--text-strong)">Sidebar width</p>
+                    <span className="text-xs font-semibold text-(--text-strong)">{fontConfig.sidebarWidth}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={240}
+                    max={460}
+                    step={10}
+                    value={fontConfig.sidebarWidth}
+                    onChange={(event) => updateFontConfig({ sidebarWidth: Number(event.target.value) })}
+                    className="glass-range w-full"
+                    aria-label="Sidebar width"
+                  />
+                  <p className="text-xs text-(--text-soft)">
+                    Saved in Settings and presets, so it persists across pages and restarts.
+                  </p>
                 </div>
-                <input
-                  type="range"
-                  min={260}
-                  max={560}
-                  step={10}
-                  value={fontConfig.columnWidth}
-                  onChange={(event) => updateFontConfig({ columnWidth: Number(event.target.value) })}
-                  className="glass-range w-full"
-                  aria-label="Column width"
-                />
-                <p className="text-xs text-(--text-soft)">
-                  Applies to all board columns. You can also drag the right edge of any category column to resize directly.
-                </p>
+
+                <div className="surface-card surface-card--subtle border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)] rounded-2xl p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <p className="font-medium text-(--text-strong)">Column width</p>
+                    <span className="text-xs font-semibold text-(--text-strong)">{fontConfig.columnWidth}px</span>
+                  </div>
+                  <input
+                    type="range"
+                    min={260}
+                    max={560}
+                    step={10}
+                    value={fontConfig.columnWidth}
+                    onChange={(event) => updateFontConfig({ columnWidth: Number(event.target.value) })}
+                    className="glass-range w-full"
+                    aria-label="Column width"
+                  />
+                  <p className="text-xs text-(--text-soft)">
+                    Applies to all board columns. You can also drag the right edge of any category column to resize directly.
+                  </p>
+                </div>
               </div>
             </div>
 
@@ -997,7 +1038,7 @@ export default function SettingsPage() {
               )}
 
               {settingsPresets.length === 0 ? (
-                <p className="text-xs text-(--text-soft)">No presets yet. Save your current layout, colors, fonts, typography sizes, column width, and wallpaper to reuse later.</p>
+                <p className="text-xs text-(--text-soft)">No presets yet. Save your current layout, colors, fonts, typography sizes, sidebar and column widths, and wallpaper to reuse later.</p>
               ) : (
                 <div className="grid gap-3 md:grid-cols-2">
                   {settingsPresets.map((preset) => (
@@ -1029,6 +1070,8 @@ export default function SettingsPage() {
                         <span className="px-2 py-1 rounded-full border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)]">Mode: {preset.mode}</span>
                         <span className="px-2 py-1 rounded-full border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)]">Accent: {preset.accentThemeId}</span>
                         <span className="px-2 py-1 rounded-full border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)]">Font: {preset.fonts.uiFont}</span>
+                        <span className="px-2 py-1 rounded-full border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)]">UI: {preset.fonts.uiFontSize ?? 14}px</span>
+                        <span className="px-2 py-1 rounded-full border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)]">Sidebar: {preset.fonts.sidebarWidth ?? 240}px</span>
                         <span className="px-2 py-1 rounded-full border border-[color-mix(in_srgb,var(--card-border)_80%,transparent)]">Columns: {preset.fonts.columnWidth ?? 320}px</span>
                       </div>
                     </div>

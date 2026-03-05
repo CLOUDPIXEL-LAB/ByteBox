@@ -310,10 +310,12 @@ const applyFontConfig = (config: FontConfig) => {
 
   body.style.setProperty('--font-ui-active', uiFontValue);
   body.style.setProperty('--font-mono-active', monoFontValue);
+  body.style.setProperty('--font-size-ui', `${normalizedConfig.uiFontSize}px`);
   body.style.setProperty('--font-size-body', `${normalizedConfig.bodyFontSize}px`);
   body.style.setProperty('--font-size-category-title', `${normalizedConfig.categoryTitleSize}px`);
   body.style.setProperty('--font-size-card-title', `${normalizedConfig.cardTitleSize}px`);
   body.style.setProperty('--font-size-code', `${normalizedConfig.codeFontSize}px`);
+  body.style.setProperty('--sidebar-width', `${normalizedConfig.sidebarWidth}px`);
   body.style.setProperty('--board-column-width', `${normalizedConfig.columnWidth}px`);
 };
 

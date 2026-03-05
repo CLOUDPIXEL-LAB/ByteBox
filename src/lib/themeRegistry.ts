@@ -37,10 +37,12 @@ export type BackgroundConfig = {
 export type FontConfig = {
   uiFont: string;
   monoFont: string;
+  uiFontSize: number;
   bodyFontSize: number;
   categoryTitleSize: number;
   cardTitleSize: number;
   codeFontSize: number;
+  sidebarWidth: number;
   columnWidth: number;
 };
 
@@ -227,10 +229,12 @@ export const availableMonoFonts = [
 export const defaultFontConfig: FontConfig = {
   uiFont: 'system',
   monoFont: 'geist-mono',
+  uiFontSize: 14,
   bodyFontSize: 14,
   categoryTitleSize: 16,
   cardTitleSize: 16,
   codeFontSize: 14,
+  sidebarWidth: 240,
   columnWidth: 320,
 };
 
@@ -263,10 +267,12 @@ export const normalizeFontConfig = (
   return {
     uiFont: config.uiFont || defaultFontConfig.uiFont,
     monoFont: config.monoFont || defaultFontConfig.monoFont,
+    uiFontSize: normalizeNumeric(config.uiFontSize, defaultFontConfig.uiFontSize, 12, 20),
     bodyFontSize: normalizeNumeric(config.bodyFontSize, defaultFontConfig.bodyFontSize, 12, 20),
     categoryTitleSize: normalizeNumeric(config.categoryTitleSize, defaultFontConfig.categoryTitleSize, 13, 28),
     cardTitleSize: normalizeNumeric(config.cardTitleSize, defaultFontConfig.cardTitleSize, 13, 26),
     codeFontSize: normalizeNumeric(config.codeFontSize, defaultFontConfig.codeFontSize, 11, 22),
+    sidebarWidth: normalizeNumeric(config.sidebarWidth, defaultFontConfig.sidebarWidth, 240, 460),
     columnWidth: normalizeNumeric(config.columnWidth, defaultFontConfig.columnWidth, 260, 560),
   };
 };

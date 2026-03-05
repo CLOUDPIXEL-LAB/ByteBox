@@ -48,10 +48,12 @@
   /* Font tokens - these get overwritten by ThemeContext */
   --font-ui-active: var(--font-geist-sans);
   --font-mono-active: var(--font-geist-mono);
+  --font-size-ui: 14px;
   --font-size-body: 14px;
   --font-size-category-title: 16px;
   --font-size-card-title: 16px;
   --font-size-code: 14px;
+  --sidebar-width: 240px;
   --board-column-width: 320px;
   --user-background-image: none;
 }
@@ -123,6 +125,10 @@ body {
   font-size: var(--font-size-body);
   font-family: var(--font-ui-active, var(--font-geist-sans, system-ui)), -apple-system, sans-serif;
   transition: background-color 200ms ease, color 200ms ease;
+}
+
+.text-dynamic-ui {
+  font-size: var(--font-size-ui);
 }
 
 .text-dynamic-body {
